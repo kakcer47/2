@@ -443,8 +443,8 @@
     <script>
         // Configuration
         const CONFIG = {
-            POSTS_API: 'https://sub-muey.onrender.com/api',
-            ACCOUNTS_API: 'https://six-z05l.onrender.com/api',
+            POSTS_API: 'https://your-posts-server.onrender.com/api',
+            ACCOUNTS_API: 'https://your-accounts-server.onrender.com/api',
             DB_NAME: 'EventsPlatform',
             DB_VERSION: 1
         }
@@ -461,7 +461,8 @@
                 hidden: new Set()
             },
             lastSync: 0,
-            isOnline: navigator.onLine
+            isOnline: navigator.onLine,
+            ws: null // WebSocket connection
         }
 
         // === TELEGRAM WEB APP INTEGRATION ===
@@ -532,6 +533,9 @@
                 
                 // Start periodic sync
                 startPeriodicSync()
+                
+                // Setup WebSocket for real-time updates
+                setupWebSocket()
                 
                 setStatus('✅ Ready!')
                 
@@ -604,6 +608,112 @@
             }
         }
 
+        // === WEBSOCKET REAL-TIME UPDATES ===
+
+        function setupWebSocket() {
+            if (!app.isOnline) return
+            
+            try {
+                const wsUrl = CONFIG.POSTS_API.replace('https://', 'wss://').replace('http://', 'ws://').replace('/api', '')
+                console.log('🔌 Connecting to WebSocket:', wsUrl)
+                
+                app.ws = new WebSocket(wsUrl)
+                
+                app.ws.onopen = () => {
+                    console.log('✅ WebSocket connected')
+                    setStatus('🔄 Real-time updates active')
+                }
+                
+                app.ws.onmessage = (event) => {
+                    try {
+                        const message = JSON.parse(event.data)
+                        handleWebSocketMessage(message)
+                    } catch (error) {
+                        console.error('WebSocket message parse error:', error)
+                    }
+                }
+                
+                app.ws.onclose = () => {
+                    console.log('🔌 WebSocket disconnected')
+                    app.ws = null
+                    
+                    // Reconnect after 5 seconds if online
+                    if (app.isOnline) {
+                        setTimeout(setupWebSocket, 5000)
+                    }
+                }
+                
+                app.ws.onerror = (error) => {
+                    console.error('WebSocket error:', error)
+                }
+                
+            } catch (error) {
+                console.error('WebSocket setup error:', error)
+            }
+        }
+
+        function handleWebSocketMessage(message) {
+            const { type, data } = message
+            
+            console.log('📡 WebSocket message:', type, data)
+            
+            switch (type) {
+                case 'EVENT_CREATED':
+                    // Новое событие от другого пользователя
+                    if (data.authorId !== app.userId) {
+                        app.events.set(data.id, data)
+                        saveToIndexedDB('events', [data])
+                        
+                        // Обновляем UI если на вкладке feed
+                        if (app.currentTab === 'feed') {
+                            renderCurrentTab()
+                        }
+                        
+                        // Показываем уведомление
+                        showNotification(`📝 New event: ${data.title}`)
+                    }
+                    break
+                    
+                case 'EVENT_UPDATED':
+                    // Событие обновлено
+                    app.events.set(data.id, data)
+                    saveToIndexedDB('events', [data])
+                    renderCurrentTab()
+                    break
+                    
+                case 'EVENT_DELETED':
+                    // Событие удалено
+                    app.events.delete(data.id)
+                    renderCurrentTab()
+                    break
+                    
+                case 'EVENT_LIKED':
+                    // Обновление лайков в реальном времени
+                    const event = app.events.get(data.id)
+                    if (event) {
+                        event.likes = data.likes
+                        app.events.set(data.id, event)
+                        saveToIndexedDB('events', [event])
+                        renderCurrentTab()
+                    }
+                    break
+                    
+                case 'STATS':
+                    // Статистика подключений
+                    console.log('📊 Platform stats:', data)
+                    break
+                    
+                default:
+                    console.log('Unknown WebSocket message type:', type)
+            }
+        }
+
+        function showNotification(message) {
+            // Показываем уведомление в статус баре
+            setStatus(message)
+            setTimeout(() => setStatus('✅ Ready!'), 3000)
+        }
+
         // === AUTHENTICATION ===
 
         async function authenticateUser() {
@@ -624,6 +734,8 @@
                 app.userId = userData.id
                 
                 console.log(`✅ Authenticated as ${userData.id}`)
+                console.log(`👤 User data:`, userData)
+                console.log(`🔍 Will filter my events by authorId: ${app.userId}`)
                 
             } catch (error) {
                 console.error('Authentication error:', error)
@@ -761,11 +873,16 @@
                 app.isOnline = true
                 setStatus('🌐 Back online')
                 syncWithServers()
+                setupWebSocket() // Reconnect WebSocket
             })
             
             window.addEventListener('offline', () => {
                 app.isOnline = false
                 setStatus('📴 Offline mode')
+                if (app.ws) {
+                    app.ws.close()
+                    app.ws = null
+                }
             })
         }
 
@@ -790,6 +907,10 @@
         }
 
         function renderCurrentTab() {
+            console.log(`🎨 Rendering tab: ${app.currentTab}`)
+            console.log(`🎨 Current user: ${app.userId}`)
+            console.log(`🎨 Total events in cache: ${app.events.size}`)
+            
             const events = getFilteredEvents()
             const container = document.getElementById(`${app.currentTab}Content`)
             
@@ -814,11 +935,26 @@
             
             let events = Array.from(app.events.values())
             
+            console.log(`🔍 Filtering events for tab: ${app.currentTab}`)
+            console.log(`🔍 Total events before filtering: ${events.length}`)
+            console.log(`🔍 Current user ID: ${app.userId}`)
+            
             // Filter by tab
             if (app.currentTab === 'favorites') {
                 events = events.filter(event => app.userMeta.favorites.has(event.id))
+                console.log(`🔍 After favorites filter: ${events.length}`)
             } else if (app.currentTab === 'my-events') {
-                events = events.filter(event => event.authorId === app.userId)
+                console.log(`🔍 My events filter - looking for authorId: ${app.userId}`)
+                console.log(`🔍 Sample event authorIds:`, events.slice(0, 3).map(e => e.authorId))
+                
+                events = events.filter(event => {
+                    const matches = event.authorId === app.userId
+                    if (matches) {
+                        console.log(`✅ Found my event: ${event.title} (${event.authorId})`)
+                    }
+                    return matches
+                })
+                console.log(`🔍 After my-events filter: ${events.length} events`)
             }
             
             // Filter by search
@@ -827,27 +963,34 @@
                     event.title.toLowerCase().includes(search) ||
                     event.description.toLowerCase().includes(search)
                 )
+                console.log(`🔍 After search filter: ${events.length}`)
             }
             
             // Filter by city
             if (city) {
                 events = events.filter(event => event.city === city)
+                console.log(`🔍 After city filter: ${events.length}`)
             }
             
             // Filter by category
             if (category) {
                 events = events.filter(event => event.category === category)
+                console.log(`🔍 After category filter: ${events.length}`)
             }
             
             // Hide hidden events (except in my-events)
             if (app.currentTab !== 'my-events') {
                 events = events.filter(event => !app.userMeta.hidden.has(event.id))
+                console.log(`🔍 After hidden filter: ${events.length}`)
             }
             
             // Sort by creation date (newest first)
             events.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
             
-            return events.slice(0, 50) // Limit to 50 events for performance
+            const result = events.slice(0, 50) // Limit to 50 events for performance
+            console.log(`🔍 Final result: ${result.length} events`)
+            
+            return result
         }
 
         function renderEventCard(event) {
@@ -885,7 +1028,7 @@
                                 ${isHidden ? '👀 Show' : '👁️ Hide'}
                             </button>
                         ` : ''}
-                        <button class="action-btn" onclick="openTelegramChat('${event.authorId}')">
+                        <button class="action-btn" onclick="openTelegramChat('${event.id}', '${event.authorId}')">
                             💬 Contact
                         </button>
                     </div>
@@ -1069,6 +1212,8 @@
                     }
                 }
                 
+                console.log(`📝 Creating event with authorId: ${app.userId}`)
+                
                 // Create locally first
                 const localEvent = {
                     id: `local_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
@@ -1177,12 +1322,56 @@
             console.log(message)
         }
 
-        function openTelegramChat(userId) {
-            if (window.Telegram?.WebApp) {
-                // Try to open chat in Telegram
-                window.Telegram.WebApp.openTelegramLink(`https://t.me/username`)
-            } else {
-                alert('Contact feature available only in Telegram')
+        function openTelegramChat(eventId, authorId) {
+            try {
+                const event = app.events.get(eventId)
+                if (!event) {
+                    alert('Event not found')
+                    return
+                }
+                
+                console.log('📞 Opening chat with author:', event.author)
+                
+                if (window.Telegram?.WebApp) {
+                    // Попробуем извлечь Telegram ID автора из authorId
+                    let telegramId = null
+                    
+                    if (authorId.startsWith('tg_')) {
+                        telegramId = authorId.replace('tg_', '')
+                    }
+                    
+                    console.log('📞 Author Telegram ID:', telegramId)
+                    
+                    if (telegramId && telegramId !== 'undefined') {
+                        // Открываем чат с пользователем по ID
+                        const chatUrl = `https://t.me/user?id=${telegramId}`
+                        console.log('📞 Opening chat URL:', chatUrl)
+                        
+                        // Пробуем открыть через Telegram Web App API
+                        if (window.Telegram.WebApp.openTelegramLink) {
+                            window.Telegram.WebApp.openTelegramLink(chatUrl)
+                        } else {
+                            // Fallback - открываем в новом окне
+                            window.open(chatUrl, '_blank')
+                        }
+                    } else {
+                        // Показываем информацию об авторе
+                        const authorInfo = `
+👤 Author: ${event.author?.fullName || 'Anonymous'}
+📧 Contact through the event comments or find them in the event location!
+
+📍 Event: ${event.title}
+${event.city ? `🏙️ City: ${event.city}` : ''}
+                        `.trim()
+                        
+                        alert(authorInfo)
+                    }
+                } else {
+                    alert('Contact feature available only in Telegram. Author: ' + (event.author?.fullName || 'Anonymous'))
+                }
+            } catch (error) {
+                console.error('Error opening chat:', error)
+                alert('Could not open chat. Please try again.')
             }
         }
 
@@ -1191,6 +1380,12 @@
             setInterval(() => {
                 if (app.isOnline) {
                     syncWithServers()
+                    
+                    // Check WebSocket connection
+                    if (!app.ws || app.ws.readyState !== WebSocket.OPEN) {
+                        console.log('🔌 WebSocket reconnecting...')
+                        setupWebSocket()
+                    }
                 }
             }, 30000)
         }
