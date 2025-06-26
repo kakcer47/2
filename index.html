@@ -37,6 +37,25 @@
             margin-left: -16px;
             border-bottom-left-radius: 20px;
             border-bottom-right-radius: 20px;
+            display: flex;
+            justify-content: space-around;
+        }
+
+        .tab {
+            cursor: pointer;
+            padding: 10px 20px;
+            border: none;
+            background: transparent;
+            transition: background 0.3s;
+        }
+
+        .tab:hover {
+            background: rgba(0, 0, 0, 0.1);
+        }
+
+        .tab.active {
+            font-weight: bold;
+            border-bottom: 2px solid #818181;
         }
 
         .header h1 {
@@ -577,6 +596,7 @@
             <div class="tab" data-tab="my-events">My Events</div>
             <div class="tab" data-tab="hidden">Hidden</div>
         </div>
+
 
         <!-- Filters -->
         <div class="filters">
