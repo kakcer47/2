@@ -243,7 +243,7 @@
         }
 
         .menu-btn:hover {
-            background: var(--tg-theme-hint-color, rgba(0,0,0,0.1));
+            background: var(--tg-theme-hint-color, rgba(0, 0, 0, 0.1));
         }
 
         .dropdown-menu {
@@ -329,7 +329,7 @@
             height: 48px;
             border: none;
             border-radius: 50%;
-            background: var(--tg-theme-button-color, #0088cc);
+            background: var(--tg-theme-button-color, #696969);
             color: var(--tg-theme-button-text-color, #ffffff);
             cursor: pointer;
             display: flex;
@@ -345,6 +345,31 @@
         .create-icon {
             width: 24px;
             height: 24px;
+        }
+
+        .filters {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .filter-grid {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+        }
+
+        .row select,
+        .date-filter input {
+            margin-right: 10px;
+        }
+
+        .date-filter {
+            align-items: center;
         }
 
         .modal {
@@ -547,11 +572,6 @@
     <div class="container">
         <!-- Header -->
         <div class="header">
-            <h1>🎯 Events Platform 📰 📝 ⭐ 👁️</h1>
-        </div>
-
-        <!-- Tabs -->
-        <div class="tabs">
             <div class="tab active" data-tab="feed">Feed</div>
             <div class="tab" data-tab="favorites">Favorites</div>
             <div class="tab" data-tab="my-events">My Events</div>
@@ -561,32 +581,36 @@
         <!-- Filters -->
         <div class="filters">
             <div class="filter-grid">
-                <select id="cityFilter">
-                    <option value="">All cities</option>
-                </select>
-                <select id="categoryFilter">
-                    <option value="">All categories</option>
-                    <option value="meetup">Meetup</option>
-                    <option value="party">Party</option>
-                    <option value="sport">Sport</option>
-                    <option value="culture">Culture</option>
-                    <option value="business">Business</option>
-                    <option value="education">Education</option>
-                </select>
-                
-                <select id="genderFilter">
-                    <option value="">All genders</option>
-                    <option value="male">Male</option>
-                    <option value="female">Female</option>
-                </select>
-                <select id="ageFilter">
-                    <option value="">All ages</option>
-                    <option value="16-25">16-25</option>
-                    <option value="25-45">25-45</option>
-                    <option value="45+">45+</option>
-                </select>
+                <div class="row">
+                    <select id="cityFilter">
+                        <option value="">All cities</option>
+                    </select>
+                    <select id="categoryFilter">
+                        <option value="">All categories</option>
+                        <option value="meetup">Meetup</option>
+                        <option value="party">Party</option>
+                        <option value="sport">Sport</option>
+                        <option value="culture">Culture</option>
+                        <option value="business">Business</option>
+                        <option value="education">Education</option>
+                    </select>
+                </div>
 
-                <div class="date-filter">
+                <div class="row">
+                    <select id="genderFilter">
+                        <option value="">All genders</option>
+                        <option value="male">Male</option>
+                        <option value="female">Female</option>
+                    </select>
+                    <select id="ageFilter">
+                        <option value="">All ages</option>
+                        <option value="16-25">16-25</option>
+                        <option value="25-45">25-45</option>
+                        <option value="45+">45+</option>
+                    </select>
+                </div>
+
+                <div class="date-filter row">
                     <label>From:</label>
                     <input type="date" id="dateFromFilter">
                     <label>To:</label>
@@ -608,15 +632,27 @@
     <div class="search-area">
         <div class="search-container">
             <svg class="search-icon" viewBox="0 0 400 400" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M197.001 244C171.822 271.83 126.998 313 104.256 295.496C81.5174 277.992 126.998 246 156.656 220.314" stroke="currentColor" stroke-opacity="0.9" stroke-width="16" stroke-linecap="round" stroke-linejoin="round"/>
-                <path d="M165.944 196.347C135.998 107 276.999 75.9996 300.776 165.974C319.017 235 211.46 292.164 175.314 213.85" stroke="currentColor" stroke-opacity="0.9" stroke-width="16" stroke-linecap="round" stroke-linejoin="round"/>
+                <path
+                    d="M197.001 244C171.822 271.83 126.998 313 104.256 295.496C81.5174 277.992 126.998 246 156.656 220.314"
+                    stroke="currentColor" stroke-opacity="0.9" stroke-width="16" stroke-linecap="round"
+                    stroke-linejoin="round" />
+                <path
+                    d="M165.944 196.347C135.998 107 276.999 75.9996 300.776 165.974C319.017 235 211.46 292.164 175.314 213.85"
+                    stroke="currentColor" stroke-opacity="0.9" stroke-width="16" stroke-linecap="round"
+                    stroke-linejoin="round" />
             </svg>
             <input type="text" class="search-input" id="searchInput" placeholder="">
         </div>
         <button class="create-btn" onclick="showCreateModal()">
             <svg class="create-icon" viewBox="0 0 400 400" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M71.8708 189.953C76.0596 179.972 67.0124 166.184 74.2179 157.188C75.8153 155.199 122.602 153.152 125.561 155.514C136.45 164.206 111.415 193.423 144.018 201.553C171.926 208.513 155.397 160.743 162.516 157.188C171.049 152.934 188.865 158.57 198.547 157.188C226.846 153.158 203.311 181.664 211.97 193.182C217.423 200.435 261.828 185.402 250.56 219.132C244.647 236.825 226.375 230.776 216.164 235.873C211.338 238.281 215.898 272.743 215.1 272.582C205.09 270.587 157.177 275.336 158.734 276.89C168.054 286.189 186.94 229.756 144.018 235.873C133.985 237.301 125.13 246.004 123.884 255.963C123.16 261.765 125.774 278.518 125.561 278.564C113.242 281.023 100.187 277.778 86.9713 281.075C84.5867 281.671 67.5038 288.431 65.9983 286.935C63.3552 284.292 66.3776 262.486 66.8373 258.788C67.5727 252.946 65.9754 240.01 71.8708 240.01C84.7533 240.01 42.0914 251.826 29.6626 235.873C17.2337 219.92 29.6626 189.953 66.8373 198.994" stroke="currentColor" stroke-opacity="0.9" stroke-width="16" stroke-linecap="round" stroke-linejoin="round"/>
-                <path d="M219.962 158.69C301.398 167.678 215.1 108.884 284.641 112.13C309.301 113.281 287.258 146.158 293.857 154.973C299.085 161.97 334.878 147.654 341.615 156.653C345.643 162.039 327.578 197.327 334.074 199.496C339.004 201.142 350.98 188.742 359.204 191.096C376.15 195.952 380.691 231.713 365.907 238.979C351.123 246.245 341.747 240.521 340.777 241.5C336.129 246.154 349.597 267.685 346.642 275.102C344.754 279.832 305.714 287.83 301.398 283.503C292.4 274.481 309.369 240.976 291.344 236.459C265.56 229.998 276.039 267.893 267.046 270.902C254.301 275.16 229.326 272.582 215.1 272.582" stroke="currentColor" stroke-opacity="0.9" stroke-width="16" stroke-linecap="round" stroke-linejoin="round"/>
+                <path
+                    d="M71.8708 189.953C76.0596 179.972 67.0124 166.184 74.2179 157.188C75.8153 155.199 122.602 153.152 125.561 155.514C136.45 164.206 111.415 193.423 144.018 201.553C171.926 208.513 155.397 160.743 162.516 157.188C171.049 152.934 188.865 158.57 198.547 157.188C226.846 153.158 203.311 181.664 211.97 193.182C217.423 200.435 261.828 185.402 250.56 219.132C244.647 236.825 226.375 230.776 216.164 235.873C211.338 238.281 215.898 272.743 215.1 272.582C205.09 270.587 157.177 275.336 158.734 276.89C168.054 286.189 186.94 229.756 144.018 235.873C133.985 237.301 125.13 246.004 123.884 255.963C123.16 261.765 125.774 278.518 125.561 278.564C113.242 281.023 100.187 277.778 86.9713 281.075C84.5867 281.671 67.5038 288.431 65.9983 286.935C63.3552 284.292 66.3776 262.486 66.8373 258.788C67.5727 252.946 65.9754 240.01 71.8708 240.01C84.7533 240.01 42.0914 251.826 29.6626 235.873C17.2337 219.92 29.6626 189.953 66.8373 198.994"
+                    stroke="currentColor" stroke-opacity="0.9" stroke-width="16" stroke-linecap="round"
+                    stroke-linejoin="round" />
+                <path
+                    d="M219.962 158.69C301.398 167.678 215.1 108.884 284.641 112.13C309.301 113.281 287.258 146.158 293.857 154.973C299.085 161.97 334.878 147.654 341.615 156.653C345.643 162.039 327.578 197.327 334.074 199.496C339.004 201.142 350.98 188.742 359.204 191.096C376.15 195.952 380.691 231.713 365.907 238.979C351.123 246.245 341.747 240.521 340.777 241.5C336.129 246.154 349.597 267.685 346.642 275.102C344.754 279.832 305.714 287.83 301.398 283.503C292.4 274.481 309.369 240.976 291.344 236.459C265.56 229.998 276.039 267.893 267.046 270.902C254.301 275.16 229.326 272.582 215.1 272.582"
+                    stroke="currentColor" stroke-opacity="0.9" stroke-width="16" stroke-linecap="round"
+                    stroke-linejoin="round" />
             </svg>
         </button>
     </div>
@@ -635,19 +671,21 @@
                 <form id="createEventForm">
                     <div class="form-group">
                         <label class="form-label">Title</label>
-                        <input type="text" class="form-input" id="eventTitle" required placeholder="Event title" maxlength="64">
+                        <input type="text" class="form-input" id="eventTitle" required placeholder="Event title"
+                            maxlength="64">
                         <div class="char-counter" id="titleCounter">0/64</div>
                     </div>
                     <div class="form-group">
                         <label class="form-label">Description</label>
-                        <textarea class="form-input" id="eventDescription" required placeholder="Describe your event..." maxlength="350" rows="4"></textarea>
+                        <textarea class="form-input" id="eventDescription" required placeholder="Describe your event..."
+                            maxlength="350" rows="4"></textarea>
                         <div class="char-counter" id="descCounter">0/350</div>
                     </div>
                     <div class="form-group">
                         <label class="form-label">Location</label>
                         <input type="text" class="form-input" id="eventCity" placeholder="City">
                     </div>
-                    
+
                     <div class="form-grid">
                         <div>
                             <label class="form-label">Category</label>
@@ -679,7 +717,7 @@
                             </select>
                         </div>
                     </div>
-                    
+
                     <div class="form-date-group">
                         <label>From:</label>
                         <input type="date" class="form-input" id="eventDateFrom">
@@ -1225,7 +1263,7 @@
             if (category) events = events.filter(event => event.category === category)
             if (gender) events = events.filter(event => event.gender === gender)
             if (age) events = events.filter(event => event.ageGroup === age)
-            
+
             // Date filters
             if (dateFrom) {
                 events = events.filter(event => {
@@ -1315,10 +1353,10 @@
         function toggleMenu(eventId, isOwn) {
             const menu = document.getElementById(`menu-${eventId}`)
             const isOpen = menu.classList.contains('show')
-            
+
             // Close all menus first
             closeAllMenus()
-            
+
             if (!isOpen) {
                 menu.classList.add('show')
                 app.openMenus.add(eventId)
@@ -1478,7 +1516,7 @@
 
             try {
                 closeAllMenus()
-                
+
                 // Remove from local storage
                 app.events.delete(eventId)
                 renderCurrentTab()
