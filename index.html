@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -83,7 +84,8 @@
             margin-bottom: 0;
         }
 
-        input, select {
+        input,
+        select {
             flex: 1;
             min-width: 120px;
             padding: 12px;
@@ -339,11 +341,12 @@
             .filter-row {
                 flex-direction: column;
             }
-            
-            input, select {
+
+            input,
+            select {
                 min-width: auto;
             }
-            
+
             .event-info {
                 flex-direction: column;
                 gap: 8px;
@@ -351,6 +354,7 @@
         }
     </style>
 </head>
+
 <body>
     <div class="container">
         <!-- Header -->
@@ -363,6 +367,7 @@
             <div class="tab active" data-tab="feed">📰 Feed</div>
             <div class="tab" data-tab="favorites">⭐ Favorites</div>
             <div class="tab" data-tab="my-events">📝 My Events</div>
+            <div class="tab" data-tab="hidden">👁️ Hidden</div>
         </div>
 
         <!-- Filters -->
@@ -391,6 +396,7 @@
         <div id="feedContent" class="feed"></div>
         <div id="favoritesContent" class="feed hidden"></div>
         <div id="myEventsContent" class="feed hidden"></div>
+        <div id="hiddenContent" class="feed hidden"></div>
     </div>
 
     <!-- Floating Action Button -->
@@ -466,7 +472,7 @@
         }
 
         // === TELEGRAM WEB APP INTEGRATION ===
-        
+
         window.addEventListener('load', async () => {
             try {
                 // Initialize Telegram Web App
@@ -474,7 +480,7 @@
                     const tg = window.Telegram.WebApp
                     tg.ready()
                     tg.expand()
-                    
+
                     // Set theme
                     document.documentElement.style.setProperty('--tg-theme-bg-color', tg.themeParams.bg_color || '#ffffff')
                     document.documentElement.style.setProperty('--tg-theme-text-color', tg.themeParams.text_color || '#000000')
@@ -482,7 +488,7 @@
                     document.documentElement.style.setProperty('--tg-theme-button-color', tg.themeParams.button_color || '#0088cc')
                     document.documentElement.style.setProperty('--tg-theme-button-text-color', tg.themeParams.button_text_color || '#ffffff')
                     document.documentElement.style.setProperty('--tg-theme-secondary-bg-color', tg.themeParams.secondary_bg_color || '#f8f9fa')
-                    
+
                     // Get user data
                     if (tg.initDataUnsafe?.user) {
                         app.user = tg.initDataUnsafe.user
@@ -518,27 +524,27 @@
         async function initializeApp() {
             try {
                 setStatus('🔄 Initializing app...')
-                
+
                 // Initialize IndexedDB
                 await initDB()
-                
+
                 // Authenticate user
                 await authenticateUser()
-                
+
                 // Load data
                 await loadData()
-                
+
                 // Setup event listeners
                 setupEventListeners()
-                
+
                 // Start periodic sync
                 startPeriodicSync()
-                
+
                 // Setup WebSocket for real-time updates
                 setupWebSocket()
-                
+
                 setStatus('✅ Ready!')
-                
+
             } catch (error) {
                 console.error('App initialization failed:', error)
                 setStatus('❌ Initialization failed', true)
@@ -550,16 +556,16 @@
         async function initDB() {
             return new Promise((resolve, reject) => {
                 const request = indexedDB.open(CONFIG.DB_NAME, CONFIG.DB_VERSION)
-                
+
                 request.onerror = () => reject(request.error)
                 request.onsuccess = () => {
                     app.db = request.result
                     resolve()
                 }
-                
+
                 request.onupgradeneeded = (event) => {
                     const db = event.target.result
-                    
+
                     // Events store
                     if (!db.objectStoreNames.contains('events')) {
                         const eventsStore = db.createObjectStore('events', { keyPath: 'id' })
@@ -568,12 +574,12 @@
                         eventsStore.createIndex('city', 'city')
                         eventsStore.createIndex('category', 'category')
                     }
-                    
+
                     // User meta store
                     if (!db.objectStoreNames.contains('userMeta')) {
                         db.createObjectStore('userMeta', { keyPath: 'type' })
                     }
-                    
+
                     // App state store
                     if (!db.objectStoreNames.contains('appState')) {
                         db.createObjectStore('appState', { keyPath: 'key' })
@@ -585,7 +591,7 @@
         async function saveToIndexedDB(storeName, data) {
             const transaction = app.db.transaction([storeName], 'readwrite')
             const store = transaction.objectStore(storeName)
-            
+
             if (Array.isArray(data)) {
                 for (const item of data) {
                     await store.put(item)
@@ -593,14 +599,14 @@
             } else {
                 await store.put(data)
             }
-            
+
             return transaction.complete
         }
 
         async function loadFromIndexedDB(storeName, query = null) {
             const transaction = app.db.transaction([storeName], 'readonly')
             const store = transaction.objectStore(storeName)
-            
+
             if (query) {
                 return store.get(query)
             } else {
@@ -612,18 +618,18 @@
 
         function setupWebSocket() {
             if (!app.isOnline) return
-            
+
             try {
                 const wsUrl = CONFIG.POSTS_API.replace('https://', 'wss://').replace('http://', 'ws://').replace('/api', '')
                 console.log('🔌 Connecting to WebSocket:', wsUrl)
-                
+
                 app.ws = new WebSocket(wsUrl)
-                
+
                 app.ws.onopen = () => {
                     console.log('✅ WebSocket connected')
                     setStatus('🔄 Real-time updates active')
                 }
-                
+
                 app.ws.onmessage = (event) => {
                     try {
                         const message = JSON.parse(event.data)
@@ -632,21 +638,21 @@
                         console.error('WebSocket message parse error:', error)
                     }
                 }
-                
+
                 app.ws.onclose = () => {
                     console.log('🔌 WebSocket disconnected')
                     app.ws = null
-                    
+
                     // Reconnect after 5 seconds if online
                     if (app.isOnline) {
                         setTimeout(setupWebSocket, 5000)
                     }
                 }
-                
+
                 app.ws.onerror = (error) => {
                     console.error('WebSocket error:', error)
                 }
-                
+
             } catch (error) {
                 console.error('WebSocket setup error:', error)
             }
@@ -654,39 +660,39 @@
 
         function handleWebSocketMessage(message) {
             const { type, data } = message
-            
+
             console.log('📡 WebSocket message:', type, data)
-            
+
             switch (type) {
                 case 'EVENT_CREATED':
                     // Новое событие от другого пользователя
                     if (data.authorId !== app.userId) {
                         app.events.set(data.id, data)
                         saveToIndexedDB('events', [data])
-                        
+
                         // Обновляем UI если на вкладке feed
                         if (app.currentTab === 'feed') {
                             renderCurrentTab()
                         }
-                        
+
                         // Показываем уведомление
                         showNotification(`📝 New event: ${data.title}`)
                     }
                     break
-                    
+
                 case 'EVENT_UPDATED':
                     // Событие обновлено
                     app.events.set(data.id, data)
                     saveToIndexedDB('events', [data])
                     renderCurrentTab()
                     break
-                    
+
                 case 'EVENT_DELETED':
                     // Событие удалено
                     app.events.delete(data.id)
                     renderCurrentTab()
                     break
-                    
+
                 case 'EVENT_LIKED':
                     // Обновление лайков в реальном времени
                     const event = app.events.get(data.id)
@@ -697,12 +703,28 @@
                         renderCurrentTab()
                     }
                     break
-                    
+
+                case 'LIKE_UPDATED':
+                    const likeEvent = app.events.get(data.eventId)
+                    if (likeEvent) {
+                        likeEvent.likes = data.likes
+                        if (data.userId === app.userId) {
+                            if (data.isLiked) {
+                                app.userMeta.likes.add(data.eventId)
+                            } else {
+                                app.userMeta.likes.delete(data.eventId)
+                            }
+                        }
+                        app.events.set(data.eventId, likeEvent)
+                        renderCurrentTab()
+                    }
+                    break
+
                 case 'STATS':
                     // Статистика подключений
                     console.log('📊 Platform stats:', data)
                     break
-                    
+
                 default:
                     console.log('Unknown WebSocket message type:', type)
             }
@@ -719,24 +741,24 @@
         async function authenticateUser() {
             try {
                 setStatus('🔐 Authenticating...')
-                
+
                 const response = await fetch(`${CONFIG.ACCOUNTS_API}/users/auth`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ telegramUser: app.user })
                 })
-                
+
                 if (!response.ok) {
                     throw new Error(`Auth failed: ${response.status}`)
                 }
-                
+
                 const userData = await response.json()
                 app.userId = userData.id
-                
+
                 console.log(`✅ Authenticated as ${userData.id}`)
                 console.log(`👤 User data:`, userData)
                 console.log(`🔍 Will filter my events by authorId: ${app.userId}`)
-                
+
             } catch (error) {
                 console.error('Authentication error:', error)
                 // Fallback to local ID
@@ -749,13 +771,13 @@
 
         async function loadData() {
             setStatus('📦 Loading data...')
-            
+
             // Load from IndexedDB first
             await loadFromCache()
-            
+
             // Then sync from servers
             await syncWithServers()
-            
+
             // Render initial feed
             renderCurrentTab()
         }
@@ -765,24 +787,24 @@
                 // Load events
                 const events = await loadFromIndexedDB('events')
                 events.forEach(event => app.events.set(event.id, event))
-                
+
                 // Load user meta
                 const [likes, favorites, hidden] = await Promise.all([
                     loadFromIndexedDB('userMeta', 'likes'),
                     loadFromIndexedDB('userMeta', 'favorites'),
                     loadFromIndexedDB('userMeta', 'hidden')
                 ])
-                
+
                 if (likes) app.userMeta.likes = new Set(likes.data || [])
                 if (favorites) app.userMeta.favorites = new Set(favorites.data || [])
                 if (hidden) app.userMeta.hidden = new Set(hidden.data || [])
-                
+
                 // Load app state
                 const lastSyncState = await loadFromIndexedDB('appState', 'lastSync')
                 if (lastSyncState) app.lastSync = lastSyncState.value || 0
-                
+
                 console.log(`📦 Loaded ${app.events.size} events from cache`)
-                
+
             } catch (error) {
                 console.error('Cache loading error:', error)
             }
@@ -793,34 +815,34 @@
                 setStatus('📴 Offline mode')
                 return
             }
-            
+
             try {
                 setStatus('🔄 Syncing...')
-                
+
                 // Parallel requests
                 const [eventsResponse, userMetaResponse] = await Promise.all([
                     fetch(`${CONFIG.POSTS_API}/feed?limit=100`).catch(() => null),
                     fetch(`${CONFIG.ACCOUNTS_API}/users/${app.userId}/meta?lastSync=${app.lastSync}`).catch(() => null)
                 ])
-                
+
                 // Process events
                 if (eventsResponse?.ok) {
                     const eventsData = await eventsResponse.json()
                     const events = eventsData.posts || []
-                    
+
                     for (const event of events) {
                         app.events.set(event.id, event)
                     }
-                    
+
                     // Save to IndexedDB
                     await saveToIndexedDB('events', events)
                     console.log(`📥 Synced ${events.length} events`)
                 }
-                
+
                 // Process user meta
                 if (userMetaResponse?.ok) {
                     const userMeta = await userMetaResponse.json()
-                    
+
                     if (userMeta.isDelta) {
                         // Merge delta
                         userMeta.likes?.forEach(id => app.userMeta.likes.add(id))
@@ -832,20 +854,20 @@
                         app.userMeta.favorites = new Set(userMeta.favorites || [])
                         app.userMeta.hidden = new Set(userMeta.hidden || [])
                     }
-                    
+
                     // Save to IndexedDB
                     await Promise.all([
                         saveToIndexedDB('userMeta', { type: 'likes', data: Array.from(app.userMeta.likes) }),
                         saveToIndexedDB('userMeta', { type: 'favorites', data: Array.from(app.userMeta.favorites) }),
                         saveToIndexedDB('userMeta', { type: 'hidden', data: Array.from(app.userMeta.hidden) })
                     ])
-                    
+
                     console.log(`👤 Synced user meta: ${app.userMeta.likes.size} likes, ${app.userMeta.favorites.size} favorites`)
                 }
-                
+
                 app.lastSync = Date.now()
                 await saveToIndexedDB('appState', { key: 'lastSync', value: app.lastSync })
-                
+
             } catch (error) {
                 console.error('Sync error:', error)
                 setStatus('⚠️ Sync failed, using cache')
@@ -859,15 +881,15 @@
             document.querySelectorAll('.tab').forEach(tab => {
                 tab.addEventListener('click', () => switchTab(tab.dataset.tab))
             })
-            
+
             // Filters
             document.getElementById('searchInput').addEventListener('input', debounce(renderCurrentTab, 300))
             document.getElementById('cityFilter').addEventListener('change', renderCurrentTab)
             document.getElementById('categoryFilter').addEventListener('change', renderCurrentTab)
-            
+
             // Create form
             document.getElementById('createEventForm').addEventListener('submit', handleCreateEvent)
-            
+
             // Online/offline status
             window.addEventListener('online', () => {
                 app.isOnline = true
@@ -875,7 +897,7 @@
                 syncWithServers()
                 setupWebSocket() // Reconnect WebSocket
             })
-            
+
             window.addEventListener('offline', () => {
                 app.isOnline = false
                 setStatus('📴 Offline mode')
@@ -893,15 +915,15 @@
             document.querySelectorAll('.tab').forEach(tab => {
                 tab.classList.toggle('active', tab.dataset.tab === tabName)
             })
-            
+
             // Hide all content
             document.querySelectorAll('[id$="Content"]').forEach(content => {
                 content.classList.add('hidden')
             })
-            
+
             // Show selected content
             document.getElementById(`${tabName}Content`).classList.remove('hidden')
-            
+
             app.currentTab = tabName
             renderCurrentTab()
         }
@@ -910,10 +932,10 @@
             console.log(`🎨 Rendering tab: ${app.currentTab}`)
             console.log(`🎨 Current user: ${app.userId}`)
             console.log(`🎨 Total events in cache: ${app.events.size}`)
-            
+
             const events = getFilteredEvents()
             const container = document.getElementById(`${app.currentTab}Content`)
-            
+
             if (events.length === 0) {
                 container.innerHTML = `
                     <div class="empty">
@@ -923,7 +945,7 @@
                 `
                 return
             }
-            
+
             container.innerHTML = events.map(event => renderEventCard(event)).join('')
             updateCityFilter(events)
         }
@@ -932,13 +954,13 @@
             const search = document.getElementById('searchInput').value.toLowerCase()
             const city = document.getElementById('cityFilter').value
             const category = document.getElementById('categoryFilter').value
-            
+
             let events = Array.from(app.events.values())
-            
+
             console.log(`🔍 Filtering events for tab: ${app.currentTab}`)
             console.log(`🔍 Total events before filtering: ${events.length}`)
             console.log(`🔍 Current user ID: ${app.userId}`)
-            
+
             // Filter by tab
             if (app.currentTab === 'favorites') {
                 events = events.filter(event => app.userMeta.favorites.has(event.id))
@@ -946,9 +968,16 @@
             } else if (app.currentTab === 'my-events') {
                 console.log(`🔍 My events filter - looking for authorId: ${app.userId}`)
                 console.log(`🔍 Sample event authorIds:`, events.slice(0, 3).map(e => e.authorId))
-                
+
+            } else if (app.currentTab === 'hidden') {
+                events = events.filter(event => app.userMeta.hidden.has(event.id))
+                console.log(`🔍 After hidden tab filter: ${events.length} events`)
+
                 events = events.filter(event => {
-                    const matches = event.authorId === app.userId
+                    // Проверяем разные варианты authorId
+                    const matches = event.authorId === app.userId ||
+                        event.authorId === app.user?.id?.toString() ||
+                        event.authorId === `tg_${app.user?.id}`
                     if (matches) {
                         console.log(`✅ Found my event: ${event.title} (${event.authorId})`)
                     }
@@ -956,40 +985,42 @@
                 })
                 console.log(`🔍 After my-events filter: ${events.length} events`)
             }
-            
+
+
+
             // Filter by search
             if (search) {
-                events = events.filter(event => 
+                events = events.filter(event =>
                     event.title.toLowerCase().includes(search) ||
                     event.description.toLowerCase().includes(search)
                 )
                 console.log(`🔍 After search filter: ${events.length}`)
             }
-            
+
             // Filter by city
             if (city) {
                 events = events.filter(event => event.city === city)
                 console.log(`🔍 After city filter: ${events.length}`)
             }
-            
+
             // Filter by category
             if (category) {
                 events = events.filter(event => event.category === category)
                 console.log(`🔍 After category filter: ${events.length}`)
             }
-            
+
             // Hide hidden events (except in my-events)
             if (app.currentTab !== 'my-events') {
                 events = events.filter(event => !app.userMeta.hidden.has(event.id))
                 console.log(`🔍 After hidden filter: ${events.length}`)
             }
-            
+
             // Sort by creation date (newest first)
             events.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
-            
+
             const result = events.slice(0, 50) // Limit to 50 events for performance
             console.log(`🔍 Final result: ${result.length} events`)
-            
+
             return result
         }
 
@@ -998,10 +1029,10 @@
             const isFavorited = app.userMeta.favorites.has(event.id)
             const isHidden = app.userMeta.hidden.has(event.id)
             const isOwn = event.authorId === app.userId
-            
+
             const timeAgo = formatTimeAgo(event.createdAt)
             const author = event.author?.fullName || event.author || 'Anonymous'
-            
+
             return `
                 <div class="event-card">
                     <div class="event-header">
@@ -1011,7 +1042,7 @@
                     <div class="event-body">
                         <div class="event-description">${escapeHtml(event.description)}</div>
                         <div class="event-info">
-                            <span>👤 ${escapeHtml(author)}</span>
+                            <span><img src="https://ui-avatars.com/api/?name=${encodeURIComponent(author)}&size=20&background=random" style="width:20px;height:20px;border-radius:50%;margin-right:4px;vertical-align:middle;"> ${escapeHtml(author)}</span>
                             ${event.city ? `<span>📍 ${escapeHtml(event.city)}</span>` : ''}
                             ${event.category ? `<span>📂 ${getCategoryEmoji(event.category)} ${event.category}</span>` : ''}
                         </div>
@@ -1022,6 +1053,9 @@
                         </button>
                         <button class="action-btn ${isFavorited ? 'favorited' : ''}" onclick="toggleFavorite('${event.id}')">
                             ${isFavorited ? '⭐' : '☆'} Save
+                        </button>
+                        <button class="action-btn" onclick="toggleHidden('${event.id}')">
+                            ${isHidden ? '👀 Show' : '👁️ Hide'}
                         </button>
                         ${!isOwn ? `
                             <button class="action-btn" onclick="toggleHidden('${event.id}')">
@@ -1039,12 +1073,12 @@
         function updateCityFilter(events) {
             const citySelect = document.getElementById('cityFilter')
             const currentValue = citySelect.value
-            
+
             const cities = [...new Set(events.map(e => e.city).filter(Boolean))].sort()
-            
+
             citySelect.innerHTML = '<option value="">🏙️ All cities</option>' +
                 cities.map(city => `<option value="${city}">${city}</option>`).join('')
-            
+
             citySelect.value = currentValue
         }
 
@@ -1053,10 +1087,10 @@
         async function toggleLike(eventId) {
             const event = app.events.get(eventId)
             if (!event) return
-            
+
             const isLiked = app.userMeta.likes.has(eventId)
             const newLikedState = !isLiked
-            
+
             try {
                 // Optimistic UI update
                 if (newLikedState) {
@@ -1066,13 +1100,20 @@
                     app.userMeta.likes.delete(eventId)
                     event.likes = Math.max(0, (event.likes || 0) - 1)
                 }
-                
+
                 renderCurrentTab()
-                
+
+                if (app.ws && app.ws.readyState === WebSocket.OPEN) {
+                    app.ws.send(JSON.stringify({
+                        type: 'LIKE_UPDATED',
+                        data: { eventId, likes: event.likes, userId: app.userId, isLiked: newLikedState }
+                    }))
+                }
+
                 // Save to IndexedDB
                 await saveToIndexedDB('userMeta', { type: 'likes', data: Array.from(app.userMeta.likes) })
                 await saveToIndexedDB('events', [event])
-                
+
                 // Sync with servers (if online)
                 if (app.isOnline) {
                     const [postsResponse, accountsResponse] = await Promise.all([
@@ -1082,14 +1123,14 @@
                             headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify({ likes: event.likes })
                         }).catch(() => null),
-                        
+
                         // Update user likes
-                        newLikedState ? 
+                        newLikedState ?
                             fetch(`${CONFIG.ACCOUNTS_API}/users/${app.userId}/likes/${eventId}`, { method: 'POST' }).catch(() => null) :
                             fetch(`${CONFIG.ACCOUNTS_API}/users/${app.userId}/likes/${eventId}`, { method: 'DELETE' }).catch(() => null)
                     ])
                 }
-                
+
             } catch (error) {
                 console.error('Like toggle error:', error)
                 // Revert optimistic update
@@ -1107,7 +1148,7 @@
         async function toggleFavorite(eventId) {
             const isFavorited = app.userMeta.favorites.has(eventId)
             const newState = !isFavorited
-            
+
             try {
                 // Optimistic UI update
                 if (newState) {
@@ -1115,20 +1156,20 @@
                 } else {
                     app.userMeta.favorites.delete(eventId)
                 }
-                
+
                 renderCurrentTab()
-                
+
                 // Save to IndexedDB
                 await saveToIndexedDB('userMeta', { type: 'favorites', data: Array.from(app.userMeta.favorites) })
-                
+
                 // Sync with server (if online)
                 if (app.isOnline) {
-                    await (newState ? 
+                    await (newState ?
                         fetch(`${CONFIG.ACCOUNTS_API}/users/${app.userId}/favorites/${eventId}`, { method: 'POST' }) :
                         fetch(`${CONFIG.ACCOUNTS_API}/users/${app.userId}/favorites/${eventId}`, { method: 'DELETE' })
                     ).catch(() => null)
                 }
-                
+
             } catch (error) {
                 console.error('Favorite toggle error:', error)
                 // Revert
@@ -1144,25 +1185,25 @@
         async function toggleHidden(eventId) {
             const isHidden = app.userMeta.hidden.has(eventId)
             const newState = !isHidden
-            
+
             try {
                 if (newState) {
                     app.userMeta.hidden.add(eventId)
                 } else {
                     app.userMeta.hidden.delete(eventId)
                 }
-                
+
                 renderCurrentTab()
-                
+
                 await saveToIndexedDB('userMeta', { type: 'hidden', data: Array.from(app.userMeta.hidden) })
-                
+
                 if (app.isOnline) {
-                    await (newState ? 
+                    await (newState ?
                         fetch(`${CONFIG.ACCOUNTS_API}/users/${app.userId}/hidden/${eventId}`, { method: 'POST' }) :
                         fetch(`${CONFIG.ACCOUNTS_API}/users/${app.userId}/hidden/${eventId}`, { method: 'DELETE' })
                     ).catch(() => null)
                 }
-                
+
             } catch (error) {
                 console.error('Hidden toggle error:', error)
                 if (isHidden) {
@@ -1187,20 +1228,20 @@
 
         async function handleCreateEvent(e) {
             e.preventDefault()
-            
+
             const title = document.getElementById('eventTitle').value.trim()
             const description = document.getElementById('eventDescription').value.trim()
             const city = document.getElementById('eventCity').value.trim()
             const category = document.getElementById('eventCategory').value
-            
+
             if (!title || !description) {
                 alert('Please fill in title and description')
                 return
             }
-            
+
             try {
                 setStatus('🚀 Creating event...')
-                
+
                 const eventData = {
                     title,
                     description,
@@ -1211,9 +1252,9 @@
                         fullName: `${app.user.first_name} ${app.user.last_name || ''}`.trim()
                     }
                 }
-                
+
                 console.log(`📝 Creating event with authorId: ${app.userId}`)
-                
+
                 // Create locally first
                 const localEvent = {
                     id: `local_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
@@ -1223,14 +1264,21 @@
                     updatedAt: new Date().toISOString(),
                     status: 'active'
                 }
-                
+
                 app.events.set(localEvent.id, localEvent)
+
+                if (app.ws && app.ws.readyState === WebSocket.OPEN) {
+                    app.ws.send(JSON.stringify({
+                        type: 'EVENT_CREATED',
+                        data: localEvent
+                    }))
+                }
                 await saveToIndexedDB('events', [localEvent])
-                
+
                 hideCreateModal()
                 renderCurrentTab()
                 setStatus('✅ Event created!')
-                
+
                 // Sync with server (if online)
                 if (app.isOnline) {
                     try {
@@ -1239,7 +1287,7 @@
                             headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify(eventData)
                         })
-                        
+
                         if (response.ok) {
                             const serverEvent = await response.json()
                             // Replace local event with server event
@@ -1254,7 +1302,7 @@
                         setStatus('⚠️ Event created locally (will sync later)')
                     }
                 }
-                
+
             } catch (error) {
                 console.error('Create event error:', error)
                 setStatus('❌ Failed to create event', true)
@@ -1274,11 +1322,11 @@
             const date = new Date(dateString)
             const now = new Date()
             const diff = now - date
-            
+
             const minutes = Math.floor(diff / 60000)
             const hours = Math.floor(diff / 3600000)
             const days = Math.floor(diff / 86400000)
-            
+
             if (minutes < 1) return 'just now'
             if (minutes < 60) return `${minutes}m ago`
             if (hours < 24) return `${hours}h ago`
@@ -1329,42 +1377,40 @@
                     alert('Event not found')
                     return
                 }
-                
+
                 console.log('📞 Opening chat with author:', event.author)
-                
+
                 if (window.Telegram?.WebApp) {
-                    // Попробуем извлечь Telegram ID автора из authorId
-                    let telegramId = null
-                    
-                    if (authorId.startsWith('tg_')) {
-                        telegramId = authorId.replace('tg_', '')
-                    }
-                    
-                    console.log('📞 Author Telegram ID:', telegramId)
-                    
-                    if (telegramId && telegramId !== 'undefined') {
-                        // Открываем чат с пользователем по ID
-                        const chatUrl = `https://t.me/user?id=${telegramId}`
-                        console.log('📞 Opening chat URL:', chatUrl)
-                        
-                        // Пробуем открыть через Telegram Web App API
+                    // Сначала пробуем username
+                    const username = event.author?.username || event.username
+                    if (username) {
+                        const chatUrl = `https://t.me/${username}`
+                        console.log('📞 Opening chat via username:', chatUrl)
+
                         if (window.Telegram.WebApp.openTelegramLink) {
                             window.Telegram.WebApp.openTelegramLink(chatUrl)
                         } else {
-                            // Fallback - открываем в новом окне
+                            window.open(chatUrl, '_blank')
+                        }
+                        return
+                    }
+
+                    let telegramId = null
+                    if (authorId.startsWith('tg_')) {
+                        telegramId = authorId.replace('tg_', '')
+                    }
+
+                    if (telegramId && telegramId !== 'undefined') {
+                        const chatUrl = `https://t.me/user?id=${telegramId}`
+                        console.log('📞 Opening chat via ID:', chatUrl)
+
+                        if (window.Telegram.WebApp.openTelegramLink) {
+                            window.Telegram.WebApp.openTelegramLink(chatUrl)
+                        } else {
                             window.open(chatUrl, '_blank')
                         }
                     } else {
-                        // Показываем информацию об авторе
-                        const authorInfo = `
-👤 Author: ${event.author?.fullName || 'Anonymous'}
-📧 Contact through the event comments or find them in the event location!
-
-📍 Event: ${event.title}
-${event.city ? `🏙️ City: ${event.city}` : ''}
-                        `.trim()
-                        
-                        alert(authorInfo)
+                        alert(`Contact ${event.author?.fullName || 'Anonymous'} through the event location or comments!`)
                     }
                 } else {
                     alert('Contact feature available only in Telegram. Author: ' + (event.author?.fullName || 'Anonymous'))
@@ -1380,7 +1426,7 @@ ${event.city ? `🏙️ City: ${event.city}` : ''}
             setInterval(() => {
                 if (app.isOnline) {
                     syncWithServers()
-                    
+
                     // Check WebSocket connection
                     if (!app.ws || app.ws.readyState !== WebSocket.OPEN) {
                         console.log('🔌 WebSocket reconnecting...')
@@ -1391,4 +1437,5 @@ ${event.city ? `🏙️ City: ${event.city}` : ''}
         }
     </script>
 </body>
+
 </html>
