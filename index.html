@@ -1,0 +1,1199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Events Platform</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+            background: var(--tg-theme-bg-color, #ffffff);
+            color: var(--tg-theme-text-color, #000000);
+            line-height: 1.5;
+            padding-bottom: 100px;
+        }
+
+        .container {
+            max-width: 100%;
+            margin: 0 auto;
+            padding: 0 16px;
+        }
+
+        .header {
+            background: var(--tg-theme-secondary-bg-color, #f8f9fa);
+            padding: 16px 0;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            border-bottom: 1px solid var(--tg-theme-hint-color, #e0e0e0);
+        }
+
+        .header h1 {
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--tg-theme-text-color, #000000);
+            text-align: center;
+        }
+
+        .tabs {
+            display: flex;
+            background: var(--tg-theme-secondary-bg-color, #f8f9fa);
+            margin: 16px 0;
+            border-radius: 12px;
+            padding: 4px;
+        }
+
+        .tab {
+            flex: 1;
+            padding: 12px;
+            text-align: center;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-weight: 500;
+        }
+
+        .tab.active {
+            background: var(--tg-theme-button-color, #0088cc);
+            color: var(--tg-theme-button-text-color, #ffffff);
+        }
+
+        .filters {
+            background: var(--tg-theme-secondary-bg-color, #f8f9fa);
+            padding: 16px;
+            border-radius: 12px;
+            margin-bottom: 16px;
+        }
+
+        .filter-row {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 12px;
+            flex-wrap: wrap;
+        }
+
+        .filter-row:last-child {
+            margin-bottom: 0;
+        }
+
+        input, select {
+            flex: 1;
+            min-width: 120px;
+            padding: 12px;
+            border: 1px solid var(--tg-theme-hint-color, #e0e0e0);
+            border-radius: 8px;
+            background: var(--tg-theme-bg-color, #ffffff);
+            color: var(--tg-theme-text-color, #000000);
+            font-size: 16px;
+        }
+
+        .btn {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: var(--tg-theme-button-color, #0088cc);
+            color: var(--tg-theme-button-text-color, #ffffff);
+        }
+
+        .btn-secondary {
+            background: var(--tg-theme-secondary-bg-color, #f8f9fa);
+            color: var(--tg-theme-text-color, #000000);
+            border: 1px solid var(--tg-theme-hint-color, #e0e0e0);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .fab {
+            position: fixed;
+            bottom: 80px;
+            right: 16px;
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            background: var(--tg-theme-button-color, #0088cc);
+            color: var(--tg-theme-button-text-color, #ffffff);
+            border: none;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            font-size: 24px;
+            z-index: 1000;
+        }
+
+        .feed {
+            margin-top: 16px;
+        }
+
+        .event-card {
+            background: var(--tg-theme-bg-color, #ffffff);
+            border: 1px solid var(--tg-theme-hint-color, #e0e0e0);
+            border-radius: 12px;
+            margin-bottom: 16px;
+            overflow: hidden;
+            transition: all 0.2s;
+        }
+
+        .event-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .event-header {
+            padding: 16px;
+            border-bottom: 1px solid var(--tg-theme-hint-color, #e0e0e0);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .event-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--tg-theme-text-color, #000000);
+        }
+
+        .event-meta {
+            font-size: 14px;
+            color: var(--tg-theme-hint-color, #999999);
+        }
+
+        .event-body {
+            padding: 16px;
+        }
+
+        .event-description {
+            margin-bottom: 12px;
+            line-height: 1.5;
+        }
+
+        .event-info {
+            display: flex;
+            gap: 16px;
+            font-size: 14px;
+            color: var(--tg-theme-hint-color, #999999);
+            margin-bottom: 16px;
+        }
+
+        .event-actions {
+            display: flex;
+            gap: 8px;
+            padding: 12px 16px;
+            background: var(--tg-theme-secondary-bg-color, #f8f9fa);
+        }
+
+        .action-btn {
+            flex: 1;
+            padding: 8px;
+            border: none;
+            border-radius: 6px;
+            background: transparent;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+
+        .action-btn.liked {
+            background: rgba(255, 59, 92, 0.1);
+            color: #ff3b5c;
+        }
+
+        .action-btn.favorited {
+            background: rgba(255, 193, 7, 0.1);
+            color: #ffc107;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 10000;
+            padding: 16px;
+        }
+
+        .modal.show {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background: var(--tg-theme-bg-color, #ffffff);
+            border-radius: 12px;
+            padding: 24px;
+            width: 100%;
+            max-width: 400px;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .modal-title {
+            font-size: 20px;
+            font-weight: 600;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: var(--tg-theme-hint-color, #999999);
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: var(--tg-theme-text-color, #000000);
+        }
+
+        textarea {
+            width: 100%;
+            min-height: 80px;
+            padding: 12px;
+            border: 1px solid var(--tg-theme-hint-color, #e0e0e0);
+            border-radius: 8px;
+            background: var(--tg-theme-bg-color, #ffffff);
+            color: var(--tg-theme-text-color, #000000);
+            font-size: 16px;
+            font-family: inherit;
+            resize: vertical;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: var(--tg-theme-hint-color, #999999);
+        }
+
+        .error {
+            background: #ffe6e6;
+            color: #d32f2f;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 16px;
+            text-align: center;
+        }
+
+        .empty {
+            text-align: center;
+            padding: 40px;
+            color: var(--tg-theme-hint-color, #999999);
+        }
+
+        .status-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: var(--tg-theme-secondary-bg-color, #f8f9fa);
+            padding: 12px 16px;
+            font-size: 12px;
+            color: var(--tg-theme-hint-color, #999999);
+            border-top: 1px solid var(--tg-theme-hint-color, #e0e0e0);
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        @media (max-width: 480px) {
+            .filter-row {
+                flex-direction: column;
+            }
+            
+            input, select {
+                min-width: auto;
+            }
+            
+            .event-info {
+                flex-direction: column;
+                gap: 8px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1>🎯 Events Platform</h1>
+        </div>
+
+        <!-- Tabs -->
+        <div class="tabs">
+            <div class="tab active" data-tab="feed">📰 Feed</div>
+            <div class="tab" data-tab="favorites">⭐ Favorites</div>
+            <div class="tab" data-tab="my-events">📝 My Events</div>
+        </div>
+
+        <!-- Filters -->
+        <div class="filters">
+            <div class="filter-row">
+                <input type="text" id="searchInput" placeholder="🔍 Search events...">
+                <button class="btn btn-secondary" onclick="clearFilters()">Clear</button>
+            </div>
+            <div class="filter-row">
+                <select id="cityFilter">
+                    <option value="">🏙️ All cities</option>
+                </select>
+                <select id="categoryFilter">
+                    <option value="">📂 All categories</option>
+                    <option value="meetup">👥 Meetup</option>
+                    <option value="party">🎉 Party</option>
+                    <option value="sport">⚽ Sport</option>
+                    <option value="culture">🎭 Culture</option>
+                    <option value="business">💼 Business</option>
+                    <option value="education">📚 Education</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Content -->
+        <div id="feedContent" class="feed"></div>
+        <div id="favoritesContent" class="feed hidden"></div>
+        <div id="myEventsContent" class="feed hidden"></div>
+    </div>
+
+    <!-- Floating Action Button -->
+    <button class="fab" onclick="showCreateModal()">+</button>
+
+    <!-- Create Event Modal -->
+    <div class="modal" id="createModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">✨ Create Event</h2>
+                <button class="close-btn" onclick="hideCreateModal()">&times;</button>
+            </div>
+            <form id="createEventForm">
+                <div class="form-group">
+                    <label class="form-label">Title *</label>
+                    <input type="text" id="eventTitle" required placeholder="Event title">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Description *</label>
+                    <textarea id="eventDescription" required placeholder="Describe your event..."></textarea>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">City</label>
+                    <input type="text" id="eventCity" placeholder="City">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Category</label>
+                    <select id="eventCategory">
+                        <option value="">Select category</option>
+                        <option value="meetup">👥 Meetup</option>
+                        <option value="party">🎉 Party</option>
+                        <option value="sport">⚽ Sport</option>
+                        <option value="culture">🎭 Culture</option>
+                        <option value="business">💼 Business</option>
+                        <option value="education">📚 Education</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn btn-primary" style="width: 100%;">
+                    🚀 Create Event
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Status Bar -->
+    <div class="status-bar">
+        <span id="statusText">Initializing...</span>
+    </div>
+
+    <script>
+        // Configuration
+        const CONFIG = {
+            POSTS_API: 'https://your-posts-server.onrender.com/api',
+            ACCOUNTS_API: 'https://your-accounts-server.onrender.com/api',
+            DB_NAME: 'EventsPlatform',
+            DB_VERSION: 1
+        }
+
+        // Global state
+        let app = {
+            user: null,
+            db: null,
+            currentTab: 'feed',
+            events: new Map(),
+            userMeta: {
+                likes: new Set(),
+                favorites: new Set(),
+                hidden: new Set()
+            },
+            lastSync: 0,
+            isOnline: navigator.onLine
+        }
+
+        // === TELEGRAM WEB APP INTEGRATION ===
+        
+        window.addEventListener('load', async () => {
+            try {
+                // Initialize Telegram Web App
+                if (window.Telegram?.WebApp) {
+                    const tg = window.Telegram.WebApp
+                    tg.ready()
+                    tg.expand()
+                    
+                    // Set theme
+                    document.documentElement.style.setProperty('--tg-theme-bg-color', tg.themeParams.bg_color || '#ffffff')
+                    document.documentElement.style.setProperty('--tg-theme-text-color', tg.themeParams.text_color || '#000000')
+                    document.documentElement.style.setProperty('--tg-theme-hint-color', tg.themeParams.hint_color || '#999999')
+                    document.documentElement.style.setProperty('--tg-theme-button-color', tg.themeParams.button_color || '#0088cc')
+                    document.documentElement.style.setProperty('--tg-theme-button-text-color', tg.themeParams.button_text_color || '#ffffff')
+                    document.documentElement.style.setProperty('--tg-theme-secondary-bg-color', tg.themeParams.secondary_bg_color || '#f8f9fa')
+                    
+                    // Get user data
+                    if (tg.initDataUnsafe?.user) {
+                        app.user = tg.initDataUnsafe.user
+                        setStatus(`👋 Hello, ${app.user.first_name}!`)
+                    } else {
+                        console.log('No Telegram user data, using demo user')
+                        app.user = {
+                            id: Date.now(),
+                            first_name: 'Demo',
+                            last_name: 'User',
+                            username: 'demo_user'
+                        }
+                    }
+                } else {
+                    console.log('Not in Telegram, using demo user')
+                    app.user = {
+                        id: Date.now(),
+                        first_name: 'Demo',
+                        last_name: 'User',
+                        username: 'demo_user'
+                    }
+                }
+
+                await initializeApp()
+            } catch (error) {
+                console.error('App initialization error:', error)
+                setStatus('❌ Initialization failed', true)
+            }
+        })
+
+        // === APP INITIALIZATION ===
+
+        async function initializeApp() {
+            try {
+                setStatus('🔄 Initializing app...')
+                
+                // Initialize IndexedDB
+                await initDB()
+                
+                // Authenticate user
+                await authenticateUser()
+                
+                // Load data
+                await loadData()
+                
+                // Setup event listeners
+                setupEventListeners()
+                
+                // Start periodic sync
+                startPeriodicSync()
+                
+                setStatus('✅ Ready!')
+                
+            } catch (error) {
+                console.error('App initialization failed:', error)
+                setStatus('❌ Initialization failed', true)
+            }
+        }
+
+        // === DATABASE ===
+
+        async function initDB() {
+            return new Promise((resolve, reject) => {
+                const request = indexedDB.open(CONFIG.DB_NAME, CONFIG.DB_VERSION)
+                
+                request.onerror = () => reject(request.error)
+                request.onsuccess = () => {
+                    app.db = request.result
+                    resolve()
+                }
+                
+                request.onupgradeneeded = (event) => {
+                    const db = event.target.result
+                    
+                    // Events store
+                    if (!db.objectStoreNames.contains('events')) {
+                        const eventsStore = db.createObjectStore('events', { keyPath: 'id' })
+                        eventsStore.createIndex('createdAt', 'createdAt')
+                        eventsStore.createIndex('authorId', 'authorId')
+                        eventsStore.createIndex('city', 'city')
+                        eventsStore.createIndex('category', 'category')
+                    }
+                    
+                    // User meta store
+                    if (!db.objectStoreNames.contains('userMeta')) {
+                        db.createObjectStore('userMeta', { keyPath: 'type' })
+                    }
+                    
+                    // App state store
+                    if (!db.objectStoreNames.contains('appState')) {
+                        db.createObjectStore('appState', { keyPath: 'key' })
+                    }
+                }
+            })
+        }
+
+        async function saveToIndexedDB(storeName, data) {
+            const transaction = app.db.transaction([storeName], 'readwrite')
+            const store = transaction.objectStore(storeName)
+            
+            if (Array.isArray(data)) {
+                for (const item of data) {
+                    await store.put(item)
+                }
+            } else {
+                await store.put(data)
+            }
+            
+            return transaction.complete
+        }
+
+        async function loadFromIndexedDB(storeName, query = null) {
+            const transaction = app.db.transaction([storeName], 'readonly')
+            const store = transaction.objectStore(storeName)
+            
+            if (query) {
+                return store.get(query)
+            } else {
+                return store.getAll()
+            }
+        }
+
+        // === AUTHENTICATION ===
+
+        async function authenticateUser() {
+            try {
+                setStatus('🔐 Authenticating...')
+                
+                const response = await fetch(`${CONFIG.ACCOUNTS_API}/users/auth`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ telegramUser: app.user })
+                })
+                
+                if (!response.ok) {
+                    throw new Error(`Auth failed: ${response.status}`)
+                }
+                
+                const userData = await response.json()
+                app.userId = userData.id
+                
+                console.log(`✅ Authenticated as ${userData.id}`)
+                
+            } catch (error) {
+                console.error('Authentication error:', error)
+                // Fallback to local ID
+                app.userId = `tg_${app.user.id}`
+                console.log(`⚠️ Using fallback ID: ${app.userId}`)
+            }
+        }
+
+        // === DATA LOADING ===
+
+        async function loadData() {
+            setStatus('📦 Loading data...')
+            
+            // Load from IndexedDB first
+            await loadFromCache()
+            
+            // Then sync from servers
+            await syncWithServers()
+            
+            // Render initial feed
+            renderCurrentTab()
+        }
+
+        async function loadFromCache() {
+            try {
+                // Load events
+                const events = await loadFromIndexedDB('events')
+                events.forEach(event => app.events.set(event.id, event))
+                
+                // Load user meta
+                const [likes, favorites, hidden] = await Promise.all([
+                    loadFromIndexedDB('userMeta', 'likes'),
+                    loadFromIndexedDB('userMeta', 'favorites'),
+                    loadFromIndexedDB('userMeta', 'hidden')
+                ])
+                
+                if (likes) app.userMeta.likes = new Set(likes.data || [])
+                if (favorites) app.userMeta.favorites = new Set(favorites.data || [])
+                if (hidden) app.userMeta.hidden = new Set(hidden.data || [])
+                
+                // Load app state
+                const lastSyncState = await loadFromIndexedDB('appState', 'lastSync')
+                if (lastSyncState) app.lastSync = lastSyncState.value || 0
+                
+                console.log(`📦 Loaded ${app.events.size} events from cache`)
+                
+            } catch (error) {
+                console.error('Cache loading error:', error)
+            }
+        }
+
+        async function syncWithServers() {
+            if (!app.isOnline) {
+                setStatus('📴 Offline mode')
+                return
+            }
+            
+            try {
+                setStatus('🔄 Syncing...')
+                
+                // Parallel requests
+                const [eventsResponse, userMetaResponse] = await Promise.all([
+                    fetch(`${CONFIG.POSTS_API}/feed?limit=100`).catch(() => null),
+                    fetch(`${CONFIG.ACCOUNTS_API}/users/${app.userId}/meta?lastSync=${app.lastSync}`).catch(() => null)
+                ])
+                
+                // Process events
+                if (eventsResponse?.ok) {
+                    const eventsData = await eventsResponse.json()
+                    const events = eventsData.posts || []
+                    
+                    for (const event of events) {
+                        app.events.set(event.id, event)
+                    }
+                    
+                    // Save to IndexedDB
+                    await saveToIndexedDB('events', events)
+                    console.log(`📥 Synced ${events.length} events`)
+                }
+                
+                // Process user meta
+                if (userMetaResponse?.ok) {
+                    const userMeta = await userMetaResponse.json()
+                    
+                    if (userMeta.isDelta) {
+                        // Merge delta
+                        userMeta.likes?.forEach(id => app.userMeta.likes.add(id))
+                        userMeta.favorites?.forEach(id => app.userMeta.favorites.add(id))
+                        userMeta.hidden?.forEach(id => app.userMeta.hidden.add(id))
+                    } else {
+                        // Full replace
+                        app.userMeta.likes = new Set(userMeta.likes || [])
+                        app.userMeta.favorites = new Set(userMeta.favorites || [])
+                        app.userMeta.hidden = new Set(userMeta.hidden || [])
+                    }
+                    
+                    // Save to IndexedDB
+                    await Promise.all([
+                        saveToIndexedDB('userMeta', { type: 'likes', data: Array.from(app.userMeta.likes) }),
+                        saveToIndexedDB('userMeta', { type: 'favorites', data: Array.from(app.userMeta.favorites) }),
+                        saveToIndexedDB('userMeta', { type: 'hidden', data: Array.from(app.userMeta.hidden) })
+                    ])
+                    
+                    console.log(`👤 Synced user meta: ${app.userMeta.likes.size} likes, ${app.userMeta.favorites.size} favorites`)
+                }
+                
+                app.lastSync = Date.now()
+                await saveToIndexedDB('appState', { key: 'lastSync', value: app.lastSync })
+                
+            } catch (error) {
+                console.error('Sync error:', error)
+                setStatus('⚠️ Sync failed, using cache')
+            }
+        }
+
+        // === EVENT LISTENERS ===
+
+        function setupEventListeners() {
+            // Tab switching
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.addEventListener('click', () => switchTab(tab.dataset.tab))
+            })
+            
+            // Filters
+            document.getElementById('searchInput').addEventListener('input', debounce(renderCurrentTab, 300))
+            document.getElementById('cityFilter').addEventListener('change', renderCurrentTab)
+            document.getElementById('categoryFilter').addEventListener('change', renderCurrentTab)
+            
+            // Create form
+            document.getElementById('createEventForm').addEventListener('submit', handleCreateEvent)
+            
+            // Online/offline status
+            window.addEventListener('online', () => {
+                app.isOnline = true
+                setStatus('🌐 Back online')
+                syncWithServers()
+            })
+            
+            window.addEventListener('offline', () => {
+                app.isOnline = false
+                setStatus('📴 Offline mode')
+            })
+        }
+
+        // === UI RENDERING ===
+
+        function switchTab(tabName) {
+            // Update active tab
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.toggle('active', tab.dataset.tab === tabName)
+            })
+            
+            // Hide all content
+            document.querySelectorAll('[id$="Content"]').forEach(content => {
+                content.classList.add('hidden')
+            })
+            
+            // Show selected content
+            document.getElementById(`${tabName}Content`).classList.remove('hidden')
+            
+            app.currentTab = tabName
+            renderCurrentTab()
+        }
+
+        function renderCurrentTab() {
+            const events = getFilteredEvents()
+            const container = document.getElementById(`${app.currentTab}Content`)
+            
+            if (events.length === 0) {
+                container.innerHTML = `
+                    <div class="empty">
+                        <div style="font-size: 48px; margin-bottom: 16px;">📭</div>
+                        <div>No events found</div>
+                    </div>
+                `
+                return
+            }
+            
+            container.innerHTML = events.map(event => renderEventCard(event)).join('')
+            updateCityFilter(events)
+        }
+
+        function getFilteredEvents() {
+            const search = document.getElementById('searchInput').value.toLowerCase()
+            const city = document.getElementById('cityFilter').value
+            const category = document.getElementById('categoryFilter').value
+            
+            let events = Array.from(app.events.values())
+            
+            // Filter by tab
+            if (app.currentTab === 'favorites') {
+                events = events.filter(event => app.userMeta.favorites.has(event.id))
+            } else if (app.currentTab === 'my-events') {
+                events = events.filter(event => event.authorId === app.userId)
+            }
+            
+            // Filter by search
+            if (search) {
+                events = events.filter(event => 
+                    event.title.toLowerCase().includes(search) ||
+                    event.description.toLowerCase().includes(search)
+                )
+            }
+            
+            // Filter by city
+            if (city) {
+                events = events.filter(event => event.city === city)
+            }
+            
+            // Filter by category
+            if (category) {
+                events = events.filter(event => event.category === category)
+            }
+            
+            // Hide hidden events (except in my-events)
+            if (app.currentTab !== 'my-events') {
+                events = events.filter(event => !app.userMeta.hidden.has(event.id))
+            }
+            
+            // Sort by creation date (newest first)
+            events.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+            
+            return events.slice(0, 50) // Limit to 50 events for performance
+        }
+
+        function renderEventCard(event) {
+            const isLiked = app.userMeta.likes.has(event.id)
+            const isFavorited = app.userMeta.favorites.has(event.id)
+            const isHidden = app.userMeta.hidden.has(event.id)
+            const isOwn = event.authorId === app.userId
+            
+            const timeAgo = formatTimeAgo(event.createdAt)
+            const author = event.author?.fullName || event.author || 'Anonymous'
+            
+            return `
+                <div class="event-card">
+                    <div class="event-header">
+                        <div class="event-title">${escapeHtml(event.title)}</div>
+                        <div class="event-meta">${timeAgo}</div>
+                    </div>
+                    <div class="event-body">
+                        <div class="event-description">${escapeHtml(event.description)}</div>
+                        <div class="event-info">
+                            <span>👤 ${escapeHtml(author)}</span>
+                            ${event.city ? `<span>📍 ${escapeHtml(event.city)}</span>` : ''}
+                            ${event.category ? `<span>📂 ${getCategoryEmoji(event.category)} ${event.category}</span>` : ''}
+                        </div>
+                    </div>
+                    <div class="event-actions">
+                        <button class="action-btn ${isLiked ? 'liked' : ''}" onclick="toggleLike('${event.id}')">
+                            ${isLiked ? '❤️' : '🤍'} ${event.likes || 0}
+                        </button>
+                        <button class="action-btn ${isFavorited ? 'favorited' : ''}" onclick="toggleFavorite('${event.id}')">
+                            ${isFavorited ? '⭐' : '☆'} Save
+                        </button>
+                        ${!isOwn ? `
+                            <button class="action-btn" onclick="toggleHidden('${event.id}')">
+                                ${isHidden ? '👀 Show' : '👁️ Hide'}
+                            </button>
+                        ` : ''}
+                        <button class="action-btn" onclick="openTelegramChat('${event.authorId}')">
+                            💬 Contact
+                        </button>
+                    </div>
+                </div>
+            `
+        }
+
+        function updateCityFilter(events) {
+            const citySelect = document.getElementById('cityFilter')
+            const currentValue = citySelect.value
+            
+            const cities = [...new Set(events.map(e => e.city).filter(Boolean))].sort()
+            
+            citySelect.innerHTML = '<option value="">🏙️ All cities</option>' +
+                cities.map(city => `<option value="${city}">${city}</option>`).join('')
+            
+            citySelect.value = currentValue
+        }
+
+        // === EVENT ACTIONS ===
+
+        async function toggleLike(eventId) {
+            const event = app.events.get(eventId)
+            if (!event) return
+            
+            const isLiked = app.userMeta.likes.has(eventId)
+            const newLikedState = !isLiked
+            
+            try {
+                // Optimistic UI update
+                if (newLikedState) {
+                    app.userMeta.likes.add(eventId)
+                    event.likes = (event.likes || 0) + 1
+                } else {
+                    app.userMeta.likes.delete(eventId)
+                    event.likes = Math.max(0, (event.likes || 0) - 1)
+                }
+                
+                renderCurrentTab()
+                
+                // Save to IndexedDB
+                await saveToIndexedDB('userMeta', { type: 'likes', data: Array.from(app.userMeta.likes) })
+                await saveToIndexedDB('events', [event])
+                
+                // Sync with servers (if online)
+                if (app.isOnline) {
+                    const [postsResponse, accountsResponse] = await Promise.all([
+                        // Update post likes count
+                        fetch(`${CONFIG.POSTS_API}/events/${eventId}`, {
+                            method: 'PUT',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ likes: event.likes })
+                        }).catch(() => null),
+                        
+                        // Update user likes
+                        newLikedState ? 
+                            fetch(`${CONFIG.ACCOUNTS_API}/users/${app.userId}/likes/${eventId}`, { method: 'POST' }).catch(() => null) :
+                            fetch(`${CONFIG.ACCOUNTS_API}/users/${app.userId}/likes/${eventId}`, { method: 'DELETE' }).catch(() => null)
+                    ])
+                }
+                
+            } catch (error) {
+                console.error('Like toggle error:', error)
+                // Revert optimistic update
+                if (isLiked) {
+                    app.userMeta.likes.add(eventId)
+                    event.likes = (event.likes || 0) + 1
+                } else {
+                    app.userMeta.likes.delete(eventId)
+                    event.likes = Math.max(0, (event.likes || 0) - 1)
+                }
+                renderCurrentTab()
+            }
+        }
+
+        async function toggleFavorite(eventId) {
+            const isFavorited = app.userMeta.favorites.has(eventId)
+            const newState = !isFavorited
+            
+            try {
+                // Optimistic UI update
+                if (newState) {
+                    app.userMeta.favorites.add(eventId)
+                } else {
+                    app.userMeta.favorites.delete(eventId)
+                }
+                
+                renderCurrentTab()
+                
+                // Save to IndexedDB
+                await saveToIndexedDB('userMeta', { type: 'favorites', data: Array.from(app.userMeta.favorites) })
+                
+                // Sync with server (if online)
+                if (app.isOnline) {
+                    await (newState ? 
+                        fetch(`${CONFIG.ACCOUNTS_API}/users/${app.userId}/favorites/${eventId}`, { method: 'POST' }) :
+                        fetch(`${CONFIG.ACCOUNTS_API}/users/${app.userId}/favorites/${eventId}`, { method: 'DELETE' })
+                    ).catch(() => null)
+                }
+                
+            } catch (error) {
+                console.error('Favorite toggle error:', error)
+                // Revert
+                if (isFavorited) {
+                    app.userMeta.favorites.add(eventId)
+                } else {
+                    app.userMeta.favorites.delete(eventId)
+                }
+                renderCurrentTab()
+            }
+        }
+
+        async function toggleHidden(eventId) {
+            const isHidden = app.userMeta.hidden.has(eventId)
+            const newState = !isHidden
+            
+            try {
+                if (newState) {
+                    app.userMeta.hidden.add(eventId)
+                } else {
+                    app.userMeta.hidden.delete(eventId)
+                }
+                
+                renderCurrentTab()
+                
+                await saveToIndexedDB('userMeta', { type: 'hidden', data: Array.from(app.userMeta.hidden) })
+                
+                if (app.isOnline) {
+                    await (newState ? 
+                        fetch(`${CONFIG.ACCOUNTS_API}/users/${app.userId}/hidden/${eventId}`, { method: 'POST' }) :
+                        fetch(`${CONFIG.ACCOUNTS_API}/users/${app.userId}/hidden/${eventId}`, { method: 'DELETE' })
+                    ).catch(() => null)
+                }
+                
+            } catch (error) {
+                console.error('Hidden toggle error:', error)
+                if (isHidden) {
+                    app.userMeta.hidden.add(eventId)
+                } else {
+                    app.userMeta.hidden.delete(eventId)
+                }
+                renderCurrentTab()
+            }
+        }
+
+        // === CREATE EVENT ===
+
+        function showCreateModal() {
+            document.getElementById('createModal').classList.add('show')
+        }
+
+        function hideCreateModal() {
+            document.getElementById('createModal').classList.remove('show')
+            document.getElementById('createEventForm').reset()
+        }
+
+        async function handleCreateEvent(e) {
+            e.preventDefault()
+            
+            const title = document.getElementById('eventTitle').value.trim()
+            const description = document.getElementById('eventDescription').value.trim()
+            const city = document.getElementById('eventCity').value.trim()
+            const category = document.getElementById('eventCategory').value
+            
+            if (!title || !description) {
+                alert('Please fill in title and description')
+                return
+            }
+            
+            try {
+                setStatus('🚀 Creating event...')
+                
+                const eventData = {
+                    title,
+                    description,
+                    city,
+                    category,
+                    authorId: app.userId,
+                    author: {
+                        fullName: `${app.user.first_name} ${app.user.last_name || ''}`.trim()
+                    }
+                }
+                
+                // Create locally first
+                const localEvent = {
+                    id: `local_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+                    ...eventData,
+                    likes: 0,
+                    createdAt: new Date().toISOString(),
+                    updatedAt: new Date().toISOString(),
+                    status: 'active'
+                }
+                
+                app.events.set(localEvent.id, localEvent)
+                await saveToIndexedDB('events', [localEvent])
+                
+                hideCreateModal()
+                renderCurrentTab()
+                setStatus('✅ Event created!')
+                
+                // Sync with server (if online)
+                if (app.isOnline) {
+                    try {
+                        const response = await fetch(`${CONFIG.POSTS_API}/events`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(eventData)
+                        })
+                        
+                        if (response.ok) {
+                            const serverEvent = await response.json()
+                            // Replace local event with server event
+                            app.events.delete(localEvent.id)
+                            app.events.set(serverEvent.id, serverEvent)
+                            await saveToIndexedDB('events', [serverEvent])
+                            renderCurrentTab()
+                            console.log('✅ Event synced with server')
+                        }
+                    } catch (error) {
+                        console.error('Server sync failed:', error)
+                        setStatus('⚠️ Event created locally (will sync later)')
+                    }
+                }
+                
+            } catch (error) {
+                console.error('Create event error:', error)
+                setStatus('❌ Failed to create event', true)
+            }
+        }
+
+        // === UTILITIES ===
+
+        function clearFilters() {
+            document.getElementById('searchInput').value = ''
+            document.getElementById('cityFilter').value = ''
+            document.getElementById('categoryFilter').value = ''
+            renderCurrentTab()
+        }
+
+        function formatTimeAgo(dateString) {
+            const date = new Date(dateString)
+            const now = new Date()
+            const diff = now - date
+            
+            const minutes = Math.floor(diff / 60000)
+            const hours = Math.floor(diff / 3600000)
+            const days = Math.floor(diff / 86400000)
+            
+            if (minutes < 1) return 'just now'
+            if (minutes < 60) return `${minutes}m ago`
+            if (hours < 24) return `${hours}h ago`
+            return `${days}d ago`
+        }
+
+        function getCategoryEmoji(category) {
+            const emojis = {
+                'meetup': '👥',
+                'party': '🎉',
+                'sport': '⚽',
+                'culture': '🎭',
+                'business': '💼',
+                'education': '📚'
+            }
+            return emojis[category] || '📂'
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div')
+            div.textContent = text
+            return div.innerHTML
+        }
+
+        function debounce(func, wait) {
+            let timeout
+            return function executedFunction(...args) {
+                const later = () => {
+                    clearTimeout(timeout)
+                    func(...args)
+                }
+                clearTimeout(timeout)
+                timeout = setTimeout(later, wait)
+            }
+        }
+
+        function setStatus(message, isError = false) {
+            const statusEl = document.getElementById('statusText')
+            statusEl.textContent = message
+            statusEl.style.color = isError ? '#d32f2f' : 'inherit'
+            console.log(message)
+        }
+
+        function openTelegramChat(userId) {
+            if (window.Telegram?.WebApp) {
+                // Try to open chat in Telegram
+                window.Telegram.WebApp.openTelegramLink(`https://t.me/username`)
+            } else {
+                alert('Contact feature available only in Telegram')
+            }
+        }
+
+        function startPeriodicSync() {
+            // Sync every 30 seconds when online
+            setInterval(() => {
+                if (app.isOnline) {
+                    syncWithServers()
+                }
+            }, 30000)
+        }
+    </script>
+</body>
+</html>
