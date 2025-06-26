@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -14,52 +15,124 @@
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
-            background: #1f1e1d;
-            color: #ffffff;
+            background: var(--tg-theme-bg-color, #ffffff);
+            color: var(--tg-theme-text-color, #000000);
             line-height: 1.5;
             padding-bottom: 80px;
         }
 
+        .container {
+            max-width: 100%;
+            margin: 0 auto;
+            padding: 0 16px;
+        }
+
         .header {
-            background: #262624;
-            padding: 16px;
+            background: var(--tg-theme-secondary-bg-color, #f8f9fa);
+            padding: 16px 0;
             position: sticky;
             top: 0;
             z-index: 100;
+            width: 100vw;
+            margin-left: -16px;
+            border-bottom-left-radius: 20px;
+            border-bottom-right-radius: 20px;
             display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .tabs {
-            display: flex;
-            gap: 20px;
+            justify-content: space-around;
         }
 
         .tab {
-            padding: 8px 0;
             cursor: pointer;
-            font-size: 14px;
-            border-bottom: 2px solid transparent;
-            transition: border-color 0.2s;
+            padding: 10px 20px;
+            border: none;
+            background: transparent;
+            transition: background 0.3s;
+            border-radius: 8px;
+        }
+
+        .tab:hover {
+            background: rgba(0, 0, 0, 0.1);
         }
 
         .tab.active {
-            border-bottom-color: #666;
+            font-weight: bold;
+            background: var(--tg-theme-button-color, #0088cc);
+            color: var(--tg-theme-button-text-color, #ffffff);
         }
 
-        .filters-btn {
-            padding: 8px 12px;
-            background: transparent;
-            border: 1px solid #666;
-            border-radius: 6px;
-            color: #fff;
-            cursor: pointer;
+        .filters {
+            background: var(--tg-theme-secondary-bg-color, #f8f9fa);
+            padding: 16px;
+            border-radius: 12px;
+            margin-bottom: 16px;
+            border: none;
+        }
+
+        .filter-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .filter-row {
+            display: contents;
+        }
+
+        .date-filter {
+            grid-column: 1 / -1;
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .date-filter label {
             font-size: 14px;
+            font-weight: 500;
+            white-space: nowrap;
         }
 
-        .container {
-            padding: 0 16px;
+        .date-filter input {
+            flex: 1;
+        }
+
+        select {
+            padding: 12px;
+            border: 1px solid var(--tg-theme-hint-color, #e0e0e0);
+            border-radius: 8px;
+            background: var(--tg-theme-bg-color, #ffffff);
+            color: var(--tg-theme-text-color, #000000);
+            font-size: 16px;
+            width: 100%;
+        }
+
+        .filter-buttons {
+            grid-column: 1 / -1;
+            display: flex;
+            gap: 8px;
+        }
+
+        .clear-btn, .apply-btn {
+            flex: 1;
+            padding: 10px 16px;
+            border: 1px solid var(--tg-theme-hint-color, #e0e0e0);
+            border-radius: 8px;
+            background: var(--tg-theme-bg-color, #ffffff);
+            color: var(--tg-theme-text-color, #000000);
+            font-size: 14px;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.2s;
+        }
+
+        .apply-btn {
+            background: var(--tg-theme-button-color, #0088cc);
+            color: var(--tg-theme-button-text-color, #ffffff);
+            border-color: var(--tg-theme-button-color, #0088cc);
+        }
+
+        .clear-btn:hover, .apply-btn:hover {
+            opacity: 0.8;
         }
 
         .feed {
@@ -67,30 +140,54 @@
         }
 
         .event-card {
-            background: #262624;
-            border: 1px solid #444;
+            background: var(--tg-theme-bg-color, #ffffff);
+            border: 1px solid var(--tg-theme-hint-color, #e0e0e0);
             border-radius: 12px;
             margin-bottom: 16px;
             overflow: hidden;
+            transition: all 0.2s;
+        }
+
+        .event-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
         }
 
         .event-content {
+            background: var(--tg-theme-bg-color, #ffffff);
             padding: 16px;
         }
 
         .event-title {
             font-size: 16px;
             font-weight: 600;
+            color: var(--tg-theme-text-color, #000000);
             margin-bottom: 8px;
         }
 
         .event-description {
-            font-size: 14px;
-            opacity: 0.8;
+            font-size: 16px;
+            line-height: 1.5;
+            color: var(--tg-theme-text-color, #000000);
+            margin-bottom: 8px;
+        }
+
+        .event-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            font-size: 12px;
+            color: var(--tg-theme-hint-color, #999999);
+        }
+
+        .event-meta span {
+            background: var(--tg-theme-secondary-bg-color, #f8f9fa);
+            padding: 2px 6px;
+            border-radius: 4px;
         }
 
         .event-footer {
-            background: #1f1e1d;
+            background: var(--tg-theme-secondary-bg-color, #f8f9fa);
             padding: 12px 16px;
             display: flex;
             justify-content: space-between;
@@ -102,6 +199,11 @@
             align-items: center;
             gap: 8px;
             cursor: pointer;
+            transition: opacity 0.2s;
+        }
+
+        .event-author:hover {
+            opacity: 0.8;
         }
 
         .author-avatar {
@@ -112,6 +214,8 @@
 
         .author-name {
             font-size: 14px;
+            font-weight: 500;
+            color: var(--tg-theme-text-color, #000000);
         }
 
         .event-actions {
@@ -128,81 +232,71 @@
             border: none;
             border-radius: 20px;
             background: transparent;
-            color: #fff;
             cursor: pointer;
             font-size: 14px;
+            transition: all 0.2s;
         }
 
         .like-btn.liked {
-            background: rgba(255, 59, 92, 0.2);
+            background: rgba(255, 59, 92, 0.1);
             color: #ff3b5c;
         }
 
         .menu-btn {
-            background: none;
+            width: 32px;
+            height: 32px;
             border: none;
-            color: #fff;
+            border-radius: 50%;
+            background: transparent;
             cursor: pointer;
-            font-size: 16px;
-            padding: 4px;
-        }
-
-        .dropdown-menu {
-            display: none;
-        }
-
-        .action-modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0, 0, 0, 0.8);
-            z-index: 10000;
-            padding: 16px;
-        }
-
-        .action-modal.show {
             display: flex;
             align-items: center;
             justify-content: center;
-        }
-
-        .action-modal-content {
-            background: #262624;
-            border-radius: 20px;
-            width: 100%;
-            max-width: 300px;
-            padding: 20px;
-        }
-
-        .action-modal-title {
             font-size: 18px;
-            font-weight: 600;
-            margin-bottom: 16px;
-            text-align: center;
+            color: var(--tg-theme-hint-color, #999999);
+            transition: all 0.2s;
         }
 
-        .action-modal-item {
+        .menu-btn:hover {
+            background: var(--tg-theme-hint-color, rgba(0, 0, 0, 0.1));
+        }
+
+        .dropdown-menu {
+            position: absolute;
+            right: 0;
+            top: 100%;
+            background: var(--tg-theme-bg-color, #ffffff);
+            border: 1px solid var(--tg-theme-hint-color, #e0e0e0);
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            z-index: 1000;
+            min-width: 120px;
+            overflow: hidden;
+            display: none;
+        }
+
+        .dropdown-menu.show {
+            display: block;
+        }
+
+        .dropdown-item {
             display: block;
             width: 100%;
-            padding: 16px;
+            padding: 12px 16px;
             border: none;
-            background: #1f1e1d;
-            text-align: center;
+            background: none;
+            text-align: left;
             cursor: pointer;
-            font-size: 16px;
-            color: #fff;
-            border-radius: 8px;
-            margin-bottom: 8px;
+            font-size: 14px;
+            color: var(--tg-theme-text-color, #000000);
+            transition: background 0.2s;
         }
 
-        .action-modal-item:hover {
-            background: #333;
+        .dropdown-item:hover {
+            background: var(--tg-theme-secondary-bg-color, #f8f9fa);
         }
 
-        .action-modal-item.danger {
+        .dropdown-item.danger {
             color: #ff3b5c;
         }
 
@@ -211,8 +305,9 @@
             bottom: 0;
             left: 0;
             right: 0;
-            background: #262624;
+            background: var(--tg-theme-secondary-bg-color, #f8f9fa);
             padding: 12px 16px;
+            border-top: 1px solid var(--tg-theme-hint-color, #e0e0e0);
             display: flex;
             gap: 12px;
             align-items: center;
@@ -228,8 +323,8 @@
             padding: 12px 12px 12px 40px;
             border: none;
             border-radius: 20px;
-            background: #1f1e1d;
-            color: #fff;
+            background: var(--tg-theme-bg-color, #ffffff);
+            color: var(--tg-theme-text-color, #000000);
             font-size: 16px;
             outline: none;
         }
@@ -249,12 +344,17 @@
             height: 48px;
             border: none;
             border-radius: 50%;
-            background: #666;
-            color: #fff;
+            background: var(--tg-theme-button-color, #696969);
+            color: var(--tg-theme-button-text-color, #ffffff);
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
+            transition: all 0.2s;
+        }
+
+        .create-btn:hover {
+            transform: scale(1.05);
         }
 
         .create-icon {
@@ -269,7 +369,8 @@
             left: 0;
             right: 0;
             bottom: 0;
-            background: rgba(0, 0, 0, 0.8);
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(8px);
             z-index: 10000;
             padding: 16px;
         }
@@ -281,7 +382,7 @@
         }
 
         .modal-content {
-            background: #262624;
+            background: var(--tg-theme-bg-color, #ffffff);
             border-radius: 20px;
             width: 100%;
             max-width: 400px;
@@ -293,8 +394,7 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 20px;
-            border-bottom: 1px solid #1f1e1d;
+            padding: 20px 20px 0 20px;
         }
 
         .modal-user {
@@ -315,12 +415,17 @@
         }
 
         .modal-close {
-            background: none;
+            width: 32px;
+            height: 32px;
             border: none;
-            color: #fff;
+            border-radius: 50%;
+            background: var(--tg-theme-secondary-bg-color, #f8f9fa);
+            color: var(--tg-theme-hint-color, #999999);
             cursor: pointer;
-            font-size: 20px;
-            padding: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
         }
 
         .modal-body {
@@ -328,35 +433,38 @@
         }
 
         .form-group {
-            margin-bottom: 16px;
+            margin-bottom: 20px;
         }
 
         .form-label {
             display: block;
             margin-bottom: 8px;
+            font-weight: 500;
+            color: var(--tg-theme-text-color, #000000);
             font-size: 14px;
-            color: #fff;
         }
 
         .form-input {
             width: 100%;
             padding: 12px;
-            border: 1px solid #666;
-            border-radius: 8px;
-            background: #1f1e1d;
-            color: #fff;
+            border: 1px solid var(--tg-theme-hint-color, #e0e0e0);
+            border-radius: 12px;
+            background: var(--tg-theme-bg-color, #ffffff);
+            color: var(--tg-theme-text-color, #000000);
             font-size: 16px;
+            font-family: inherit;
+            resize: vertical;
             outline: none;
         }
 
         .form-input:focus {
-            border-color: #888;
+            border-color: var(--tg-theme-button-color, #0088cc);
         }
 
         .char-counter {
             text-align: right;
             font-size: 12px;
-            color: #888;
+            color: var(--tg-theme-hint-color, #999999);
             margin-top: 4px;
         }
 
@@ -375,6 +483,7 @@
 
         .form-date-group label {
             font-size: 14px;
+            font-weight: 500;
             white-space: nowrap;
         }
 
@@ -383,7 +492,7 @@
         }
 
         .modal-footer {
-            padding: 20px;
+            padding: 0 20px 20px 20px;
             display: flex;
             justify-content: flex-end;
         }
@@ -393,8 +502,8 @@
             height: 48px;
             border: none;
             border-radius: 50%;
-            background: #666;
-            color: #fff;
+            background: var(--tg-theme-button-color, #0088cc);
+            color: var(--tg-theme-button-text-color, #ffffff);
             cursor: pointer;
             display: flex;
             align-items: center;
@@ -402,10 +511,25 @@
             font-size: 20px;
         }
 
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: var(--tg-theme-hint-color, #999999);
+        }
+
+        .error {
+            background: #ffe6e6;
+            color: #d32f2f;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 16px;
+            text-align: center;
+        }
+
         .empty {
             text-align: center;
             padding: 40px;
-            color: #888;
+            color: var(--tg-theme-hint-color, #999999);
         }
 
         .hidden {
@@ -416,139 +540,118 @@
             position: relative;
         }
 
-        .filter-group {
-            margin-bottom: 16px;
-        }
-
-        .filter-row {
-            display: flex;
-            gap: 12px;
-            margin-bottom: 12px;
-        }
-
-        .filter-row select,
-        .filter-row input {
-            flex: 1;
-            padding: 12px;
-            border: 1px solid #666;
-            border-radius: 8px;
-            background: #1f1e1d;
-            color: #fff;
-            font-size: 14px;
-        }
-
-        .clear-btn {
-            width: 100%;
-            padding: 12px;
-            border: 1px solid #666;
-            border-radius: 8px;
-            background: #1f1e1d;
-            color: #fff;
-            cursor: pointer;
-        }
-
         @media (max-width: 480px) {
-            .tabs {
-                gap: 15px;
+            .filter-grid {
+                grid-template-columns: 1fr;
             }
-            
-            .tab {
-                font-size: 13px;
+
+            .date-filter {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 8px;
             }
-            
+
             .form-grid {
                 grid-template-columns: 1fr;
+            }
+
+            .filter-buttons {
+                flex-direction: column;
             }
         }
     </style>
 </head>
 
 <body>
-    <div class="header">
-        <div class="tabs">
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
             <div class="tab active" data-tab="feed">Feed</div>
             <div class="tab" data-tab="my-events">My Events</div>
             <div class="tab" data-tab="favorites">Favorites</div>
             <div class="tab" data-tab="hidden">Hidden</div>
         </div>
-        <button class="filters-btn" onclick="showFiltersModal()">⚙️</button>
-    </div>
 
-    <div class="container">
+        <!-- Filters -->
+        <div class="filters">
+            <div class="filter-grid">
+                <div class="row">
+                    <select id="cityFilter">
+                        <option value="">All cities</option>
+                    </select>
+                    <select id="categoryFilter">
+                        <option value="">All categories</option>
+                        <option value="meetup">Meetup</option>
+                        <option value="party">Party</option>
+                        <option value="sport">Sport</option>
+                        <option value="culture">Culture</option>
+                        <option value="business">Business</option>
+                        <option value="education">Education</option>
+                    </select>
+                </div>
+
+                <div class="row">
+                    <select id="genderFilter">
+                        <option value="">All genders</option>
+                        <option value="male">Male</option>
+                        <option value="female">Female</option>
+                    </select>
+                    <select id="ageFilter">
+                        <option value="">All ages</option>
+                        <option value="16-25">16-25</option>
+                        <option value="25-45">25-45</option>
+                        <option value="45+">45+</option>
+                    </select>
+                </div>
+
+                <div class="date-filter row">
+                    <label>From:</label>
+                    <input type="date" id="dateFromFilter">
+                    <label>To:</label>
+                    <input type="date" id="dateToFilter">
+                </div>
+
+                <div class="filter-buttons">
+                    <button class="clear-btn" onclick="clearFilters()">Clear filters</button>
+                    <button class="apply-btn" onclick="applyFilters()">Apply</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Content -->
         <div id="feedContent" class="feed"></div>
         <div id="favoritesContent" class="feed hidden"></div>
         <div id="myEventsContent" class="feed hidden"></div>
         <div id="hiddenContent" class="feed hidden"></div>
     </div>
 
+    <!-- Search and Create Area -->
     <div class="search-area">
         <div class="search-container">
             <svg class="search-icon" viewBox="0 0 400 400" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M197.001 244C171.822 271.83 126.998 313 104.256 295.496C81.5174 277.992 126.998 246 156.656 220.314" stroke="currentColor" stroke-opacity="0.9" stroke-width="16" stroke-linecap="round" stroke-linejoin="round"/>
-                <path d="M165.944 196.347C135.998 107 276.999 75.9996 300.776 165.974C319.017 235 211.46 292.164 175.314 213.85" stroke="currentColor" stroke-opacity="0.9" stroke-width="16" stroke-linecap="round" stroke-linejoin="round"/>
+                <path
+                    d="M197.001 244C171.822 271.83 126.998 313 104.256 295.496C81.5174 277.992 126.998 246 156.656 220.314"
+                    stroke="currentColor" stroke-opacity="0.9" stroke-width="16" stroke-linecap="round"
+                    stroke-linejoin="round" />
+                <path
+                    d="M165.944 196.347C135.998 107 276.999 75.9996 300.776 165.974C319.017 235 211.46 292.164 175.314 213.85"
+                    stroke="currentColor" stroke-opacity="0.9" stroke-width="16" stroke-linecap="round"
+                    stroke-linejoin="round" />
             </svg>
             <input type="text" class="search-input" id="searchInput" placeholder="">
         </div>
         <button class="create-btn" onclick="showCreateModal()">
             <svg class="create-icon" viewBox="0 0 400 400" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M71.8708 189.953C76.0596 179.972 67.0124 166.184 74.2179 157.188C75.8153 155.199 122.602 153.152 125.561 155.514C136.45 164.206 111.415 193.423 144.018 201.553C171.926 208.513 155.397 160.743 162.516 157.188C171.049 152.934 188.865 158.57 198.547 157.188C226.846 153.158 203.311 181.664 211.97 193.182C217.423 200.435 261.828 185.402 250.56 219.132C244.647 236.825 226.375 230.776 216.164 235.873C211.338 238.281 215.898 272.743 215.1 272.582C205.09 270.587 157.177 275.336 158.734 276.89C168.054 286.189 186.94 229.756 144.018 235.873C133.985 237.301 125.13 246.004 123.884 255.963C123.16 261.765 125.774 278.518 125.561 278.564C113.242 281.023 100.187 277.778 86.9713 281.075C84.5867 281.671 67.5038 288.431 65.9983 286.935C63.3552 284.292 66.3776 262.486 66.8373 258.788C67.5727 252.946 65.9754 240.01 71.8708 240.01C84.7533 240.01 42.0914 251.826 29.6626 235.873C17.2337 219.92 29.6626 189.953 66.8373 198.994" stroke="currentColor" stroke-opacity="0.9" stroke-width="16" stroke-linecap="round" stroke-linejoin="round"/>
-                <path d="M219.962 158.69C301.398 167.678 215.1 108.884 284.641 112.13C309.301 113.281 287.258 146.158 293.857 154.973C299.085 161.97 334.878 147.654 341.615 156.653C345.643 162.039 327.578 197.327 334.074 199.496C339.004 201.142 350.98 188.742 359.204 191.096C376.15 195.952 380.691 231.713 365.907 238.979C351.123 246.245 341.747 240.521 340.777 241.5C336.129 246.154 349.597 267.685 346.642 275.102C344.754 279.832 305.714 287.83 301.398 283.503C292.4 274.481 309.369 240.976 291.344 236.459C265.56 229.998 276.039 267.893 267.046 270.902C254.301 275.16 229.326 272.582 215.1 272.582" stroke="currentColor" stroke-opacity="0.9" stroke-width="16" stroke-linecap="round" stroke-linejoin="round"/>
+                <path
+                    d="M71.8708 189.953C76.0596 179.972 67.0124 166.184 74.2179 157.188C75.8153 155.199 122.602 153.152 125.561 155.514C136.45 164.206 111.415 193.423 144.018 201.553C171.926 208.513 155.397 160.743 162.516 157.188C171.049 152.934 188.865 158.57 198.547 157.188C226.846 153.158 203.311 181.664 211.97 193.182C217.423 200.435 261.828 185.402 250.56 219.132C244.647 236.825 226.375 230.776 216.164 235.873C211.338 238.281 215.898 272.743 215.1 272.582C205.09 270.587 157.177 275.336 158.734 276.89C168.054 286.189 186.94 229.756 144.018 235.873C133.985 237.301 125.13 246.004 123.884 255.963C123.16 261.765 125.774 278.518 125.561 278.564C113.242 281.023 100.187 277.778 86.9713 281.075C84.5867 281.671 67.5038 288.431 65.9983 286.935C63.3552 284.292 66.3776 262.486 66.8373 258.788C67.5727 252.946 65.9754 240.01 71.8708 240.01C84.7533 240.01 42.0914 251.826 29.6626 235.873C17.2337 219.92 29.6626 189.953 66.8373 198.994"
+                    stroke="currentColor" stroke-opacity="0.9" stroke-width="16" stroke-linecap="round"
+                    stroke-linejoin="round" />
+                <path
+                    d="M219.962 158.69C301.398 167.678 215.1 108.884 284.641 112.13C309.301 113.281 287.258 146.158 293.857 154.973C299.085 161.97 334.878 147.654 341.615 156.653C345.643 162.039 327.578 197.327 334.074 199.496C339.004 201.142 350.98 188.742 359.204 191.096C376.15 195.952 380.691 231.713 365.907 238.979C351.123 246.245 341.747 240.521 340.777 241.5C336.129 246.154 349.597 267.685 346.642 275.102C344.754 279.832 305.714 287.83 301.398 283.503C292.4 274.481 309.369 240.976 291.344 236.459C265.56 229.998 276.039 267.893 267.046 270.902C254.301 275.16 229.326 272.582 215.1 272.582"
+                    stroke="currentColor" stroke-opacity="0.9" stroke-width="16" stroke-linecap="round"
+                    stroke-linejoin="round" />
             </svg>
         </button>
-    </div>
-
-    <!-- Action Modal -->
-    <div class="action-modal" id="actionModal">
-        <div class="action-modal-content">
-            <div class="action-modal-title">Actions</div>
-            <div id="actionModalItems"></div>
-        </div>
-    </div>
-
-    <!-- Filters Modal -->
-    <div class="modal" id="filtersModal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3>Filters</h3>
-                <button class="modal-close" onclick="hideFiltersModal()">×</button>
-            </div>
-            <div class="modal-body">
-                <div class="filter-group">
-                    <div class="filter-row">
-                        <select id="cityFilter">
-                            <option value="">All cities</option>
-                        </select>
-                        <select id="categoryFilter">
-                            <option value="">All categories</option>
-                            <option value="meetup">Meetup</option>
-                            <option value="party">Party</option>
-                            <option value="sport">Sport</option>
-                            <option value="culture">Culture</option>
-                            <option value="business">Business</option>
-                            <option value="education">Education</option>
-                        </select>
-                    </div>
-                    <div class="filter-row">
-                        <select id="genderFilter">
-                            <option value="">All genders</option>
-                            <option value="male">Male</option>
-                            <option value="female">Female</option>
-                        </select>
-                        <select id="ageFilter">
-                            <option value="">All ages</option>
-                            <option value="16-25">16-25</option>
-                            <option value="25-45">25-45</option>
-                            <option value="45+">45+</option>
-                        </select>
-                    </div>
-                    <div class="filter-row">
-                        <input type="date" id="dateFromFilter" placeholder="From">
-                        <input type="date" id="dateToFilter" placeholder="To">
-                    </div>
-                    <button class="clear-btn" onclick="clearFilters()">Clear all filters</button>
-                </div>
-            </div>
-        </div>
     </div>
 
     <!-- Create Event Modal -->
@@ -559,24 +662,27 @@
                     <img class="modal-user-avatar" id="modalUserAvatar" src="" alt="">
                     <div class="modal-user-name" id="modalUserName"></div>
                 </div>
-                <button class="modal-close" onclick="hideCreateModal()">×</button>
+                <button class="modal-close" onclick="hideCreateModal()">&times;</button>
             </div>
             <div class="modal-body">
                 <form id="createEventForm">
                     <div class="form-group">
                         <label class="form-label">Title</label>
-                        <input type="text" class="form-input" id="eventTitle" required maxlength="64">
+                        <input type="text" class="form-input" id="eventTitle" required placeholder="Event title"
+                            maxlength="64">
                         <div class="char-counter" id="titleCounter">0/64</div>
                     </div>
                     <div class="form-group">
                         <label class="form-label">Description</label>
-                        <textarea class="form-input" id="eventDescription" required maxlength="350" rows="4"></textarea>
+                        <textarea class="form-input" id="eventDescription" required placeholder="Describe your event..."
+                            maxlength="350" rows="4"></textarea>
                         <div class="char-counter" id="descCounter">0/350</div>
                     </div>
                     <div class="form-group">
                         <label class="form-label">Location</label>
-                        <input type="text" class="form-input" id="eventCity">
+                        <input type="text" class="form-input" id="eventCity" placeholder="City">
                     </div>
+
                     <div class="form-grid">
                         <div>
                             <label class="form-label">Category</label>
@@ -608,6 +714,7 @@
                             </select>
                         </div>
                     </div>
+
                     <div class="form-date-group">
                         <label>From:</label>
                         <input type="date" class="form-input" id="eventDateFrom">
@@ -622,7 +729,84 @@
         </div>
     </div>
 
+    <!-- Edit Event Modal -->
+    <div class="modal" id="editModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-user">
+                    <img class="modal-user-avatar" id="editModalUserAvatar" src="" alt="">
+                    <div class="modal-user-name" id="editModalUserName">Edit Event</div>
+                </div>
+                <button class="modal-close" onclick="hideEditModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="editEventForm">
+                    <input type="hidden" id="editEventId">
+                    <div class="form-group">
+                        <label class="form-label">Title</label>
+                        <input type="text" class="form-input" id="editEventTitle" required placeholder="Event title"
+                            maxlength="64">
+                        <div class="char-counter" id="editTitleCounter">0/64</div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Description</label>
+                        <textarea class="form-input" id="editEventDescription" required placeholder="Describe your event..."
+                            maxlength="350" rows="4"></textarea>
+                        <div class="char-counter" id="editDescCounter">0/350</div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Location</label>
+                        <input type="text" class="form-input" id="editEventCity" placeholder="City">
+                    </div>
+
+                    <div class="form-grid">
+                        <div>
+                            <label class="form-label">Category</label>
+                            <select class="form-input" id="editEventCategory">
+                                <option value="">Select category</option>
+                                <option value="meetup">Meetup</option>
+                                <option value="party">Party</option>
+                                <option value="sport">Sport</option>
+                                <option value="culture">Culture</option>
+                                <option value="business">Business</option>
+                                <option value="education">Education</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="form-label">Gender</label>
+                            <select class="form-input" id="editEventGender">
+                                <option value="">Any gender</option>
+                                <option value="male">Male</option>
+                                <option value="female">Female</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="form-label">Age group</label>
+                            <select class="form-input" id="editEventAge">
+                                <option value="">Any age</option>
+                                <option value="16-25">16-25</option>
+                                <option value="25-45">25-45</option>
+                                <option value="45+">45+</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-date-group">
+                        <label>From:</label>
+                        <input type="date" class="form-input" id="editEventDateFrom">
+                        <label>To:</label>
+                        <input type="date" class="form-input" id="editEventDateTo">
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="submit" class="submit-btn" form="editEventForm">✓</button>
+            </div>
+        </div>
+    </div>
+
     <script>
+        // Configuration
         const CONFIG = {
             POSTS_API: 'https://sub-muey.onrender.com/api',
             ACCOUNTS_API: 'https://six-z05l.onrender.com/api',
@@ -630,31 +814,61 @@
             DB_VERSION: 1
         }
 
+        // Global state
         let app = {
             user: null,
             db: null,
             currentTab: 'feed',
             events: new Map(),
-            userMeta: { likes: new Set(), favorites: new Set(), hidden: new Set() },
+            userMeta: {
+                likes: new Set(),
+                favorites: new Set(),
+                hidden: new Set()
+            },
             lastSync: 0,
             isOnline: navigator.onLine,
-            ws: null
+            ws: null,
+            openMenus: new Set()
         }
+
+        // === TELEGRAM WEB APP INTEGRATION ===
 
         window.addEventListener('load', async () => {
             try {
+                // Initialize Telegram Web App
                 if (window.Telegram?.WebApp) {
                     const tg = window.Telegram.WebApp
                     tg.ready()
                     tg.expand()
-                    
+
+                    // Set theme
+                    document.documentElement.style.setProperty('--tg-theme-bg-color', tg.themeParams.bg_color || '#ffffff')
+                    document.documentElement.style.setProperty('--tg-theme-text-color', tg.themeParams.text_color || '#000000')
+                    document.documentElement.style.setProperty('--tg-theme-hint-color', tg.themeParams.hint_color || '#999999')
+                    document.documentElement.style.setProperty('--tg-theme-button-color', tg.themeParams.button_color || '#0088cc')
+                    document.documentElement.style.setProperty('--tg-theme-button-text-color', tg.themeParams.button_text_color || '#ffffff')
+                    document.documentElement.style.setProperty('--tg-theme-secondary-bg-color', tg.themeParams.secondary_bg_color || '#f8f9fa')
+
+                    // Get user data
                     if (tg.initDataUnsafe?.user) {
                         app.user = tg.initDataUnsafe.user
                     } else {
-                        app.user = { id: Date.now(), first_name: 'Demo', last_name: 'User', username: 'demo_user' }
+                        console.log('No Telegram user data, using demo user')
+                        app.user = {
+                            id: Date.now(),
+                            first_name: 'Demo',
+                            last_name: 'User',
+                            username: 'demo_user'
+                        }
                     }
                 } else {
-                    app.user = { id: Date.now(), first_name: 'Demo', last_name: 'User', username: 'demo_user' }
+                    console.log('Not in Telegram, using demo user')
+                    app.user = {
+                        id: Date.now(),
+                        first_name: 'Demo',
+                        last_name: 'User',
+                        username: 'demo_user'
+                    }
                 }
 
                 await initializeApp()
@@ -663,40 +877,107 @@
             }
         })
 
+        // === APP INITIALIZATION ===
+
         async function initializeApp() {
-            await initDB()
-            await authenticateUser()
-            await loadData()
-            setupEventListeners()
-            setupUserModal()
-            startPeriodicSync()
-            setupWebSocket()
+            try {
+                // Initialize IndexedDB
+                await initDB()
+
+                // Authenticate user
+                await authenticateUser()
+
+                // Load data
+                await loadData()
+
+                // Setup event listeners
+                setupEventListeners()
+
+                // Start periodic sync
+                startPeriodicSync()
+
+                // Setup WebSocket for real-time updates
+                setupWebSocket()
+
+                // Setup user info in modal
+                setupUserModal()
+
+            } catch (error) {
+                console.error('App initialization failed:', error)
+            }
         }
 
         function setupUserModal() {
-            const avatarUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(`${app.user.first_name} ${app.user.last_name || ''}`)}&size=40&background=random`
+            const userName = `${app.user.first_name} ${app.user.last_name || ''}`.trim()
+            const avatarUrl = getUserAvatar(app.user.id, userName, app.user.photo_url)
+            
             document.getElementById('modalUserAvatar').src = avatarUrl
-            document.getElementById('modalUserName').textContent = `${app.user.first_name} ${app.user.last_name || ''}`.trim()
+            document.getElementById('modalUserName').textContent = userName
+            document.getElementById('editModalUserAvatar').src = avatarUrl
         }
+
+        // === CHARACTER COUNTERS ===
+
+        function setupCharacterCounters() {
+            // Create form counters
+            const titleInput = document.getElementById('eventTitle')
+            const descInput = document.getElementById('eventDescription')
+            const titleCounter = document.getElementById('titleCounter')
+            const descCounter = document.getElementById('descCounter')
+
+            titleInput.addEventListener('input', () => {
+                titleCounter.textContent = `${titleInput.value.length}/64`
+            })
+
+            descInput.addEventListener('input', () => {
+                descCounter.textContent = `${descInput.value.length}/350`
+            })
+
+            // Edit form counters
+            const editTitleInput = document.getElementById('editEventTitle')
+            const editDescInput = document.getElementById('editEventDescription')
+            const editTitleCounter = document.getElementById('editTitleCounter')
+            const editDescCounter = document.getElementById('editDescCounter')
+
+            editTitleInput.addEventListener('input', () => {
+                editTitleCounter.textContent = `${editTitleInput.value.length}/64`
+            })
+
+            editDescInput.addEventListener('input', () => {
+                editDescCounter.textContent = `${editDescInput.value.length}/350`
+            })
+        }
+
+        // === DATABASE ===
 
         async function initDB() {
             return new Promise((resolve, reject) => {
                 const request = indexedDB.open(CONFIG.DB_NAME, CONFIG.DB_VERSION)
+
                 request.onerror = () => reject(request.error)
                 request.onsuccess = () => {
                     app.db = request.result
                     resolve()
                 }
+
                 request.onupgradeneeded = (event) => {
                     const db = event.target.result
+
+                    // Events store
                     if (!db.objectStoreNames.contains('events')) {
                         const eventsStore = db.createObjectStore('events', { keyPath: 'id' })
                         eventsStore.createIndex('createdAt', 'createdAt')
                         eventsStore.createIndex('authorId', 'authorId')
+                        eventsStore.createIndex('city', 'city')
+                        eventsStore.createIndex('category', 'category')
                     }
+
+                    // User meta store
                     if (!db.objectStoreNames.contains('userMeta')) {
                         db.createObjectStore('userMeta', { keyPath: 'type' })
                     }
+
+                    // App state store
                     if (!db.objectStoreNames.contains('appState')) {
                         db.createObjectStore('appState', { keyPath: 'key' })
                     }
@@ -707,26 +988,44 @@
         async function saveToIndexedDB(storeName, data) {
             const transaction = app.db.transaction([storeName], 'readwrite')
             const store = transaction.objectStore(storeName)
+
             if (Array.isArray(data)) {
-                for (const item of data) await store.put(item)
+                for (const item of data) {
+                    await store.put(item)
+                }
             } else {
                 await store.put(data)
             }
+
             return transaction.complete
         }
 
         async function loadFromIndexedDB(storeName, query = null) {
             const transaction = app.db.transaction([storeName], 'readonly')
             const store = transaction.objectStore(storeName)
-            return query ? store.get(query) : store.getAll()
+
+            if (query) {
+                return store.get(query)
+            } else {
+                return store.getAll()
+            }
         }
+
+        // === WEBSOCKET REAL-TIME UPDATES ===
 
         function setupWebSocket() {
             if (!app.isOnline) return
+
             try {
                 const wsUrl = CONFIG.POSTS_API.replace('https://', 'wss://').replace('http://', 'ws://').replace('/api', '')
+                console.log('🔌 Connecting to WebSocket:', wsUrl)
+
                 app.ws = new WebSocket(wsUrl)
-                app.ws.onopen = () => console.log('WebSocket connected')
+
+                app.ws.onopen = () => {
+                    console.log('✅ WebSocket connected')
+                }
+
                 app.ws.onmessage = (event) => {
                     try {
                         const message = JSON.parse(event.data)
@@ -735,10 +1034,21 @@
                         console.error('WebSocket message parse error:', error)
                     }
                 }
+
                 app.ws.onclose = () => {
+                    console.log('🔌 WebSocket disconnected')
                     app.ws = null
-                    if (app.isOnline) setTimeout(setupWebSocket, 5000)
+
+                    // Reconnect after 5 seconds if online
+                    if (app.isOnline) {
+                        setTimeout(setupWebSocket, 5000)
+                    }
                 }
+
+                app.ws.onerror = (error) => {
+                    console.error('WebSocket error:', error)
+                }
+
             } catch (error) {
                 console.error('WebSocket setup error:', error)
             }
@@ -746,36 +1056,51 @@
 
         function handleWebSocketMessage(message) {
             const { type, data } = message
+
+            console.log('📡 WebSocket message:', type, data)
+
             switch (type) {
                 case 'EVENT_CREATED':
                     if (data.authorId !== app.userId) {
                         app.events.set(data.id, data)
                         saveToIndexedDB('events', [data])
-                        if (app.currentTab === 'feed') renderCurrentTab()
+
+                        if (app.currentTab === 'feed') {
+                            renderCurrentTab()
+                        }
                     }
                     break
+
                 case 'EVENT_UPDATED':
                     app.events.set(data.id, data)
                     saveToIndexedDB('events', [data])
                     renderCurrentTab()
                     break
+
                 case 'EVENT_DELETED':
                     app.events.delete(data.id)
                     renderCurrentTab()
                     break
+
                 case 'LIKE_UPDATED':
-                    const event = app.events.get(data.eventId)
-                    if (event) {
-                        event.likes = data.likes
+                    const likeEvent = app.events.get(data.eventId)
+                    if (likeEvent) {
+                        likeEvent.likes = data.likes
                         if (data.userId === app.userId) {
-                            data.isLiked ? app.userMeta.likes.add(data.eventId) : app.userMeta.likes.delete(data.eventId)
+                            if (data.isLiked) {
+                                app.userMeta.likes.add(data.eventId)
+                            } else {
+                                app.userMeta.likes.delete(data.eventId)
+                            }
                         }
-                        app.events.set(data.eventId, event)
+                        app.events.set(data.eventId, likeEvent)
                         renderCurrentTab()
                     }
                     break
             }
         }
+
+        // === AUTHENTICATION ===
 
         async function authenticateUser() {
             try {
@@ -784,28 +1109,43 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ telegramUser: app.user })
                 })
-                if (response.ok) {
-                    const userData = await response.json()
-                    app.userId = userData.id
-                } else {
+
+                if (!response.ok) {
                     throw new Error(`Auth failed: ${response.status}`)
                 }
+
+                const userData = await response.json()
+                app.userId = userData.id
+
+                console.log(`✅ Authenticated as ${userData.id}`)
+
             } catch (error) {
+                console.error('Authentication error:', error)
                 app.userId = `tg_${app.user.id}`
+                console.log(`⚠️ Using fallback ID: ${app.userId}`)
             }
         }
 
+        // === DATA LOADING ===
+
         async function loadData() {
+            // Load from IndexedDB first
             await loadFromCache()
+
+            // Then sync from servers
             await syncWithServers()
+
+            // Render initial feed
             renderCurrentTab()
         }
 
         async function loadFromCache() {
             try {
+                // Load events
                 const events = await loadFromIndexedDB('events')
                 events.forEach(event => app.events.set(event.id, event))
 
+                // Load user meta
                 const [likes, favorites, hidden] = await Promise.all([
                     loadFromIndexedDB('userMeta', 'likes'),
                     loadFromIndexedDB('userMeta', 'favorites'),
@@ -816,30 +1156,46 @@
                 if (favorites) app.userMeta.favorites = new Set(favorites.data || [])
                 if (hidden) app.userMeta.hidden = new Set(hidden.data || [])
 
+                // Load app state
                 const lastSyncState = await loadFromIndexedDB('appState', 'lastSync')
                 if (lastSyncState) app.lastSync = lastSyncState.value || 0
+
+                console.log(`📦 Loaded ${app.events.size} events from cache`)
+
             } catch (error) {
                 console.error('Cache loading error:', error)
             }
         }
 
         async function syncWithServers() {
-            if (!app.isOnline) return
+            if (!app.isOnline) {
+                return
+            }
+
             try {
+                // Parallel requests
                 const [eventsResponse, userMetaResponse] = await Promise.all([
                     fetch(`${CONFIG.POSTS_API}/feed?limit=100`).catch(() => null),
                     fetch(`${CONFIG.ACCOUNTS_API}/users/${app.userId}/meta?lastSync=${app.lastSync}`).catch(() => null)
                 ])
 
+                // Process events
                 if (eventsResponse?.ok) {
                     const eventsData = await eventsResponse.json()
                     const events = eventsData.posts || []
-                    for (const event of events) app.events.set(event.id, event)
+
+                    for (const event of events) {
+                        app.events.set(event.id, event)
+                    }
+
                     await saveToIndexedDB('events', events)
+                    console.log(`📥 Synced ${events.length} events`)
                 }
 
+                // Process user meta
                 if (userMetaResponse?.ok) {
                     const userMeta = await userMetaResponse.json()
+
                     if (userMeta.isDelta) {
                         userMeta.likes?.forEach(id => app.userMeta.likes.add(id))
                         userMeta.favorites?.forEach(id => app.userMeta.favorites.add(id))
@@ -855,20 +1211,27 @@
                         saveToIndexedDB('userMeta', { type: 'favorites', data: Array.from(app.userMeta.favorites) }),
                         saveToIndexedDB('userMeta', { type: 'hidden', data: Array.from(app.userMeta.hidden) })
                     ])
+
+                    console.log(`👤 Synced user meta: ${app.userMeta.likes.size} likes, ${app.userMeta.favorites.size} favorites`)
                 }
 
                 app.lastSync = Date.now()
                 await saveToIndexedDB('appState', { key: 'lastSync', value: app.lastSync })
+
             } catch (error) {
                 console.error('Sync error:', error)
             }
         }
 
+        // === EVENT LISTENERS ===
+
         function setupEventListeners() {
+            // Tab switching
             document.querySelectorAll('.tab').forEach(tab => {
                 tab.addEventListener('click', () => switchTab(tab.dataset.tab))
             })
 
+            // Filters
             document.getElementById('searchInput').addEventListener('input', debounce(renderCurrentTab, 300))
             document.getElementById('cityFilter').addEventListener('change', renderCurrentTab)
             document.getElementById('categoryFilter').addEventListener('change', renderCurrentTab)
@@ -877,54 +1240,84 @@
             document.getElementById('dateFromFilter').addEventListener('change', renderCurrentTab)
             document.getElementById('dateToFilter').addEventListener('change', renderCurrentTab)
 
+            // Create form
             document.getElementById('createEventForm').addEventListener('submit', handleCreateEvent)
 
-            document.getElementById('eventTitle').addEventListener('input', () => {
-                document.getElementById('titleCounter').textContent = `${document.getElementById('eventTitle').value.length}/64`
-            })
-            document.getElementById('eventDescription').addEventListener('input', () => {
-                document.getElementById('descCounter').textContent = `${document.getElementById('eventDescription').value.length}/350`
-            })
+            // Edit form
+            document.getElementById('editEventForm').addEventListener('submit', handleEditEvent)
 
-            document.getElementById('filtersModal').addEventListener('click', (e) => {
-                if (e.target === e.currentTarget) hideFiltersModal()
-            })
+            // Character counters
+            setupCharacterCounters()
+
+            // Modal close on outside click
             document.getElementById('createModal').addEventListener('click', (e) => {
-                if (e.target === e.currentTarget) hideCreateModal()
-            })
-            document.getElementById('actionModal').addEventListener('click', (e) => {
-                if (e.target === e.currentTarget) hideActionModal()
+                if (e.target === e.currentTarget) {
+                    hideCreateModal()
+                }
             })
 
+            document.getElementById('editModal').addEventListener('click', (e) => {
+                if (e.target === e.currentTarget) {
+                    hideEditModal()
+                }
+            })
+
+            // Close menus on outside click
+            document.addEventListener('click', (e) => {
+                if (!e.target.closest('.menu-container')) {
+                    closeAllMenus()
+                }
+            })
+
+            // Online/offline status
             window.addEventListener('online', () => {
                 app.isOnline = true
                 syncWithServers()
                 setupWebSocket()
             })
+
             window.addEventListener('offline', () => {
                 app.isOnline = false
-                if (app.ws) app.ws.close()
+                if (app.ws) {
+                    app.ws.close()
+                    app.ws = null
+                }
             })
         }
 
+        // === UI RENDERING ===
+
         function switchTab(tabName) {
+            // Update active tab
             document.querySelectorAll('.tab').forEach(tab => {
                 tab.classList.toggle('active', tab.dataset.tab === tabName)
             })
+
+            // Hide all content
             document.querySelectorAll('[id$="Content"]').forEach(content => {
                 content.classList.add('hidden')
             })
+
+            // Show selected content
             document.getElementById(`${tabName}Content`).classList.remove('hidden')
+
             app.currentTab = tabName
             renderCurrentTab()
         }
 
         function renderCurrentTab() {
+            console.log(`🎨 Rendering tab: ${app.currentTab}`)
+
             const events = getFilteredEvents()
             const container = document.getElementById(`${app.currentTab}Content`)
 
             if (events.length === 0) {
-                container.innerHTML = '<div class="empty"><div style="font-size: 48px; margin-bottom: 16px;">📭</div><div>No events found</div></div>'
+                container.innerHTML = `
+                    <div class="empty">
+                        <div style="font-size: 48px; margin-bottom: 16px;">📭</div>
+                        <div>No events found</div>
+                    </div>
+                `
                 return
             }
 
@@ -943,20 +1336,44 @@
 
             let events = Array.from(app.events.values())
 
+            // Filter by tab
             if (app.currentTab === 'favorites') {
                 events = events.filter(event => app.userMeta.favorites.has(event.id))
             } else if (app.currentTab === 'my-events') {
-                events = events.filter(event => event.authorId === app.userId || event.authorId === app.user?.id?.toString() || event.authorId === `tg_${app.user?.id}`)
+                events = events.filter(event => {
+                    // Проверяем все возможные варианты authorId
+                    console.log(`Checking event ${event.id}: authorId=${event.authorId}, app.userId=${app.userId}, user.id=${app.user?.id}`)
+                    
+                    const matches = event.authorId === app.userId ||
+                        event.authorId === app.user?.id?.toString() ||
+                        event.authorId === `tg_${app.user?.id}` ||
+                        (event.author && event.author.telegramId === app.user?.id)
+                    
+                    if (matches) {
+                        console.log(`✅ Event ${event.id} matches user`)
+                    }
+                    
+                    return matches
+                })
             } else if (app.currentTab === 'hidden') {
                 events = events.filter(event => app.userMeta.hidden.has(event.id))
             }
 
-            if (search) events = events.filter(event => event.title.toLowerCase().includes(search) || event.description.toLowerCase().includes(search))
+            // Filter by search
+            if (search) {
+                events = events.filter(event =>
+                    event.title.toLowerCase().includes(search) ||
+                    event.description.toLowerCase().includes(search)
+                )
+            }
+
+            // Filter by other criteria
             if (city) events = events.filter(event => event.city === city)
             if (category) events = events.filter(event => event.category === category)
             if (gender) events = events.filter(event => event.gender === gender)
             if (age) events = events.filter(event => event.ageGroup === age)
-            
+
+            // Date filters
             if (dateFrom) {
                 events = events.filter(event => {
                     const eventDate = event.dateFrom || event.createdAt
@@ -970,29 +1387,51 @@
                 })
             }
 
+            // Hide hidden events (except in my-events and hidden tab)
             if (app.currentTab !== 'my-events' && app.currentTab !== 'hidden') {
                 events = events.filter(event => !app.userMeta.hidden.has(event.id))
             }
 
+            // Sort by creation date (newest first)
             events.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+
+            console.log(`📊 Filtered events: ${events.length} from ${app.events.size} total`)
+
             return events.slice(0, 50)
         }
 
         function renderEventCard(event) {
             const isLiked = app.userMeta.likes.has(event.id)
-            const isOwn = event.authorId === app.userId
-            const author = event.author?.fullName || event.author || 'Anonymous'
+            const isOwn = event.authorId === app.userId || 
+                         event.authorId === app.user?.id?.toString() || 
+                         event.authorId === `tg_${app.user?.id}` ||
+                         (event.author && event.author.telegramId === app.user?.id)
+
+            const author = event.author?.fullName || event.authorName || 'Anonymous'
             const username = event.author?.username || ''
-            const avatarUrl = event.author?.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(author)}&size=32&background=random`
+            const avatarUrl = getUserAvatar(event.authorId, author, event.author?.avatar)
+
+            // Метаданные события
+            const metaTags = []
+            if (event.city) metaTags.push(`📍 ${event.city}`)
+            if (event.category) metaTags.push(`🏷️ ${event.category}`)
+            if (event.gender) metaTags.push(`👤 ${event.gender}`)
+            if (event.ageGroup) metaTags.push(`📅 ${event.ageGroup}`)
+            if (event.dateFrom) metaTags.push(`📆 ${new Date(event.dateFrom).toLocaleDateString()}`)
 
             return `
                 <div class="event-card">
                     <div class="event-content">
                         <div class="event-title">${escapeHtml(event.title)}</div>
                         <div class="event-description">${escapeHtml(event.description)}</div>
+                        ${metaTags.length > 0 ? `
+                            <div class="event-meta">
+                                ${metaTags.map(tag => `<span>${escapeHtml(tag)}</span>`).join('')}
+                            </div>
+                        ` : ''}
                     </div>
                     <div class="event-footer">
-                        <div class="event-author" onclick="openUserProfile('${event.authorId}', '${username}')">
+                        <div class="event-author" onclick="openUserProfile('${event.authorId}', '${username}', '${event.author?.telegramId || ''}')">
                             <img src="${avatarUrl}" alt="${author}" class="author-avatar">
                             <div class="author-name">${escapeHtml(author)}</div>
                         </div>
@@ -1001,7 +1440,19 @@
                                 ${isLiked ? '❤️' : '🤍'} ${event.likes || 0}
                             </button>
                             <div class="menu-container">
-                                <button class="menu-btn" onclick="showActionModal('${event.id}', ${isOwn})">⋯</button>
+                                <button class="menu-btn" onclick="toggleMenu('${event.id}', ${isOwn})">
+                                    ⋯
+                                </button>
+                                <div class="dropdown-menu" id="menu-${event.id}">
+                                    ${isOwn ? `
+                                        <button class="dropdown-item" onclick="editEvent('${event.id}')">Edit</button>
+                                        <button class="dropdown-item danger" onclick="deleteEvent('${event.id}')">Delete</button>
+                                    ` : `
+                                        <button class="dropdown-item" onclick="toggleFavorite('${event.id}')">${app.userMeta.favorites.has(event.id) ? 'Remove from favorites' : 'Add to favorites'}</button>
+                                        <button class="dropdown-item" onclick="toggleHidden('${event.id}')">${app.userMeta.hidden.has(event.id) ? 'Show' : 'Hide'}</button>
+                                        <button class="dropdown-item danger" onclick="reportEvent('${event.id}')">Report</button>
+                                    `}
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -1009,47 +1460,51 @@
             `
         }
 
+        function getUserAvatar(authorId, authorName, photoUrl = null) {
+            // Если есть фото из Telegram, используем его
+            if (photoUrl) {
+                return photoUrl
+            }
+
+            // Иначе генерируем аватар на основе имени
+            return `https://ui-avatars.com/api/?name=${encodeURIComponent(authorName)}&size=32&background=random`
+        }
+
         function updateCityFilter(events) {
             const citySelect = document.getElementById('cityFilter')
             const currentValue = citySelect.value
+
             const cities = [...new Set(events.map(e => e.city).filter(Boolean))].sort()
-            citySelect.innerHTML = '<option value="">All cities</option>' + cities.map(city => `<option value="${city}">${city}</option>`).join('')
+
+            citySelect.innerHTML = '<option value="">All cities</option>' +
+                cities.map(city => `<option value="${city}">${city}</option>`).join('')
+
             citySelect.value = currentValue
         }
 
-        function showActionModal(eventId, isOwn) {
-            const modal = document.getElementById('actionModal')
-            const itemsContainer = document.getElementById('actionModalItems')
-            
-            if (isOwn) {
-                itemsContainer.innerHTML = `
-                    <button class="action-modal-item" onclick="editEvent('${eventId}'); hideActionModal()">Edit</button>
-                    <button class="action-modal-item danger" onclick="deleteEvent('${eventId}'); hideActionModal()">Delete</button>
-                `
-            } else {
-                const isFavorited = app.userMeta.favorites.has(eventId)
-                const isHidden = app.userMeta.hidden.has(eventId)
-                itemsContainer.innerHTML = `
-                    <button class="action-modal-item" onclick="toggleFavorite('${eventId}'); hideActionModal()">${isFavorited ? 'Remove from favorites' : 'Add to favorites'}</button>
-                    <button class="action-modal-item" onclick="toggleHidden('${eventId}'); hideActionModal()">${isHidden ? 'Show' : 'Hide'}</button>
-                    <button class="action-modal-item danger" onclick="reportEvent('${eventId}'); hideActionModal()">Report</button>
-                `
+        // === MENU FUNCTIONS ===
+
+        function toggleMenu(eventId, isOwn) {
+            const menu = document.getElementById(`menu-${eventId}`)
+            const isOpen = menu.classList.contains('show')
+
+            // Close all menus first
+            closeAllMenus()
+
+            if (!isOpen) {
+                menu.classList.add('show')
+                app.openMenus.add(eventId)
             }
-            
-            modal.classList.add('show')
-        }
-
-        function hideActionModal() {
-            document.getElementById('actionModal').classList.remove('show')
-        }
-
-        function toggleMenu(eventId) {
-            // Deprecated - replaced with showActionModal
         }
 
         function closeAllMenus() {
-            // Deprecated - replaced with hideActionModal
+            document.querySelectorAll('.dropdown-menu').forEach(menu => {
+                menu.classList.remove('show')
+            })
+            app.openMenus.clear()
         }
+
+        // === EVENT ACTIONS ===
 
         async function toggleLike(eventId) {
             const event = app.events.get(eventId)
@@ -1059,6 +1514,7 @@
             const newLikedState = !isLiked
 
             try {
+                // Optimistic UI update
                 if (newLikedState) {
                     app.userMeta.likes.add(eventId)
                     event.likes = (event.likes || 0) + 1
@@ -1076,9 +1532,11 @@
                     }))
                 }
 
+                // Save to IndexedDB
                 await saveToIndexedDB('userMeta', { type: 'likes', data: Array.from(app.userMeta.likes) })
                 await saveToIndexedDB('events', [event])
 
+                // Sync with servers (if online)
                 if (app.isOnline) {
                     const [postsResponse, accountsResponse] = await Promise.all([
                         fetch(`${CONFIG.POSTS_API}/events/${eventId}`, {
@@ -1086,13 +1544,16 @@
                             headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify({ likes: event.likes })
                         }).catch(() => null),
+
                         newLikedState ?
                             fetch(`${CONFIG.ACCOUNTS_API}/users/${app.userId}/likes/${eventId}`, { method: 'POST' }).catch(() => null) :
                             fetch(`${CONFIG.ACCOUNTS_API}/users/${app.userId}/likes/${eventId}`, { method: 'DELETE' }).catch(() => null)
                     ])
                 }
+
             } catch (error) {
                 console.error('Like toggle error:', error)
+                // Revert optimistic update
                 if (isLiked) {
                     app.userMeta.likes.add(eventId)
                     event.likes = (event.likes || 0) + 1
@@ -1109,19 +1570,35 @@
             const newState = !isFavorited
 
             try {
-                newState ? app.userMeta.favorites.add(eventId) : app.userMeta.favorites.delete(eventId)
+                // Optimistic UI update
+                if (newState) {
+                    app.userMeta.favorites.add(eventId)
+                } else {
+                    app.userMeta.favorites.delete(eventId)
+                }
+
+                closeAllMenus()
                 renderCurrentTab()
+
+                // Save to IndexedDB
                 await saveToIndexedDB('userMeta', { type: 'favorites', data: Array.from(app.userMeta.favorites) })
 
+                // Sync with server (if online)
                 if (app.isOnline) {
                     await (newState ?
                         fetch(`${CONFIG.ACCOUNTS_API}/users/${app.userId}/favorites/${eventId}`, { method: 'POST' }) :
                         fetch(`${CONFIG.ACCOUNTS_API}/users/${app.userId}/favorites/${eventId}`, { method: 'DELETE' })
                     ).catch(() => null)
                 }
+
             } catch (error) {
                 console.error('Favorite toggle error:', error)
-                isFavorited ? app.userMeta.favorites.add(eventId) : app.userMeta.favorites.delete(eventId)
+                // Revert
+                if (isFavorited) {
+                    app.userMeta.favorites.add(eventId)
+                } else {
+                    app.userMeta.favorites.delete(eventId)
+                }
                 renderCurrentTab()
             }
         }
@@ -1131,8 +1608,15 @@
             const newState = !isHidden
 
             try {
-                newState ? app.userMeta.hidden.add(eventId) : app.userMeta.hidden.delete(eventId)
+                if (newState) {
+                    app.userMeta.hidden.add(eventId)
+                } else {
+                    app.userMeta.hidden.delete(eventId)
+                }
+
+                closeAllMenus()
                 renderCurrentTab()
+
                 await saveToIndexedDB('userMeta', { type: 'hidden', data: Array.from(app.userMeta.hidden) })
 
                 if (app.isOnline) {
@@ -1141,41 +1625,157 @@
                         fetch(`${CONFIG.ACCOUNTS_API}/users/${app.userId}/hidden/${eventId}`, { method: 'DELETE' })
                     ).catch(() => null)
                 }
+
             } catch (error) {
                 console.error('Hidden toggle error:', error)
-                isHidden ? app.userMeta.hidden.add(eventId) : app.userMeta.hidden.delete(eventId)
+                if (isHidden) {
+                    app.userMeta.hidden.add(eventId)
+                } else {
+                    app.userMeta.hidden.delete(eventId)
+                }
                 renderCurrentTab()
             }
         }
 
         function editEvent(eventId) {
-            console.log('Edit event:', eventId)
+            const event = app.events.get(eventId)
+            if (!event) return
+
+            closeAllMenus()
+
+            // Заполняем форму данными события
+            document.getElementById('editEventId').value = eventId
+            document.getElementById('editEventTitle').value = event.title || ''
+            document.getElementById('editEventDescription').value = event.description || ''
+            document.getElementById('editEventCity').value = event.city || ''
+            document.getElementById('editEventCategory').value = event.category || ''
+            document.getElementById('editEventGender').value = event.gender || ''
+            document.getElementById('editEventAge').value = event.ageGroup || ''
+            document.getElementById('editEventDateFrom').value = event.dateFrom || ''
+            document.getElementById('editEventDateTo').value = event.dateTo || ''
+
+            // Обновляем счетчики символов
+            document.getElementById('editTitleCounter').textContent = `${(event.title || '').length}/64`
+            document.getElementById('editDescCounter').textContent = `${(event.description || '').length}/350`
+
+            showEditModal()
+        }
+
+        async function handleEditEvent(e) {
+            e.preventDefault()
+
+            const eventId = document.getElementById('editEventId').value
+            const title = document.getElementById('editEventTitle').value.trim()
+            const description = document.getElementById('editEventDescription').value.trim()
+            const city = document.getElementById('editEventCity').value.trim()
+            const category = document.getElementById('editEventCategory').value
+            const gender = document.getElementById('editEventGender').value
+            const ageGroup = document.getElementById('editEventAge').value
+            const dateFrom = document.getElementById('editEventDateFrom').value
+            const dateTo = document.getElementById('editEventDateTo').value
+
+            if (!title || !description) {
+                alert('Please fill in title and description')
+                return
+            }
+
+            try {
+                const eventData = {
+                    title,
+                    description,
+                    city,
+                    category,
+                    gender,
+                    ageGroup,
+                    dateFrom,
+                    dateTo,
+                    updatedAt: new Date().toISOString()
+                }
+
+                // Update locally first
+                const event = app.events.get(eventId)
+                if (event) {
+                    Object.assign(event, eventData)
+                    app.events.set(eventId, event)
+                    await saveToIndexedDB('events', [event])
+
+                    if (app.ws && app.ws.readyState === WebSocket.OPEN) {
+                        app.ws.send(JSON.stringify({
+                            type: 'EVENT_UPDATED',
+                            data: event
+                        }))
+                    }
+
+                    hideEditModal()
+                    renderCurrentTab()
+
+                    // Sync with server (if online)
+                    if (app.isOnline) {
+                        try {
+                            const response = await fetch(`${CONFIG.POSTS_API}/events/${eventId}`, {
+                                method: 'PUT',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify(eventData)
+                            })
+
+                            if (response.ok) {
+                                const serverEvent = await response.json()
+                                app.events.set(serverEvent.id, serverEvent)
+                                await saveToIndexedDB('events', [serverEvent])
+                                renderCurrentTab()
+                                console.log('✅ Event updated on server')
+                            }
+                        } catch (error) {
+                            console.error('Server sync failed:', error)
+                        }
+                    }
+                }
+
+            } catch (error) {
+                console.error('Edit event error:', error)
+            }
         }
 
         async function deleteEvent(eventId) {
-            if (!confirm('Are you sure you want to delete this event?')) return
+            if (!confirm('Are you sure you want to delete this event?')) {
+                return
+            }
 
             try {
+                closeAllMenus()
+
+                // Remove from local storage
                 app.events.delete(eventId)
                 renderCurrentTab()
 
+                // Sync with server
                 if (app.isOnline) {
-                    await fetch(`${CONFIG.POSTS_API}/events/${eventId}`, { method: 'DELETE' }).catch(() => null)
+                    await fetch(`${CONFIG.POSTS_API}/events/${eventId}`, {
+                        method: 'DELETE'
+                    }).catch(() => null)
                 }
+
             } catch (error) {
                 console.error('Delete event error:', error)
             }
         }
 
         function reportEvent(eventId) {
+            closeAllMenus()
             alert('Event reported. Thank you for helping keep our community safe.')
+            console.log('Report event:', eventId)
         }
 
-        function openUserProfile(authorId, username) {
+        function openUserProfile(authorId, username, telegramId) {
             try {
+                console.log('📞 Opening user profile:', { authorId, username, telegramId })
+
                 if (window.Telegram?.WebApp) {
-                    if (username && username !== 'undefined') {
+                    // Сначала пробуем username, если он есть
+                    if (username && username !== 'undefined' && username.trim() !== '') {
                         const chatUrl = `https://t.me/${username}`
+                        console.log('📞 Opening chat via username:', chatUrl)
+
                         if (window.Telegram.WebApp.openTelegramLink) {
                             window.Telegram.WebApp.openTelegramLink(chatUrl)
                         } else {
@@ -1184,19 +1784,34 @@
                         return
                     }
 
-                    let telegramId = null
-                    if (authorId.startsWith('tg_')) telegramId = authorId.replace('tg_', '')
-
+                    // Затем пробуем Telegram ID из события
                     if (telegramId && telegramId !== 'undefined') {
                         const chatUrl = `https://t.me/user?id=${telegramId}`
+                        console.log('📞 Opening chat via event telegramId:', chatUrl)
+
                         if (window.Telegram.WebApp.openTelegramLink) {
                             window.Telegram.WebApp.openTelegramLink(chatUrl)
                         } else {
                             window.open(chatUrl, '_blank')
                         }
-                    } else {
-                        alert('Cannot contact this user')
+                        return
                     }
+
+                    // В последнюю очередь пробуем извлечь ID из authorId
+                    if (authorId && authorId.startsWith('tg_')) {
+                        const extractedId = authorId.replace('tg_', '')
+                        const chatUrl = `https://t.me/user?id=${extractedId}`
+                        console.log('📞 Opening chat via extracted ID:', chatUrl)
+
+                        if (window.Telegram.WebApp.openTelegramLink) {
+                            window.Telegram.WebApp.openTelegramLink(chatUrl)
+                        } else {
+                            window.open(chatUrl, '_blank')
+                        }
+                        return
+                    }
+
+                    alert('Cannot contact this user - no username or ID available')
                 } else {
                     alert('Contact feature available only in Telegram')
                 }
@@ -1206,13 +1821,7 @@
             }
         }
 
-        function showFiltersModal() {
-            document.getElementById('filtersModal').classList.add('show')
-        }
-
-        function hideFiltersModal() {
-            document.getElementById('filtersModal').classList.remove('show')
-        }
+        // === CREATE EVENT ===
 
         function showCreateModal() {
             document.getElementById('createModal').classList.add('show')
@@ -1223,6 +1832,17 @@
             document.getElementById('createEventForm').reset()
             document.getElementById('titleCounter').textContent = '0/64'
             document.getElementById('descCounter').textContent = '0/350'
+        }
+
+        function showEditModal() {
+            document.getElementById('editModal').classList.add('show')
+        }
+
+        function hideEditModal() {
+            document.getElementById('editModal').classList.remove('show')
+            document.getElementById('editEventForm').reset()
+            document.getElementById('editTitleCounter').textContent = '0/64'
+            document.getElementById('editDescCounter').textContent = '0/350'
         }
 
         async function handleCreateEvent(e) {
@@ -1244,16 +1864,26 @@
 
             try {
                 const eventData = {
-                    title, description, city, category, gender, ageGroup, dateFrom, dateTo,
+                    title,
+                    description,
+                    city,
+                    category,
+                    gender,
+                    ageGroup,
+                    dateFrom,
+                    dateTo,
                     authorId: app.userId,
                     author: {
                         fullName: `${app.user.first_name} ${app.user.last_name || ''}`.trim(),
-                        username: app.user.username || '',
+                        username: app.user.username,
                         telegramId: app.user.id,
-                        avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(`${app.user.first_name} ${app.user.last_name || ''}`)}&size=40&background=random`
+                        avatar: app.user.photo_url
                     }
                 }
 
+                console.log(`📝 Creating event with authorId: ${app.userId}`)
+
+                // Create locally first
                 const localEvent = {
                     id: `local_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
                     ...eventData,
@@ -1266,13 +1896,18 @@
                 app.events.set(localEvent.id, localEvent)
 
                 if (app.ws && app.ws.readyState === WebSocket.OPEN) {
-                    app.ws.send(JSON.stringify({ type: 'EVENT_CREATED', data: localEvent }))
+                    app.ws.send(JSON.stringify({
+                        type: 'EVENT_CREATED',
+                        data: localEvent
+                    }))
                 }
                 await saveToIndexedDB('events', [localEvent])
 
                 hideCreateModal()
-                renderCurrentTab()
+                // Переключаемся на "Мои События" после создания
+                switchTab('my-events')
 
+                // Sync with server (if online)
                 if (app.isOnline) {
                     try {
                         const response = await fetch(`${CONFIG.POSTS_API}/events`, {
@@ -1283,19 +1918,24 @@
 
                         if (response.ok) {
                             const serverEvent = await response.json()
+                            // Replace local event with server event
                             app.events.delete(localEvent.id)
                             app.events.set(serverEvent.id, serverEvent)
                             await saveToIndexedDB('events', [serverEvent])
                             renderCurrentTab()
+                            console.log('✅ Event synced with server')
                         }
                     } catch (error) {
                         console.error('Server sync failed:', error)
                     }
                 }
+
             } catch (error) {
                 console.error('Create event error:', error)
             }
         }
+
+        // === UTILITIES ===
 
         function clearFilters() {
             document.getElementById('searchInput').value = ''
@@ -1306,7 +1946,10 @@
             document.getElementById('dateFromFilter').value = ''
             document.getElementById('dateToFilter').value = ''
             renderCurrentTab()
-            hideFiltersModal()
+        }
+
+        function applyFilters() {
+            renderCurrentTab()
         }
 
         function escapeHtml(text) {
@@ -1328,13 +1971,20 @@
         }
 
         function startPeriodicSync() {
+            // Sync every 30 seconds when online
             setInterval(() => {
                 if (app.isOnline) {
                     syncWithServers()
-                    if (!app.ws || app.ws.readyState !== WebSocket.OPEN) setupWebSocket()
+
+                    // Check WebSocket connection
+                    if (!app.ws || app.ws.readyState !== WebSocket.OPEN) {
+                        console.log('🔌 WebSocket reconnecting...')
+                        setupWebSocket()
+                    }
                 }
             }, 30000)
         }
     </script>
 </body>
+
 </html>
