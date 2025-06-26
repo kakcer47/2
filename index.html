@@ -969,10 +969,6 @@
                 console.log(`🔍 My events filter - looking for authorId: ${app.userId}`)
                 console.log(`🔍 Sample event authorIds:`, events.slice(0, 3).map(e => e.authorId))
 
-            } else if (app.currentTab === 'hidden') {
-                events = events.filter(event => app.userMeta.hidden.has(event.id))
-                console.log(`🔍 After hidden tab filter: ${events.length} events`)
-
                 events = events.filter(event => {
                     // Проверяем разные варианты authorId
                     const matches = event.authorId === app.userId ||
@@ -984,6 +980,9 @@
                     return matches
                 })
                 console.log(`🔍 After my-events filter: ${events.length} events`)
+            } else if (app.currentTab === 'hidden') {
+                events = events.filter(event => app.userMeta.hidden.has(event.id))
+                console.log(`🔍 After hidden tab filter: ${events.length} events`)
             }
 
 
@@ -1010,7 +1009,7 @@
             }
 
             // Hide hidden events (except in my-events)
-            if (app.currentTab !== 'my-events') {
+            if (app.currentTab !== 'my-events' && app.currentTab !== 'hidden') {
                 events = events.filter(event => !app.userMeta.hidden.has(event.id))
                 console.log(`🔍 After hidden filter: ${events.length}`)
             }
@@ -1055,13 +1054,11 @@
                             ${isFavorited ? '⭐' : '☆'} Save
                         </button>
                         <button class="action-btn" onclick="toggleHidden('${event.id}')">
-                            ${isHidden ? '👀 Show' : '👁️ Hide'}
-                        </button>
-                        ${!isOwn ? `
-                            <button class="action-btn" onclick="toggleHidden('${event.id}')">
-                                ${isHidden ? '👀 Show' : '👁️ Hide'}
-                            </button>
-                        ` : ''}
+                            ${!isOwn ? `
+                                <button class="action-btn" onclick="toggleHidden('${event.id}')">
+                                    ${isHidden ? '👀 Show' : '👁️ Hide'}
+                                </button>
+                            ` : ''}
                         <button class="action-btn" onclick="openTelegramChat('${event.id}', '${event.authorId}')">
                             💬 Contact
                         </button>
