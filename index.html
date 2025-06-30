@@ -168,6 +168,78 @@
             background: #1d1c1b;
             color: #fff;
         }
+        .create-post-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #fcfcfc;
+            padding: 16px;
+            box-sizing: border-box;
+            overflow-y: auto;
+        }
+        .create-post-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+        .create-post-header img {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+        }
+        .create-post-header .name {
+            flex: 1;
+            font-weight: 500;
+        }
+        .create-post-header .back {
+            background: none;
+            border: none;
+            color: #1d1c1b;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        .create-post-content textarea {
+            width: 100%;
+            min-height: 100px;
+            padding: 8px;
+            border: 1px solid #f8f7f6;
+            border-radius: 8px;
+            font-family: 'Rubik', sans-serif;
+            resize: vertical;
+            margin-bottom: 16px;
+        }
+        .create-post-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+        .create-post-tags .tag {
+            padding: 6px 12px;
+            background: #f8f7f6;
+            border-radius: 12px;
+            cursor: pointer;
+        }
+        .create-post-tags .tag.active {
+            background: #1d1c1b;
+            color: #fff;
+        }
+        .create-post-button {
+            padding: 12px;
+            background: #1d1c1b;
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            font-family: 'Rubik', sans-serif;
+            cursor: pointer;
+            width: 100%;
+            font-size: 16px;
+            font-weight: 500;
+        }
     </style>
 </head>
 <body>
@@ -183,10 +255,24 @@
         </div>
         <div class="search-bar">
             <input type="text" id="search" placeholder="Поиск объявлений...">
-            <button onclick="createPost()">Создать</button>
+            <button onclick="showCreatePostModal()">Создать</button>
         </div>
         <div class="modal" id="postMenu">
             <!-- Menu options populated dynamically -->
+        </div>
+        <div class="create-post-modal" id="createPostModal">
+            <div class="create-post-header">
+                <button class="back" onclick="hideCreatePostModal()">Назад</button>
+                <img id="userAvatar" src="https://via.placeholder.com/40" alt="Avatar">
+                <span class="name" id="userName"></span>
+            </div>
+            <div class="create-post-content">
+                <textarea id="postDescription" placeholder="Введите текст объявления..."></textarea>
+                <div class="create-post-tags" id="createPostTags">
+                    <!-- Tags populated dynamically -->
+                </div>
+                <button class="create-post-button" onclick="createPost()">Создать</button>
+            </div>
         </div>
     </div>
     <script>
@@ -195,8 +281,10 @@
         let userId = null;
         let currentCategory = null;
         let currentTags = [];
+        let createPostTags = [];
         let currentPage = 1;
         let isLoading = false;
+        let userData = null;
 
         // Initialize Telegram Web App
         Telegram.WebApp.ready();
@@ -204,8 +292,8 @@
 
         // Connect to WebSocket servers
         function connectWebSockets() {
-            wsAccounts = new WebSocket('wss://bottg-os1g.onrender.com');
-            wsPosts = new WebSocket('wss://six-yqrj.onrender.com');
+            wsAccounts = new WebSocket('wss://your-accounts-server.onrender.com');
+            wsPosts = new WebSocket('wss://your-posts-server.onrender.com');
 
             wsAccounts.onmessage = handleAccountsMessage;
             wsPosts.onmessage = handlePostsMessage;
@@ -221,7 +309,9 @@
             const data = JSON.parse(event.data);
             if (data.type === 'user_data') {
                 userId = data.user_id;
-                // Update UI with user data if needed
+                userData = data;
+                document.getElementById('userAvatar').src = data.photo_url || 'https://via.placeholder.com/40';
+                document.getElementById('userName').textContent = `${data.first_name} ${data.last_name || ''}`.trim();
             }
         }
 
@@ -232,6 +322,8 @@
                 renderPosts(data.posts, data.append);
             } else if (data.type === 'post_updated') {
                 updatePost(data.post);
+            } else if (data.type === 'post_deleted') {
+                document.querySelector(`.post[data-id="${data.post_id}"]`)?.remove();
             }
         }
 
@@ -280,7 +372,7 @@
             container.innerHTML = categories.map(cat => `
                 <div class="category" onclick="selectCategory('${cat}')">${cat}</div>
             `).join('');
-            selectCategory(categories[0]); // Select first category by default
+            selectCategory(categories[0]);
         }
 
         // Select category
@@ -311,9 +403,17 @@
                     <div class="tag" onclick="toggleTag('${type}', '${val}')">${val}</div>
                 `)
             ).join('');
+
+            // Load tags for create post modal
+            const createTagsContainer = document.getElementById('createPostTags');
+            createTagsContainer.innerHTML = Object.entries(tags).flatMap(([type, values]) =>
+                values.map(val => `
+                    <div class="tag" onclick="toggleCreatePostTag('${type}', '${val}')">${val}</div>
+                `)
+            ).join('');
         }
 
-        // Toggle tag
+        // Toggle tag for filtering
         function toggleTag(type, value) {
             const key = `${type}:${value}`;
             if (currentTags.includes(key)) {
@@ -321,11 +421,24 @@
             } else {
                 currentTags.push(key);
             }
-            document.querySelectorAll('.tag').forEach(el => {
+            document.querySelectorAll('#tags .tag').forEach(el => {
                 el.classList.toggle('active', currentTags.includes(`${type}:${el.textContent}`));
             });
             currentPage = 1;
             loadPosts();
+        }
+
+        // Toggle tag for create post
+        function toggleCreatePostTag(type, value) {
+            const key = `${type}:${value}`;
+            if (createPostTags.includes(key)) {
+                createPostTags = createPostTags.filter(t => t !== key);
+            } else {
+                createPostTags.push(key);
+            }
+            document.querySelectorAll('#createPostTags .tag').forEach(el => {
+                el.classList.toggle('active', createPostTags.includes(`${type}:${el.textContent}`));
+            });
         }
 
         // Load posts
@@ -360,7 +473,7 @@
                         <div class="like" onclick="likePost(${post.id})">
                             ❤️ <span>${post.likes}</span>
                         </div>
-                        <div class="menu" onclick="showPostMenu(${post.id}, ${post.creator.user_id === userId})">⋮</div>
+                        <div class="menu" onclick="showPostMenu(${post.id}, ${post.creator.user_id === userId})">� Lakeside</div>
                     </div>
                 </div>
             `).join('');
@@ -373,6 +486,26 @@
             const postEl = document.querySelector(`.post[data-id="${post.id}"]`);
             if (postEl) {
                 postEl.querySelector('.like span').textContent = post.likes;
+            } else {
+                // Prepend new post to feed
+                const feed = document.getElementById('feed');
+                feed.innerHTML = `
+                    <div class="post" data-id="${post.id}">
+                        <div class="post-description">${post.description}</div>
+                        <div class="post-creator">
+                            <img src="${post.creator.photo_url || 'https://via.placeholder.com/32'}" alt="Avatar">
+                            <a href="tg://user?id=${post.creator.user_id}" target="_blank">
+                                ${post.creator.first_name} ${post.creator.last_name || ''}
+                            </a>
+                        </div>
+                        <div class="post-actions">
+                            <div class="like" onclick="likePost(${post.id})">
+                                ❤️ <span>${post.likes}</span>
+                            </div>
+                            <div class="menu" onclick="showPostMenu(${post.id}, ${post.creator.user_id === userId})">⋮</div>
+                        </div>
+                    </div>
+                ` + feed.innerHTML;
             }
         }
 
@@ -397,7 +530,7 @@
                 <button onclick="reportPost(${postId})">Пожаловаться</button>
             `;
             modal.style.display = 'block';
-            setTimeout(() => modal.style.display = 'none', 5000); // Auto-close after 5s
+            setTimeout(() => modal.style.display = 'none', 5000);
         }
 
         // Post actions
@@ -415,33 +548,52 @@
         }
 
         function hidePost(postId) {
-            wsAccounts.send(JSON.stringify({ type: 'hide_post', post_id: postId, user_id: userId }));
+            wsAccounts.send(JSON.stringify({ type: 'hide_post', post_id: postIdというのは: postId, user_id: userId }));
         }
 
         function reportPost(postId) {
             wsPosts.send(JSON.stringify({ type: 'report_post', post_id: postId, user_id: userId }));
         }
 
+        // Show create post modal
+        function showCreatePostModal() {
+            document.getElementById('createPostModal').style.display = 'block';
+            createPostTags = []; // Reset selected tags
+            document.querySelectorAll('#createPostTags .tag').forEach(el => el.classList.remove('active'));
+            document.getElementById('postDescription').value = '';
+            Telegram.WebApp.MainButton.hide();
+            Telegram.WebApp.BackButton.show();
+            Telegram.WebApp.BackButton.onClick(hideCreatePostModal);
+        }
+
+        // Hide create post modal
+        function hideCreatePostModal() {
+            document.getElementById('createPostModal').style.display = 'none';
+            Telegram.WebApp.BackButton.hide();
+        }
+
         // Create post
         function createPost() {
-            Telegram.WebApp.showPopup({
-                title: 'Создать объявление',
-                message: 'Введите описание и выберите теги.',
-                buttons: [{ type: 'ok' }, { type: 'cancel' }]
-            }, (buttonId) => {
-                if (buttonId === 'ok') {
-                    const description = prompt('Введите описание:');
-                    if (description) {
-                        wsPosts.send(JSON.stringify({
-                            type: 'create_post',
-                            user_id: userId,
-                            description,
-                            category: currentCategory,
-                            tags: currentTags
-                        }));
-                    }
+            const description = document.getElementById('postDescription').value.trim();
+            if (!description) {
+                Telegram.WebApp.showAlert('Пожалуйста, введите текст объявления.');
+                return;
+            }
+            wsPosts.send(JSON.stringify({
+                type: 'create_post',
+                user_id: userId,
+                description,
+                category: currentCategory,
+                tags: createPostTags,
+                creator: {
+                    user_id: userId,
+                    username: userData.username || '',
+                    first_name: userData.first_name || '',
+                    last_name: userData.last_name || '',
+                    photo_url: userData.photo_url || ''
                 }
-            });
+            }));
+            hideCreatePostModal();
         }
 
         // Infinite scroll
