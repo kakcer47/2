@@ -1,0 +1,68 @@
+{
+  "ru": {
+    "categories": {
+      "all": "Все",
+      "work": "Работа",
+      "hobbies": "Хобби",
+      "leisure": "Отдых",
+      "events": "Мероприятия",
+      "friendship": "Дружба",
+      "health": "Здоровье"
+    },
+    "cities": [
+      "Все города",
+      "Москва",
+      "Санкт-Петербург",
+      "Новосибирск",
+      "Екатеринбург",
+      "Казань",
+      "Нижний Новгород",
+      "Челябинск",
+      "Самара",
+      "Омск",
+      "Ростов-на-Дону",
+      "Уфа",
+      "Красноярск",
+      "Воронеж",
+      "Пермь",
+      "Волгоград",
+      "Краснодар",
+      "Тюмень",
+      "Барнаул",
+      "Ижевск"
+    ]
+  },
+  "en": {
+    "categories": {
+      "all": "All",
+      "work": "Work",
+      "hobbies": "Hobbies",
+      "leisure": "Leisure",
+      "events": "Events",
+      "friendship": "Friendship",
+      "health": "Health"
+    },
+    "cities": [
+      "All cities",
+      "Moscow",
+      "Saint Petersburg",
+      "Novosibirsk",
+      "Yekaterinburg",
+      "Kazan",
+      "Nizhny Novgorod",
+      "Chelyabinsk",
+      "Samara",
+      "Omsk",
+      "Rostov-on-Don",
+      "Ufa",
+      "Krasnoyarsk",
+      "Voronezh",
+      "Perm",
+      "Volgograd",
+      "Krasnodar",
+      "Tyumen",
+      "Barnaul",
+      "Izhevsk"
+    ]
+  }
+}
