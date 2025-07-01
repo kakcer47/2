@@ -371,25 +371,29 @@
             object-fit: cover;
         }
 
-        .create-post-header .name {
+        .user-info {
             flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .user-info .name {
             font-weight: 600;
             font-size: 18px;
-        }
-
-        .create-post-header .back {
-            background: none;
-            border: none;
             color: #1d1c1b;
-            font-size: 16px;
-            cursor: pointer;
-            padding: 8px;
-            border-radius: 8px;
-            transition: background 0.3s ease;
         }
 
-        .create-post-header .back:hover {
-            background: #f5f5f5;
+        .user-info .post-limit {
+            font-size: 14px;
+            color: #666;
+            font-weight: 400;
+        }
+
+        .create-post-content {
+            flex: 1;
+            overflow-y: auto;
+            padding-bottom: 80px; /* Место для кнопки внизу */
         }
 
         .create-post-content textarea {
@@ -411,11 +415,65 @@
             border-color: #1d1c1b;
         }
 
+        .create-categories {
+            margin-bottom: 20px;
+        }
+
+        .categories-label, .filters-label {
+            font-size: 16px;
+            font-weight: 600;
+            color: #1d1c1b;
+            margin-bottom: 12px;
+        }
+
+        .categories-scroll {
+            display: flex;
+            overflow-x: auto;
+            padding: 8px 0;
+            scroll-snap-type: x mandatory;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+            gap: 8px;
+        }
+
+        .categories-scroll::-webkit-scrollbar {
+            display: none;
+        }
+
+        .categories-scroll .category {
+            flex: 0 0 auto;
+            padding: 8px 16px;
+            background: #f8f7f6;
+            border: 1px solid #e0e0e0;
+            border-radius: 20px;
+            cursor: pointer;
+            scroll-snap-align: center;
+            transition: all 0.3s ease;
+            font-family: 'Rubik', sans-serif;
+            font-weight: 500;
+            font-size: 14px;
+            color: #1d1c1b;
+            white-space: nowrap;
+        }
+
+        .categories-scroll .category:hover {
+            background: #ebebeb;
+        }
+
+        .categories-scroll .category.active {
+            background: #1d1c1b;
+            color: #fff;
+            border-color: #1d1c1b;
+        }
+
+        .create-filters {
+            margin-bottom: 20px;
+        }
+
         .create-post-tags {
             display: flex;
             flex-wrap: wrap;
             gap: 8px;
-            margin-bottom: 20px;
         }
 
         .create-post-tags .tag {
@@ -438,7 +496,19 @@
             border-color: #1d1c1b;
         }
 
+        .create-post-footer {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: #fcfcfc;
+            padding: 16px 20px;
+            border-top: 1px solid #f0f0f0;
+            box-shadow: 0 -2px 8px rgba(0,0,0,0.1);
+        }
+
         .create-post-button {
+            width: 100%;
             padding: 16px;
             background: #1d1c1b;
             color: #fff;
@@ -446,7 +516,6 @@
             border-radius: 12px;
             font-family: 'Rubik', sans-serif;
             cursor: pointer;
-            width: 100%;
             font-size: 16px;
             font-weight: 600;
             transition: background 0.3s ease;
@@ -491,6 +560,71 @@
             .filter-btn {
                 padding: 6px 10px;
                 font-size: 13px;
+            }
+
+            .create-post-header {
+                padding: 16px 16px 12px 16px;
+                margin-bottom: 16px;
+            }
+
+            .create-post-header img {
+                width: 36px;
+                height: 36px;
+            }
+
+            .user-info .name {
+                font-size: 16px;
+            }
+
+            .user-info .post-limit {
+                font-size: 12px;
+            }
+
+            .create-post-content {
+                padding: 0 16px;
+                padding-bottom: 90px; /* Больше места для кнопки на мобильных */
+            }
+
+            .create-post-content textarea {
+                min-height: 100px;
+                padding: 12px;
+                font-size: 16px; /* Предотвращает зум на iOS */
+            }
+
+            .categories-scroll .category {
+                padding: 6px 12px;
+                font-size: 13px;
+            }
+
+            .create-post-tags .tag {
+                padding: 6px 12px;
+                font-size: 13px;
+            }
+
+            .create-post-footer {
+                padding: 12px 16px;
+            }
+
+            .create-post-button {
+                padding: 14px;
+                font-size: 15px;
+            }
+
+            .categories-label, .filters-label {
+                font-size: 15px;
+                margin-bottom: 10px;
+            }
+        }
+
+        /* Дополнительные стили для iOS Safari */
+        @supports (-webkit-touch-callout: none) {
+            .create-post-modal {
+                -webkit-overflow-scrolling: touch;
+            }
+            
+            .create-post-content textarea {
+                -webkit-appearance: none;
+                border-radius: 12px;
             }
         }
     </style>
@@ -551,16 +685,32 @@
         
         <div class="create-post-modal" id="createPostModal">
             <div class="create-post-header">
-                <button class="back" onclick="hideCreatePostModal()">Назад</button>
                 <img id="userAvatar" src="https://via.placeholder.com/40" alt="Avatar">
-                <span class="name" id="userName"></span>
+                <div class="user-info">
+                    <span class="name" id="userName"></span>
+                    <span class="post-limit" id="postLimit">0/60 - объявлений</span>
+                </div>
             </div>
             <div class="create-post-content">
                 <textarea id="postDescription" placeholder="Введите текст объявления..."></textarea>
-                <div class="create-post-tags" id="createPostTags">
-                    <!-- Tags populated dynamically -->
+                
+                <div class="create-categories">
+                    <div class="categories-label">Категория:</div>
+                    <div class="categories-scroll" id="createCategories">
+                        <!-- Categories populated dynamically -->
+                    </div>
                 </div>
-                <button class="create-post-button" onclick="createPost()">Создать</button>
+                
+                <div class="create-filters">
+                    <div class="filters-label">Фильтры:</div>
+                    <div class="create-post-tags" id="createPostTags">
+                        <!-- Tags populated dynamically -->
+                    </div>
+                </div>
+            </div>
+            
+            <div class="create-post-footer">
+                <button class="create-post-button" onclick="createPost()">Создать объявление</button>
             </div>
         </div>
     </div>
@@ -570,6 +720,7 @@
         let ws = null;
         let userId = null;
         let currentCategory = null;
+        let createPostCategory = null; // Категория для создания поста
         let currentFilters = {
             city: [],
             gender: [],
@@ -581,6 +732,7 @@
         let currentPage = 1;
         let isLoading = false;
         let userData = null;
+        let userLimits = { used: 0, total: 60 }; // Лимиты пользователя
 
         // Инициализация Telegram Web App
         Telegram.WebApp.ready();
@@ -607,6 +759,9 @@
             if (data.type === 'user_data') {
                 userId = data.user_id;
                 userData = data;
+                if (data.limits) {
+                    userLimits = data.limits;
+                }
                 updateUserInterface(data);
             } else if (data.type === 'posts') {
                 renderPosts(data.posts, data.append);
@@ -620,6 +775,10 @@
             } else if (data.type === 'limit_exceeded') {
                 Telegram.WebApp.showAlert('Достигнут лимит объявлений. Попробуйте позже.');
             } else if (data.type === 'post_created') {
+                if (data.limits) {
+                    userLimits = data.limits;
+                    updatePostLimit();
+                }
                 Telegram.WebApp.showAlert('Объявление отправлено на модерацию.');
             }
         }
@@ -631,6 +790,16 @@
             
             if (avatar) avatar.src = userData.photo_url || 'https://via.placeholder.com/40';
             if (userName) userName.textContent = `${userData.first_name} ${userData.last_name || ''}`.trim();
+            
+            updatePostLimit();
+        }
+
+        // Обновление счетчика лимитов
+        function updatePostLimit() {
+            const limitElement = document.getElementById('postLimit');
+            if (limitElement) {
+                limitElement.textContent = `${userLimits.used}/${userLimits.total} - объявлений`;
+            }
         }
 
         // Выбор языка
@@ -932,18 +1101,52 @@
         function showCreatePostModal() {
             document.getElementById('createPostModal').style.display = 'block';
             createPostTags = [];
+            createPostCategory = currentCategory; // Используем текущую выбранную категорию
             updateCreatePostTags();
+            loadCreateCategories();
             document.getElementById('postDescription').value = '';
             
+            // Обновляем лимиты
+            updatePostLimit();
+            
+            // Настройка Telegram Web App
             Telegram.WebApp.MainButton.hide();
             Telegram.WebApp.BackButton.show();
             Telegram.WebApp.BackButton.onClick(hideCreatePostModal);
+            
+            // Блокируем прокрутку основной страницы
+            document.body.style.overflow = 'hidden';
         }
 
         // Скрыть модальное окно создания поста
         function hideCreatePostModal() {
             document.getElementById('createPostModal').style.display = 'none';
             Telegram.WebApp.BackButton.hide();
+            
+            // Разрешаем прокрутку основной страницы
+            document.body.style.overflow = 'auto';
+        }
+
+        // Загрузка категорий для создания поста
+        function loadCreateCategories() {
+            const categories = ['Работа', 'Хобби', 'Отдых', 'Мероприятия', 'Дружба', 'Здоровье'];
+            const container = document.getElementById('createCategories');
+            container.innerHTML = categories.map(cat => `
+                <div class="category ${cat === createPostCategory ? 'active' : ''}" onclick="selectCreateCategory('${cat}')">${cat}</div>
+            `).join('');
+        }
+
+        // Выбор категории для создания поста
+        function selectCreateCategory(category) {
+            createPostCategory = category;
+            
+            // Обновляем визуальное состояние категорий
+            document.querySelectorAll('#createCategories .category').forEach(el => {
+                el.classList.toggle('active', el.textContent === category);
+                if (el.textContent === category) {
+                    el.scrollIntoView({ behavior: 'smooth', inline: 'center' });
+                }
+            });
         }
 
         // Загрузка тегов для создания поста
@@ -999,13 +1202,18 @@
                 Telegram.WebApp.showAlert('Текст объявления должен содержать минимум 10 символов.');
                 return;
             }
+
+            if (!createPostCategory) {
+                Telegram.WebApp.showAlert('Пожалуйста, выберите категорию.');
+                return;
+            }
             
             if (ws && ws.readyState === WebSocket.OPEN) {
                 ws.send(JSON.stringify({
                     type: 'create_post',
                     user_id: userId,
                     description: description,
-                    category: currentCategory,
+                    category: createPostCategory, // Используем выбранную в модальном окне категорию
                     tags: createPostTags,
                     creator: {
                         user_id: userId,
@@ -1041,6 +1249,24 @@
         document.addEventListener('DOMContentLoaded', () => {
             connectWebSocket();
             loadCreatePostTags();
+            
+            // Закрытие модального окна по клику вне его
+            window.addEventListener('click', (e) => {
+                const createModal = document.getElementById('createPostModal');
+                if (e.target === createModal) {
+                    hideCreatePostModal();
+                }
+                
+                const filterModal = document.getElementById('filterModal');
+                if (e.target === filterModal) {
+                    hideFilterModal();
+                }
+                
+                const postMenu = document.getElementById('postMenu');
+                if (e.target === postMenu) {
+                    hidePostMenu();
+                }
+            });
             
             setTimeout(() => {
                 if (ws && ws.readyState === WebSocket.OPEN) {
