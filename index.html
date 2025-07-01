@@ -1333,16 +1333,33 @@
                     openEditPostModal(data.post);
                     
                 } else if (data.type === 'favorites_updated') {
-                    const message = data.action === 'added' ? t('messages.addedToFavorites') : t('messages.removedFromFavorites');
+                    let message;
+                    if (data.action === 'added') {
+                        message = t('messages.addedToFavorites');
+                        // Обновляем кнопку в меню если оно открыто
+                        const favBtn = document.getElementById(`favBtn${currentPostId}`);
+                        if (favBtn) favBtn.textContent = t('menu.removeFromFavorites');
+                    } else {
+                        message = t('messages.removedFromFavorites');
+                        const favBtn = document.getElementById(`favBtn${currentPostId}`);
+                        if (favBtn) favBtn.textContent = t('menu.addToFavorites');
+                    }
                     Telegram.WebApp.showAlert(message);
                     hidePostMenu();
                     
                 } else if (data.type === 'hide_updated') {
-                    const message = data.action === 'hidden' ? t('messages.postHidden') : t('messages.postShown');
-                    Telegram.WebApp.showAlert(message);
+                    let message;
                     if (data.action === 'hidden') {
+                        message = t('messages.postHidden');
                         removePostFromFeed(currentPostId);
+                        const hideBtn = document.getElementById(`hideBtn${currentPostId}`);
+                        if (hideBtn) hideBtn.textContent = t('menu.showPost');
+                    } else {
+                        message = t('messages.postShown');
+                        const hideBtn = document.getElementById(`hideBtn${currentPostId}`);
+                        if (hideBtn) hideBtn.textContent = t('menu.hidePost');
                     }
+                    Telegram.WebApp.showAlert(message);
                     hidePostMenu();
                     
                 } else if (data.type === 'report_sent') {
@@ -1808,40 +1825,38 @@
             currentPostId = postId;
             const modal = document.getElementById('postMenu');
             
-            const post = Array.from(document.querySelectorAll('.post')).find(p => 
-                parseInt(p.dataset.id) === postId
-            );
-            
-            let favoriteText, hideText;
-            if (post) {
-                // Определяем текст для кнопок на основе текущего состояния
-                favoriteText = t('menu.addToFavorites'); // По умолчанию
-                hideText = t('menu.hidePost'); // По умолчанию
+            if (isOwnPost) {
+                modal.innerHTML = `
+                    <div class="modal-header">
+                        <h3>${t('menu.myPost')}</h3>
+                        <button onclick="hidePostMenu()">✕</button>
+                    </div>
+                    <div class="modal-content">
+                        <button onclick="editPost(${postId})">${t('menu.edit')}</button>
+                        <button onclick="deletePost(${postId})">${t('menu.delete')}</button>
+                    </div>
+                `;
             } else {
-                favoriteText = t('menu.addToFavorites');
-                hideText = t('menu.hidePost');
+                // Получаем информацию о состоянии поста для пользователя
+                const postElement = document.querySelector(`.post[data-id="${postId}"]`);
+                let favoriteText = t('menu.addToFavorites');
+                let hideText = t('menu.hidePost');
+                
+                // Здесь можно добавить логику определения состояния на основе данных
+                // Пока используем статичные тексты, но в будущем можно улучшить
+                
+                modal.innerHTML = `
+                    <div class="modal-header">
+                        <h3>${t('menu.actions')}</h3>
+                        <button onclick="hidePostMenu()">✕</button>
+                    </div>
+                    <div class="modal-content">
+                        <button onclick="addToFavorites(${postId})" id="favBtn${postId}">${favoriteText}</button>
+                        <button onclick="hidePost(${postId})" id="hideBtn${postId}">${hideText}</button>
+                        <button onclick="reportPost(${postId})">${t('menu.report')}</button>
+                    </div>
+                `;
             }
-            
-            modal.innerHTML = isOwnPost ? `
-                <div class="modal-header">
-                    <h3>${t('menu.myPost')}</h3>
-                    <button onclick="hidePostMenu()">✕</button>
-                </div>
-                <div class="modal-content">
-                    <button onclick="editPost(${postId})">${t('menu.edit')}</button>
-                    <button onclick="deletePost(${postId})">${t('menu.delete')}</button>
-                </div>
-            ` : `
-                <div class="modal-header">
-                    <h3>${t('menu.actions')}</h3>
-                    <button onclick="hidePostMenu()">✕</button>
-                </div>
-                <div class="modal-content">
-                    <button onclick="addToFavorites(${postId})">${favoriteText}</button>
-                    <button onclick="hidePost(${postId})">${hideText}</button>
-                    <button onclick="reportPost(${postId})">${t('menu.report')}</button>
-                </div>
-            `;
             
             showModal(modal);
             setTimeout(() => hidePostMenu(), 10000);
