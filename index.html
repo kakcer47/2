@@ -34,10 +34,98 @@
             z-index: -1;
         }
 
+        /* Загрузочный экран */
+        .loading-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #1d1c1b;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+        }
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-top: 4px solid #fff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .loading-text {
+            color: #fff;
+            margin-top: 20px;
+            font-size: 16px;
+        }
+
+        /* Выбор языка */
+        .language-selection {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #1d1c1b;
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 9998;
+        }
+
+        .language-title {
+            color: #fff;
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 40px;
+            text-align: center;
+        }
+
+        .language-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            width: 200px;
+        }
+
+        .language-btn {
+            padding: 16px 24px;
+            background: #fff;
+            color: #1d1c1b;
+            border: none;
+            border-radius: 12px;
+            font-family: 'Rubik', sans-serif;
+            font-size: 18px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .language-btn:hover {
+            background: #f0f0f0;
+            transform: translateY(-2px);
+        }
+
         .container {
             max-width: 100%;
             padding: 16px 16px 100px 16px;
             box-sizing: border-box;
+            display: none;
+        }
+
+        .container.visible {
+            display: block;
         }
 
         /* Категории */
@@ -312,6 +400,12 @@
             z-index: 1000;
             max-height: 80vh;
             overflow-y: auto;
+            transform: translateY(100%);
+            transition: transform 0.3s ease;
+        }
+
+        .modal.visible {
+            transform: translateY(0);
         }
 
         .modal-header {
@@ -700,7 +794,23 @@
     </style>
 </head>
 <body>
-    <div class="container">
+    <!-- Загрузочный экран -->
+    <div class="loading-screen" id="loadingScreen">
+        <div class="spinner"></div>
+        <div class="loading-text" id="loadingText">Подключение...</div>
+    </div>
+
+    <!-- Выбор языка -->
+    <div class="language-selection" id="languageSelection">
+        <div class="language-title" id="languageTitle">Выберите язык / Choose Language</div>
+        <div class="language-buttons">
+            <button class="language-btn" onclick="selectLanguage('ru')">🇷🇺 Русский</button>
+            <button class="language-btn" onclick="selectLanguage('en')">🇬🇧 English</button>
+        </div>
+    </div>
+
+    <!-- Основной контент -->
+    <div class="container" id="mainContainer">
         <div class="categories" id="categories">
             <!-- Categories populated dynamically -->
         </div>
@@ -708,23 +818,23 @@
         <div class="filters-container">
             <div class="filters" id="filters">
                 <button class="filter-btn" id="cityFilter" onclick="showFilterOptions('city')">
-                    <span>Город</span>
+                    <span id="cityFilterText">Город</span>
                     <span class="filter-icon">▼</span>
                 </button>
                 <button class="filter-btn" id="genderFilter" onclick="showFilterOptions('gender')">
-                    <span>Пол</span>
+                    <span id="genderFilterText">Пол</span>
                     <span class="filter-icon">▼</span>
                 </button>
                 <button class="filter-btn" id="ageFilter" onclick="showFilterOptions('age')">
-                    <span>Возраст</span>
+                    <span id="ageFilterText">Возраст</span>
                     <span class="filter-icon">▼</span>
                 </button>
                 <button class="filter-btn" id="dateFilter" onclick="showFilterOptions('date')">
-                    <span>Дата</span>
+                    <span id="dateFilterText">Дата</span>
                     <span class="filter-icon">▼</span>
                 </button>
                 <button class="filter-btn" id="sortFilter" onclick="showFilterOptions('sort')">
-                    <span>Сортировка</span>
+                    <span id="sortFilterText">Сортировка</span>
                     <span class="filter-icon">▼</span>
                 </button>
             </div>
@@ -736,10 +846,10 @@
     </div>
     
     <!-- Нижнее меню -->
-    <div class="bottom-menu">
+    <div class="bottom-menu" id="bottomMenu" style="display: none;">
         <div class="bottom-menu-content">
             <input type="text" id="search" placeholder="Поиск объявлений...">
-            <button onclick="showCreatePostModal()">Создать</button>
+            <button onclick="showCreatePostModal()" id="createButton">Создать</button>
         </div>
     </div>
     
@@ -772,14 +882,14 @@
             <textarea id="postDescription" placeholder="Введите текст объявления..."></textarea>
             
             <div class="create-categories">
-                <div class="categories-label">Категория:</div>
+                <div class="categories-label" id="categoryLabel">Категория:</div>
                 <div class="categories-scroll" id="createCategories">
                     <!-- Categories populated dynamically -->
                 </div>
             </div>
             
             <div class="create-filters">
-                <div class="filters-label">Фильтры:</div>
+                <div class="filters-label" id="filtersLabel">Фильтры:</div>
                 <div class="create-filters-buttons" id="createFiltersButtons">
                     <!-- Filter buttons populated dynamically -->
                 </div>
@@ -790,14 +900,199 @@
         </div>
         
         <div class="create-post-footer">
-            <button class="create-post-button" onclick="createPost()">Создать объявление</button>
+            <button class="create-post-button" onclick="createPost()" id="createPostButton">Создать объявление</button>
         </div>
     </div>
 
     <script>
+        // Локализация
+        const translations = {
+            ru: {
+                loading: 'Подключение...',
+                connectionLost: 'Соединение потеряно',
+                reconnecting: 'Переподключение...',
+                searchPlaceholder: 'Поиск объявлений...',
+                createButton: 'Создать',
+                cityFilter: 'Город',
+                genderFilter: 'Пол',
+                ageFilter: 'Возраст',
+                dateFilter: 'Дата',
+                sortFilter: 'Сортировка',
+                categoryLabel: 'Категория:',
+                filtersLabel: 'Фильтры:',
+                postPlaceholder: 'Введите текст объявления...',
+                createPostButton: 'Создать объявление',
+                editPostButton: 'Сохранить изменения',
+                postLimitText: ' - объявлений',
+                noPosts: 'Объявлений не найдено',
+                categories: {
+                    all: 'Все',
+                    work: 'Работа',
+                    hobbies: 'Хобби',
+                    leisure: 'Отдых',
+                    events: 'Мероприятия',
+                    friendship: 'Дружба',
+                    health: 'Здоровье'
+                },
+                filters: {
+                    cityTitle: 'Выбрать город',
+                    genderTitle: 'Выбрать пол',
+                    ageTitle: 'Выбрать возраст',
+                    dateTitle: 'Выбрать дату',
+                    sortTitle: 'Сортировка',
+                    allCities: 'Все города',
+                    allGenders: 'Все',
+                    allAges: 'Все возрасты',
+                    allDates: 'Все даты',
+                    male: 'Мужской',
+                    female: 'Женский',
+                    age1: '18-25',
+                    age2: '26-35',
+                    age3: '36-45',
+                    age4: '46+',
+                    today: 'Сегодня',
+                    tomorrow: 'Завтра',
+                    thisWeek: 'На этой неделе',
+                    thisMonth: 'В этом месяце',
+                    sortNew: 'Новые',
+                    sortOld: 'Старые',
+                    sortRating: 'По рейтингу',
+                    sortMy: 'Мои',
+                    sortFavorites: 'Избранные',
+                    sortHidden: 'Скрытые'
+                },
+                menu: {
+                    myPost: 'Мое объявление',
+                    actions: 'Действия',
+                    edit: 'Изменить',
+                    delete: 'Удалить',
+                    addToFavorites: 'Добавить в избранные',
+                    removeFromFavorites: 'Убрать из избранных',
+                    hidePost: 'Скрыть пост',
+                    showPost: 'Показать пост',
+                    report: 'Пожаловаться'
+                },
+                messages: {
+                    limitExceeded: 'Достигнут дневной лимит объявлений',
+                    banned: 'Ваш аккаунт заблокирован',
+                    postCreated: 'Объявление отправлено на модерацию',
+                    editCreated: 'Изменения отправлены на модерацию',
+                    alreadyReported: 'Вы уже отправляли жалобу на это объявление',
+                    reportSent: 'Жалоба отправлена модераторам',
+                    addedToFavorites: 'Добавлено в избранные',
+                    removedFromFavorites: 'Убрано из избранных',
+                    postHidden: 'Пост скрыт',
+                    postShown: 'Пост показан',
+                    enterText: 'Пожалуйста, введите текст объявления.',
+                    textTooShort: 'Текст объявления должен содержать минимум 10 символов.',
+                    textTooLong: 'Текст объявления слишком длинный (максимум 1000 символов).',
+                    selectCategory: 'Пожалуйста, выберите категорию.',
+                    noConnection: 'Нет соединения с сервером. Попробуйте позже.',
+                    userDataError: 'Ошибка получения данных пользователя.',
+                    createError: 'Ошибка при создании объявления.',
+                    postNotFound: 'Пост не найден или не принадлежит вам',
+                    citySearchPlaceholder: 'Поиск города...'
+                }
+            },
+            en: {
+                loading: 'Connecting...',
+                connectionLost: 'Connection lost',
+                reconnecting: 'Reconnecting...',
+                searchPlaceholder: 'Search ads...',
+                createButton: 'Create',
+                cityFilter: 'City',
+                genderFilter: 'Gender',
+                ageFilter: 'Age',
+                dateFilter: 'Date',
+                sortFilter: 'Sort',
+                categoryLabel: 'Category:',
+                filtersLabel: 'Filters:',
+                postPlaceholder: 'Enter ad text...',
+                createPostButton: 'Create ad',
+                editPostButton: 'Save changes',
+                postLimitText: ' - ads',
+                noPosts: 'No ads found',
+                categories: {
+                    all: 'All',
+                    work: 'Work',
+                    hobbies: 'Hobbies',
+                    leisure: 'Leisure',
+                    events: 'Events',
+                    friendship: 'Friendship',
+                    health: 'Health'
+                },
+                filters: {
+                    cityTitle: 'Select city',
+                    genderTitle: 'Select gender',
+                    ageTitle: 'Select age',
+                    dateTitle: 'Select date',
+                    sortTitle: 'Sort',
+                    allCities: 'All cities',
+                    allGenders: 'All',
+                    allAges: 'All ages',
+                    allDates: 'All dates',
+                    male: 'Male',
+                    female: 'Female',
+                    age1: '18-25',
+                    age2: '26-35',
+                    age3: '36-45',
+                    age4: '46+',
+                    today: 'Today',
+                    tomorrow: 'Tomorrow',
+                    thisWeek: 'This week',
+                    thisMonth: 'This month',
+                    sortNew: 'New',
+                    sortOld: 'Old',
+                    sortRating: 'By rating',
+                    sortMy: 'My',
+                    sortFavorites: 'Favorites',
+                    sortHidden: 'Hidden'
+                },
+                menu: {
+                    myPost: 'My ad',
+                    actions: 'Actions',
+                    edit: 'Edit',
+                    delete: 'Delete',
+                    addToFavorites: 'Add to favorites',
+                    removeFromFavorites: 'Remove from favorites',
+                    hidePost: 'Hide post',
+                    showPost: 'Show post',
+                    report: 'Report'
+                },
+                messages: {
+                    limitExceeded: 'Daily ad limit reached',
+                    banned: 'Your account is blocked',
+                    postCreated: 'Ad sent for moderation',
+                    editCreated: 'Changes sent for moderation',
+                    alreadyReported: 'You already reported this ad',
+                    reportSent: 'Report sent to moderators',
+                    addedToFavorites: 'Added to favorites',
+                    removedFromFavorites: 'Removed from favorites',
+                    postHidden: 'Post hidden',
+                    postShown: 'Post shown',
+                    enterText: 'Please enter ad text.',
+                    textTooShort: 'Ad text must contain at least 10 characters.',
+                    textTooLong: 'Ad text is too long (maximum 1000 characters).',
+                    selectCategory: 'Please select a category.',
+                    noConnection: 'No connection to server. Try later.',
+                    userDataError: 'Error getting user data.',
+                    createError: 'Error creating ad.',
+                    postNotFound: 'Post not found or does not belong to you',
+                    citySearchPlaceholder: 'Search city...'
+                }
+            }
+        };
+
+        // Данные городов
+        const cities = {
+            ru: ['Все города', 'Москва', 'Санкт-Петербург', 'Новосибирск', 'Екатеринбург', 'Казань', 'Нижний Новгород', 'Челябинск', 'Самара', 'Омск', 'Ростов-на-Дону', 'Уфа', 'Красноярск', 'Воронеж', 'Пермь', 'Волгоград'],
+            en: ['All cities', 'Moscow', 'Saint Petersburg', 'Novosibirsk', 'Yekaterinburg', 'Kazan', 'Nizhny Novgorod', 'Chelyabinsk', 'Samara', 'Omsk', 'Rostov-on-Don', 'Ufa', 'Krasnoyarsk', 'Voronezh', 'Perm', 'Volgograd']
+        };
+
         // Глобальные переменные
         let ws = null;
         let telegramId = null;
+        let currentLanguage = 'ru';
         let currentCategory = null;
         let createPostCategory = null;
         let currentFilters = {
@@ -818,10 +1113,70 @@
         let isLoading = false;
         let userData = null;
         let userLimits = { used: 0, total: 60 };
+        let currentPostId = null;
+        let connectionAttempts = 0;
+        let maxConnectionAttempts = 5;
+        let isConnectionActive = false;
         
         // Переменные для редактирования
         let isEditMode = false;
         let editingPostId = null;
+
+        // Функция перевода
+        function t(key) {
+            const keys = key.split('.');
+            let value = translations[currentLanguage];
+            for (const k of keys) {
+                value = value[k];
+                if (!value) break;
+            }
+            return value || key;
+        }
+
+        // Обновление интерфейса при смене языка
+        function updateLanguageInterface() {
+            // Загрузочный экран
+            document.getElementById('loadingText').textContent = t('loading');
+            
+            // Поиск и кнопки
+            document.getElementById('search').placeholder = t('searchPlaceholder');
+            document.getElementById('createButton').textContent = t('createButton');
+            
+            // Фильтры
+            document.getElementById('cityFilterText').textContent = t('cityFilter');
+            document.getElementById('genderFilterText').textContent = t('genderFilter');
+            document.getElementById('ageFilterText').textContent = t('ageFilter');
+            document.getElementById('dateFilterText').textContent = t('dateFilter');
+            document.getElementById('sortFilterText').textContent = t('sortFilter');
+            
+            // Создание поста
+            document.getElementById('postDescription').placeholder = t('postPlaceholder');
+            document.getElementById('categoryLabel').textContent = t('categoryLabel');
+            document.getElementById('filtersLabel').textContent = t('filtersLabel');
+            
+            // Обновляем категории и фильтры
+            loadCategories();
+            loadCreateCategories();
+            updatePostLimit();
+        }
+
+        // Выбор языка
+        function selectLanguage(lang) {
+            currentLanguage = lang;
+            document.getElementById('languageSelection').style.display = 'none';
+            updateLanguageInterface();
+            
+            // Если WebSocket уже подключен, инициализируем приложение
+            if (isConnectionActive) {
+                initApp();
+            }
+        }
+
+        // Показать экран выбора языка
+        function showLanguageSelection() {
+            document.getElementById('loadingScreen').style.display = 'none';
+            document.getElementById('languageSelection').style.display = 'flex';
+        }
 
         // Инициализация Telegram Web App
         Telegram.WebApp.ready();
@@ -843,9 +1198,18 @@
             
             ws.onopen = () => {
                 console.log('WebSocket connected to:', wsUrl);
-                const user = Telegram.WebApp.initDataUnsafe.user;
-                if (user) {
-                    syncUser(user);
+                isConnectionActive = true;
+                connectionAttempts = 0;
+                
+                // Если язык не выбран, показываем выбор языка
+                if (!currentLanguage || currentLanguage === 'ru') {
+                    showLanguageSelection();
+                } else {
+                    // Если язык уже выбран, инициализируем приложение
+                    const user = Telegram.WebApp.initDataUnsafe.user;
+                    if (user) {
+                        syncUser(user);
+                    }
                 }
             };
             
@@ -853,30 +1217,45 @@
             
             ws.onerror = (error) => {
                 console.error('WebSocket error:', error);
-                showConnectionError();
+                isConnectionActive = false;
+                showLoadingScreen(t('connectionLost'));
             };
             
             ws.onclose = (event) => {
                 console.log('WebSocket closed:', event.code, event.reason);
-                setTimeout(() => {
-                    if (ws.readyState === WebSocket.CLOSED) {
-                        connectWebSocket();
-                    }
-                }, 3000);
+                isConnectionActive = false;
+                
+                if (connectionAttempts < maxConnectionAttempts) {
+                    connectionAttempts++;
+                    showLoadingScreen(t('reconnecting'));
+                    setTimeout(() => {
+                        if (!isConnectionActive) {
+                            connectWebSocket();
+                        }
+                    }, 3000);
+                } else {
+                    showLoadingScreen(t('connectionLost'));
+                }
             };
         }
 
-        // Функция для отображения ошибки соединения
-        function showConnectionError() {
-            const feed = document.getElementById('feed');
-            if (feed && feed.children.length === 0) {
-                feed.innerHTML = `
-                    <div class="no-posts" style="text-align: center; color: #ff6b6b;">
-                        <p>⚠️ Проблемы с подключением к серверу</p>
-                        <p>Попробуйте перезагрузить страницу</p>
-                    </div>
-                `;
+        // Показать загрузочный экран
+        function showLoadingScreen(text = null) {
+            document.getElementById('loadingScreen').style.display = 'flex';
+            document.getElementById('languageSelection').style.display = 'none';
+            document.getElementById('mainContainer').classList.remove('visible');
+            document.getElementById('bottomMenu').style.display = 'none';
+            
+            if (text) {
+                document.getElementById('loadingText').textContent = text;
             }
+        }
+
+        // Скрыть загрузочный экран
+        function hideLoadingScreen() {
+            document.getElementById('loadingScreen').style.display = 'none';
+            document.getElementById('mainContainer').classList.add('visible');
+            document.getElementById('bottomMenu').style.display = 'block';
         }
 
         // Обработка сообщений WebSocket
@@ -890,7 +1269,8 @@
                     userData = {
                         telegram_id: data.telegram_id,
                         limits: data.limits || { used: 0, total: 60 },
-                        is_banned: data.is_banned || false
+                        is_banned: data.is_banned || false,
+                        language: data.language || 'ru'
                     };
                     
                     const telegramUser = Telegram.WebApp.initDataUnsafe.user;
@@ -901,8 +1281,15 @@
                         userData.photo_url = telegramUser.photo_url || '';
                     }
                     
+                    // Устанавливаем язык пользователя
+                    if (data.language) {
+                        currentLanguage = data.language;
+                        updateLanguageInterface();
+                    }
+                    
                     updateUserInterface();
-                    console.log('User synced successfully:', userId);
+                    hideLoadingScreen();
+                    console.log('User synced successfully:', telegramId);
                     
                 } else if (data.type === 'posts') {
                     console.log('Rendering posts:', data.posts.length, 'append:', data.append);
@@ -917,11 +1304,11 @@
                     removePostFromFeed(data.post_id);
                     
                 } else if (data.type === 'banned') {
-                    Telegram.WebApp.showAlert('Ваш аккаунт заблокирован за нарушение правил.');
+                    Telegram.WebApp.showAlert(t('messages.banned'));
                     Telegram.WebApp.close();
                     
                 } else if (data.type === 'limit_exceeded') {
-                    Telegram.WebApp.showAlert('Достигнут лимит объявлений. Попробуйте позже.');
+                    Telegram.WebApp.showAlert(t('messages.limitExceeded'));
                     
                 } else if (data.type === 'post_created') {
                     if (data.limits) {
@@ -929,7 +1316,10 @@
                         updatePostLimit();
                     }
                     hideCreatePostModal();
-                    Telegram.WebApp.showAlert('Объявление отправлено на модерацию.');
+                    
+                    const message = isEditMode ? t('messages.editCreated') : t('messages.postCreated');
+                    Telegram.WebApp.showAlert(message);
+                    
                     currentPage = 1;
                     loadPosts();
                     
@@ -939,13 +1329,16 @@
                         updatePostLimit();
                     }
                     
+                } else if (data.type === 'post_for_edit') {
+                    openEditPostModal(data.post);
+                    
                 } else if (data.type === 'favorites_updated') {
-                    const message = data.action === 'added' ? 'Добавлено в избранные' : 'Убрано из избранных';
+                    const message = data.action === 'added' ? t('messages.addedToFavorites') : t('messages.removedFromFavorites');
                     Telegram.WebApp.showAlert(message);
                     hidePostMenu();
                     
                 } else if (data.type === 'hide_updated') {
-                    const message = data.action === 'hidden' ? 'Пост скрыт' : 'Пост показан';
+                    const message = data.action === 'hidden' ? t('messages.postHidden') : t('messages.postShown');
                     Telegram.WebApp.showAlert(message);
                     if (data.action === 'hidden') {
                         removePostFromFeed(currentPostId);
@@ -953,12 +1346,18 @@
                     hidePostMenu();
                     
                 } else if (data.type === 'report_sent') {
-                    Telegram.WebApp.showAlert('Жалоба отправлена модераторам.');
+                    Telegram.WebApp.showAlert(t('messages.reportSent'));
                     hidePostMenu();
                     
                 } else if (data.type === 'error') {
                     console.error('Server error:', data.message);
-                    Telegram.WebApp.showAlert(data.message);
+                    if (data.message === 'Вы уже отправляли жалобу на это объявление') {
+                        Telegram.WebApp.showAlert(t('messages.alreadyReported'));
+                    } else if (data.message === 'Пост не найден или не принадлежит вам') {
+                        Telegram.WebApp.showAlert(t('messages.postNotFound'));
+                    } else {
+                        Telegram.WebApp.showAlert(data.message);
+                    }
                 }
                 
             } catch (error) {
@@ -985,26 +1384,8 @@
         function updatePostLimit() {
             const limitElement = document.getElementById('postLimit');
             if (limitElement && userData.limits) {
-                limitElement.textContent = `${userData.limits.used}/${userData.limits.total} - объявлений`;
+                limitElement.textContent = `${userData.limits.used}/${userData.limits.total}${t('postLimitText')}`;
             }
-        }
-
-        // Выбор языка
-        function showLanguageSelection() {
-            Telegram.WebApp.showPopup({
-                title: 'Выберите язык',
-                message: 'Пожалуйста, выберите язык интерфейса.',
-                buttons: [
-                    { id: 'ru', type: 'default', text: '🇷🇺 Русский' },
-                    { id: 'en', type: 'default', text: '🇬🇧 English' }
-                ]
-            }, (buttonId) => {
-                if (buttonId === 'ru') {
-                    initApp();
-                } else if (buttonId === 'en') {
-                    Telegram.WebApp.showAlert('English version coming soon!');
-                }
-            });
         }
 
         // Инициализация приложения
@@ -1024,7 +1405,7 @@
                     setTimeout(() => {
                         clearInterval(checkConnection);
                         if (!ws || ws.readyState !== WebSocket.OPEN) {
-                            showConnectionError();
+                            showLoadingScreen(t('connectionLost'));
                         }
                     }, 10000);
                 }
@@ -1052,7 +1433,8 @@
                     username: telegramUser.username || '',
                     first_name: telegramUser.first_name || '',
                     last_name: telegramUser.last_name || '',
-                    photo_url: telegramUser.photo_url || ''
+                    photo_url: telegramUser.photo_url || '',
+                    language: currentLanguage
                 }));
             } catch (error) {
                 console.error('Error syncing user:', error);
@@ -1061,12 +1443,21 @@
 
         // Загрузка категорий
         function loadCategories() {
-            const categories = ['Все', 'Работа', 'Хобби', 'Отдых', 'Мероприятия', 'Дружба', 'Здоровье'];
+            const categoriesData = [
+                t('categories.all'),
+                t('categories.work'),
+                t('categories.hobbies'),
+                t('categories.leisure'),
+                t('categories.events'),
+                t('categories.friendship'),
+                t('categories.health')
+            ];
+            
             const container = document.getElementById('categories');
-            container.innerHTML = categories.map(cat => `
+            container.innerHTML = categoriesData.map(cat => `
                 <div class="category" onclick="selectCategory('${cat}')">${cat}</div>
             `).join('');
-            selectCategory(categories[0]);
+            selectCategory(categoriesData[0]);
         }
 
         // Выбор категории
@@ -1087,24 +1478,24 @@
 
         // Загрузка опций фильтров
         function loadFilterOptions() {
-            // Статические данные фильтров
+            // Статические данные фильтров уже в функции showFilterOptions
         }
 
         // Показать опции фильтра
         function showFilterOptions(filterType) {
             const filterData = {
-                city: ['Все города', 'Москва', 'Санкт-Петербург', 'Новосибирск', 'Екатеринбург', 'Казань', 'Нижний Новгород', 'Челябинск', 'Самара', 'Омск', 'Ростов-на-Дону', 'Уфа', 'Красноярск', 'Воронеж', 'Пермь', 'Волгоград'],
-                gender: ['Все', 'Мужской', 'Женский'],
-                age: ['Все возрасты', '18-25', '26-35', '36-45', '46+'],
-                date: ['Все даты', 'Сегодня', 'Завтра', 'На этой неделе', 'В этом месяце'],
-                sort: ['Новые', 'Старые', 'По рейтингу', 'Мои', 'Избранные', 'Скрытые']
+                city: cities[currentLanguage],
+                gender: [t('filters.allGenders'), t('filters.male'), t('filters.female')],
+                age: [t('filters.allAges'), t('filters.age1'), t('filters.age2'), t('filters.age3'), t('filters.age4')],
+                date: [t('filters.allDates'), t('filters.today'), t('filters.tomorrow'), t('filters.thisWeek'), t('filters.thisMonth')],
+                sort: [t('filters.sortNew'), t('filters.sortOld'), t('filters.sortRating'), t('filters.sortMy'), t('filters.sortFavorites'), t('filters.sortHidden')]
             };
 
             const modal = document.getElementById('filterModal');
             const title = document.getElementById('filterTitle');
             const options = document.getElementById('filterOptions');
             
-            title.textContent = getFilterTitle(filterType);
+            title.textContent = t(`filters.${filterType}Title`);
             
             let content = '';
             
@@ -1112,7 +1503,7 @@
             if (filterType === 'city') {
                 content += `
                     <div class="city-search">
-                        <input type="text" id="citySearchInput" placeholder="Поиск города..." oninput="filterCities()">
+                        <input type="text" id="citySearchInput" placeholder="${t('messages.citySearchPlaceholder')}" oninput="filterCities()">
                     </div>
                 `;
             }
@@ -1126,7 +1517,19 @@
             `).join('');
             
             options.innerHTML = content;
+            showModal(modal);
+        }
+
+        // Показать модальное окно
+        function showModal(modal) {
             modal.style.display = 'block';
+            setTimeout(() => modal.classList.add('visible'), 10);
+        }
+
+        // Скрыть модальное окно
+        function hideModal(modal) {
+            modal.classList.remove('visible');
+            setTimeout(() => modal.style.display = 'none', 300);
         }
 
         // Фильтрация городов
@@ -1137,7 +1540,7 @@
             
             cityButtons.forEach(button => {
                 const cityName = button.getAttribute('data-city').toLowerCase();
-                if (cityName.includes(searchValue) || cityName === 'все города') {
+                if (cityName.includes(searchValue) || cityName === t('filters.allCities').toLowerCase()) {
                     button.style.display = 'block';
                 } else {
                     button.style.display = 'none';
@@ -1145,29 +1548,16 @@
             });
         }
 
-        // Получить заголовок фильтра
-        function getFilterTitle(filterType) {
-            const titles = {
-                city: 'Выбрать город',
-                gender: 'Выбрать пол',
-                age: 'Выбрать возраст',
-                date: 'Выбрать дату',
-                sort: 'Сортировка'
-            };
-            return titles[filterType];
-        }
-
         // Проверить активность фильтра
         function isFilterActive(filterType, option) {
             if (filterType === 'sort') {
-                const sortMap = {
-                    'Новые': 'new',
-                    'Старые': 'old',
-                    'По рейтингу': 'rating',
-                    'Мои': 'my',
-                    'Избранные': 'favorites',
-                    'Скрытые': 'hidden'
-                };
+                const sortMap = {};
+                sortMap[t('filters.sortNew')] = 'new';
+                sortMap[t('filters.sortOld')] = 'old';
+                sortMap[t('filters.sortRating')] = 'rating';
+                sortMap[t('filters.sortMy')] = 'my';
+                sortMap[t('filters.sortFavorites')] = 'favorites';
+                sortMap[t('filters.sortHidden')] = 'hidden';
                 return currentFilters.sort === sortMap[option];
             }
             return currentFilters[filterType].includes(option);
@@ -1176,17 +1566,17 @@
         // Выбрать опцию фильтра
         function selectFilterOption(filterType, option) {
             if (filterType === 'sort') {
-                const sortMap = {
-                    'Новые': 'new',
-                    'Старые': 'old',
-                    'По рейтингу': 'rating',
-                    'Мои': 'my',
-                    'Избранные': 'favorites',
-                    'Скрытые': 'hidden'
-                };
+                const sortMap = {};
+                sortMap[t('filters.sortNew')] = 'new';
+                sortMap[t('filters.sortOld')] = 'old';
+                sortMap[t('filters.sortRating')] = 'rating';
+                sortMap[t('filters.sortMy')] = 'my';
+                sortMap[t('filters.sortFavorites')] = 'favorites';
+                sortMap[t('filters.sortHidden')] = 'hidden';
                 currentFilters.sort = sortMap[option];
             } else {
-                if (option.includes('Все')) {
+                if (option.includes(t('filters.allCities')) || option.includes(t('filters.allGenders')) || 
+                    option.includes(t('filters.allAges')) || option.includes(t('filters.allDates'))) {
                     currentFilters[filterType] = [];
                 } else {
                     const index = currentFilters[filterType].indexOf(option);
@@ -1220,7 +1610,7 @@
 
         // Скрыть модальное окно фильтра
         function hideFilterModal() {
-            document.getElementById('filterModal').style.display = 'none';
+            hideModal(document.getElementById('filterModal'));
         }
 
         // Загрузка постов
@@ -1251,7 +1641,7 @@
             isLoading = true;
             
             const searchValue = document.getElementById('search')?.value || '';
-            const categoryToSend = currentCategory === 'Все' ? null : currentCategory;
+            const categoryToSend = currentCategory === t('categories.all') ? null : currentCategory;
             
             try {
                 ws.send(JSON.stringify({
@@ -1285,7 +1675,7 @@
             }
             
             if (posts.length === 0 && !append) {
-                feed.innerHTML = '<div class="no-posts">Объявлений не найдено</div>';
+                feed.innerHTML = `<div class="no-posts">${t('noPosts')}</div>`;
                 isLoading = false;
                 return;
             }
@@ -1325,14 +1715,14 @@
                 creator = typeof post.creator === 'string' ? JSON.parse(post.creator) : post.creator;
             } catch (e) {
                 creator = {
-                    first_name: 'Пользователь',
+                    first_name: 'User',
                     last_name: '',
                     telegram_id: 0,
                     photo_url: 'https://via.placeholder.com/32'
                 };
             }
             
-            const creatorName = `${creator.first_name || ''} ${creator.last_name || ''}`.trim() || 'Пользователь';
+            const creatorName = `${creator.first_name || ''} ${creator.last_name || ''}`.trim() || 'User';
             const creatorPhoto = creator.photo_url || 'https://via.placeholder.com/32';
             const description = escapeHtml(post.description || '');
             const likes = post.likes || 0;
@@ -1353,7 +1743,7 @@
                         </div>
                         <div class="post-actions">
                             <div class="${likeClass}" onclick="likePost(${post.id})">
-                                ${likeIcon} <span>${likes}</span>
+                                <span class="like-icon">${likeIcon}</span> <span class="like-count">${likes}</span>
                             </div>
                             <div class="menu" onclick="showPostMenu(${post.id}, ${creatorId === telegramId})">⋮</div>
                         </div>
@@ -1373,23 +1763,26 @@
         function updatePost(post) {
             const postEl = document.querySelector(`.post[data-id="${post.id}"]`);
             if (postEl) {
-                const likesSpan = postEl.querySelector('.like span');
+                const likeCountSpan = postEl.querySelector('.like-count');
                 const likeDiv = postEl.querySelector('.like');
+                const likeIcon = postEl.querySelector('.like-icon');
                 
-                if (likesSpan) likesSpan.textContent = post.likes;
-                if (likeDiv) {
-                    const likeIcon = likeDiv.querySelector('span:first-child') || likeDiv.childNodes[0];
+                if (likeCountSpan) likeCountSpan.textContent = post.likes || 0;
+                if (likeDiv && likeIcon) {
                     if (post.user_liked) {
                         likeDiv.classList.add('liked');
-                        if (likeIcon) likeIcon.textContent = '❤️';
+                        likeIcon.textContent = '❤️';
                     } else {
                         likeDiv.classList.remove('liked');
-                        if (likeIcon) likeIcon.textContent = '🤍';
+                        likeIcon.textContent = '🤍';
                     }
                 }
             } else {
+                // Если поста нет в ленте, добавляем его
                 const feed = document.getElementById('feed');
-                feed.insertAdjacentHTML('afterbegin', createPostHTML(post));
+                if (feed && post.status === 'approved') {
+                    feed.insertAdjacentHTML('afterbegin', createPostHTML(post));
+                }
             }
         }
 
@@ -1410,39 +1803,53 @@
             }
         }
 
-        let currentPostId = null;
-
         // Показать меню поста
         function showPostMenu(postId, isOwnPost) {
             currentPostId = postId;
             const modal = document.getElementById('postMenu');
+            
+            const post = Array.from(document.querySelectorAll('.post')).find(p => 
+                parseInt(p.dataset.id) === postId
+            );
+            
+            let favoriteText, hideText;
+            if (post) {
+                // Определяем текст для кнопок на основе текущего состояния
+                favoriteText = t('menu.addToFavorites'); // По умолчанию
+                hideText = t('menu.hidePost'); // По умолчанию
+            } else {
+                favoriteText = t('menu.addToFavorites');
+                hideText = t('menu.hidePost');
+            }
+            
             modal.innerHTML = isOwnPost ? `
                 <div class="modal-header">
-                    <h3>Мое объявление</h3>
+                    <h3>${t('menu.myPost')}</h3>
                     <button onclick="hidePostMenu()">✕</button>
                 </div>
                 <div class="modal-content">
-                    <button onclick="editPost(${postId})">Изменить</button>
-                    <button onclick="deletePost(${postId})">Удалить</button>
+                    <button onclick="editPost(${postId})">${t('menu.edit')}</button>
+                    <button onclick="deletePost(${postId})">${t('menu.delete')}</button>
                 </div>
             ` : `
                 <div class="modal-header">
-                    <h3>Действия</h3>
+                    <h3>${t('menu.actions')}</h3>
                     <button onclick="hidePostMenu()">✕</button>
                 </div>
                 <div class="modal-content">
-                    <button onclick="addToFavorites(${postId})">В избранные / Убрать</button>
-                    <button onclick="hidePost(${postId})">Скрыть / Показать</button>
-                    <button onclick="reportPost(${postId})">Пожаловаться</button>
+                    <button onclick="addToFavorites(${postId})">${favoriteText}</button>
+                    <button onclick="hidePost(${postId})">${hideText}</button>
+                    <button onclick="reportPost(${postId})">${t('menu.report')}</button>
                 </div>
             `;
-            modal.style.display = 'block';
+            
+            showModal(modal);
             setTimeout(() => hidePostMenu(), 10000);
         }
 
         // Скрыть меню поста
         function hidePostMenu() {
-            document.getElementById('postMenu').style.display = 'none';
+            hideModal(document.getElementById('postMenu'));
         }
 
         // Действия с постами
@@ -1475,20 +1882,13 @@
 
         // Редактирование поста
         function editPost(postId) {
-            const postElement = document.querySelector(`.post[data-id="${postId}"]`);
-            if (!postElement) {
-                Telegram.WebApp.showAlert('Пост не найден');
-                return;
-            }
-            
             if (ws && ws.readyState === WebSocket.OPEN) {
-                ws.send(JSON.dumps({
+                ws.send(JSON.stringify({
                     type: 'get_post_for_edit',
                     post_id: postId,
                     telegram_id: telegramId
                 }));
             }
-            
             hidePostMenu();
         }
 
@@ -1527,7 +1927,7 @@
                 age: [],
                 date: []
             };
-            createPostCategory = currentCategory === 'Все' ? 'Работа' : currentCategory;
+            createPostCategory = currentCategory === t('categories.all') ? t('categories.work') : currentCategory;
             updateCreatePostTags();
             loadCreateCategories();
             loadCreateFilterButtons();
@@ -1538,9 +1938,9 @@
                 modalTitle.textContent = `${userData.first_name} ${userData.last_name}`.trim();
             }
             
-            const createButton = document.querySelector('.create-post-button');
+            const createButton = document.getElementById('createPostButton');
             if (createButton) {
-                createButton.textContent = 'Создать объявление';
+                createButton.textContent = t('createPostButton');
             }
             
             updatePostLimit();
@@ -1587,9 +1987,9 @@
                 modalTitle.textContent = `${userData.first_name} ${userData.last_name}`.trim();
             }
             
-            const createButton = document.querySelector('.create-post-button');
+            const createButton = document.getElementById('createPostButton');
             if (createButton) {
-                createButton.textContent = 'Сохранить изменения';
+                createButton.textContent = t('editPostButton');
             }
             
             Telegram.WebApp.MainButton.hide();
@@ -1612,9 +2012,17 @@
 
         // Загрузка категорий для создания поста
         function loadCreateCategories() {
-            const categories = ['Работа', 'Хобби', 'Отдых', 'Мероприятия', 'Дружба', 'Здоровье'];
+            const categoriesData = [
+                t('categories.work'),
+                t('categories.hobbies'),
+                t('categories.leisure'),
+                t('categories.events'),
+                t('categories.friendship'),
+                t('categories.health')
+            ];
+            
             const container = document.getElementById('createCategories');
-            container.innerHTML = categories.map(cat => `
+            container.innerHTML = categoriesData.map(cat => `
                 <div class="category ${cat === createPostCategory ? 'active' : ''}" onclick="selectCreateCategory('${cat}')">${cat}</div>
             `).join('');
         }
@@ -1634,10 +2042,10 @@
         // Загрузка кнопок фильтров для создания поста
         function loadCreateFilterButtons() {
             const filterTypes = [
-                { type: 'city', label: 'Город' },
-                { type: 'gender', label: 'Пол' },
-                { type: 'age', label: 'Возраст' },
-                { type: 'date', label: 'Дата' }
+                { type: 'city', label: t('cityFilter') },
+                { type: 'gender', label: t('genderFilter') },
+                { type: 'age', label: t('ageFilter') },
+                { type: 'date', label: t('dateFilter') }
             ];
             
             const container = document.getElementById('createFiltersButtons');
@@ -1656,17 +2064,17 @@
         // Показать опции фильтра для создания поста
         function showCreateFilterOptions(filterType) {
             const filterData = {
-                city: ['Москва', 'Санкт-Петербург', 'Новосибирск', 'Екатеринбург', 'Казань', 'Нижний Новгород', 'Челябинск', 'Самара', 'Омск', 'Ростов-на-Дону', 'Уфа', 'Красноярск', 'Воронеж', 'Пермь', 'Волгоград'],
-                gender: ['Мужской', 'Женский'],
-                age: ['18-25', '26-35', '36-45', '46+'],
-                date: ['Сегодня', 'Завтра', 'На этой неделе', 'В этом месяце']
+                city: cities[currentLanguage].slice(1), // Убираем "Все города"
+                gender: [t('filters.male'), t('filters.female')],
+                age: [t('filters.age1'), t('filters.age2'), t('filters.age3'), t('filters.age4')],
+                date: [t('filters.today'), t('filters.tomorrow'), t('filters.thisWeek'), t('filters.thisMonth')]
             };
 
             const modal = document.getElementById('filterModal');
             const title = document.getElementById('filterTitle');
             const options = document.getElementById('filterOptions');
             
-            title.textContent = getFilterTitle(filterType);
+            title.textContent = t(`filters.${filterType}Title`);
             
             let content = '';
             
@@ -1674,7 +2082,7 @@
             if (filterType === 'city') {
                 content += `
                     <div class="city-search">
-                        <input type="text" id="citySearchInput" placeholder="Поиск города..." oninput="filterCities()">
+                        <input type="text" id="citySearchInput" placeholder="${t('messages.citySearchPlaceholder')}" oninput="filterCitiesForCreate()">
                     </div>
                 `;
             }
@@ -1688,7 +2096,23 @@
             `).join('');
             
             options.innerHTML = content;
-            modal.style.display = 'block';
+            showModal(modal);
+        }
+
+        // Фильтрация городов для создания поста
+        function filterCitiesForCreate() {
+            const searchInput = document.getElementById('citySearchInput');
+            const searchValue = searchInput.value.toLowerCase();
+            const cityButtons = document.querySelectorAll('#filterOptions button[data-city]');
+            
+            cityButtons.forEach(button => {
+                const cityName = button.getAttribute('data-city').toLowerCase();
+                if (cityName.includes(searchValue)) {
+                    button.style.display = 'block';
+                } else {
+                    button.style.display = 'none';
+                }
+            });
         }
 
         // Выбрать опцию фильтра для создания поста
@@ -1717,7 +2141,7 @@
         function updateCreatePostTags() {
             const container = document.getElementById('createPostTags');
             if (createPostTags.length === 0) {
-                container.innerHTML = '<div style="color: #999; font-style: italic;">Теги не выбраны</div>';
+                container.innerHTML = `<div style="color: #999; font-style: italic;">${currentLanguage === 'ru' ? 'Теги не выбраны' : 'No tags selected'}</div>`;
                 return;
             }
             
@@ -1732,33 +2156,33 @@
             const description = document.getElementById('postDescription').value.trim();
             
             if (!description) {
-                Telegram.WebApp.showAlert('Пожалуйста, введите текст объявления.');
+                Telegram.WebApp.showAlert(t('messages.enterText'));
                 return;
             }
             
             if (description.length < 10) {
-                Telegram.WebApp.showAlert('Текст объявления должен содержать минимум 10 символов.');
+                Telegram.WebApp.showAlert(t('messages.textTooShort'));
                 return;
             }
 
             if (description.length > 1000) {
-                Telegram.WebApp.showAlert('Текст объявления слишком длинный (максимум 1000 символов).');
+                Telegram.WebApp.showAlert(t('messages.textTooLong'));
                 return;
             }
 
             if (!createPostCategory) {
-                Telegram.WebApp.showAlert('Пожалуйста, выберите категорию.');
+                Telegram.WebApp.showAlert(t('messages.selectCategory'));
                 return;
             }
             
             if (!ws || ws.readyState !== WebSocket.OPEN) {
-                Telegram.WebApp.showAlert('Нет соединения с сервером. Попробуйте позже.');
+                Telegram.WebApp.showAlert(t('messages.noConnection'));
                 return;
             }
             
             const telegramUser = Telegram.WebApp.initDataUnsafe.user;
             if (!telegramUser) {
-                Telegram.WebApp.showAlert('Ошибка получения данных пользователя.');
+                Telegram.WebApp.showAlert(t('messages.userDataError'));
                 return;
             }
             
@@ -1770,9 +2194,8 @@
             });
             
             try {
-                const messageType = isEditMode ? 'update_post' : 'create_post';
                 const message = {
-                    type: messageType,
+                    type: 'create_post',
                     telegram_id: telegramId,
                     description: description,
                     category: createPostCategory,
@@ -1783,17 +2206,18 @@
                         first_name: telegramUser.first_name || '',
                         last_name: telegramUser.last_name || '',
                         photo_url: telegramUser.photo_url || ''
-                    }
+                    },
+                    is_edit: isEditMode
                 };
                 
                 if (isEditMode) {
-                    message.post_id = editingPostId;
+                    message.original_post_id = editingPostId;
                 }
                 
                 ws.send(JSON.stringify(message));
             } catch (error) {
                 console.error('Error creating/updating post:', error);
-                Telegram.WebApp.showAlert('Ошибка при создании объявления.');
+                Telegram.WebApp.showAlert(t('messages.createError'));
             }
         }
 
@@ -1806,12 +2230,24 @@
 
         // Поиск
         let searchTimeout;
-        document.getElementById('search').addEventListener('input', () => {
-            clearTimeout(searchTimeout);
-            searchTimeout = setTimeout(() => {
-                currentPage = 1;
-                loadPosts();
-            }, 500);
+        document.addEventListener('DOMContentLoaded', () => {
+            const searchInput = document.getElementById('search');
+            if (searchInput) {
+                searchInput.addEventListener('input', () => {
+                    clearTimeout(searchTimeout);
+                    searchTimeout = setTimeout(() => {
+                        currentPage = 1;
+                        loadPosts();
+                    }, 500);
+                });
+
+                // Скрытие клавиатуры при клике вне поля поиска
+                document.addEventListener('click', (e) => {
+                    if (e.target !== searchInput && !searchInput.contains(e.target)) {
+                        searchInput.blur();
+                    }
+                });
+            }
         });
 
         // Инициализация приложения
@@ -1835,12 +2271,6 @@
                     hidePostMenu();
                 }
             });
-            
-            setTimeout(() => {
-                if (ws && ws.readyState === WebSocket.OPEN) {
-                    showLanguageSelection();
-                }
-            }, 1000);
         });
     </script>
 </body>
