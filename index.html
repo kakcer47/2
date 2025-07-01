@@ -253,11 +253,6 @@
 
     <!-- Основной контент -->
     <div class="container" id="mainContainer">
-        <!-- Проверка настройки SERVER_URL -->
-        <div class="warning-message" id="urlWarning" style="display: none;">
-            ⚠️ Необходимо обновить SERVER_URL в коде! Замените 'https://six-yevf.onrender.com' на ваш реальный URL.
-        </div>
-
         <div class="success-message">
             ✅ Приложение успешно подключено к серверу!
         </div>
@@ -296,8 +291,8 @@
     </div>
 
     <script>
-        // ⚠️ ВАЖНО: Замените на ваш реальный URL сервера на Render
-        const SERVER_URL = 'https://six-yevf.onrender.com'; // ← ВСТАВЬТЕ ВАШ URL
+        // Ваш реальный URL сервера на Render
+        const SERVER_URL = 'https://six-yevf.onrender.com';
 
         // Глобальные переменные
         let ws = null;
@@ -319,17 +314,6 @@
             console.log(message);
         }
 
-        // Проверка правильности URL сервера
-        function checkServerURL() {
-            if (SERVER_URL === 'https://six-yevf.onrender.com') {
-                document.getElementById('urlWarning').style.display = 'block';
-                addDebugLog('⚠️ WARNING: Please update SERVER_URL in the code!');
-                showError('Необходимо обновить SERVER_URL в коде');
-                return false;
-            }
-            return true;
-        }
-
         // Инициализация Telegram Web App
         if (window.Telegram && window.Telegram.WebApp) {
             Telegram.WebApp.ready();
@@ -341,10 +325,6 @@
 
         // Подключение к WebSocket серверу
         function connectWebSocket() {
-            if (!checkServerURL()) {
-                return;
-            }
-
             // WebSocket URL через /ws endpoint
             const wsUrl = SERVER_URL.replace('https://', 'wss://').replace('http://', 'ws://') + '/ws';
             
@@ -401,7 +381,7 @@
             ws.onerror = (error) => {
                 addDebugLog(`❌ WebSocket error: ${error.type || 'Unknown'}`);
                 isConnectionActive = false;
-                showError('Ошибка подключения к серверу.\n\nПроверьте правильность SERVER_URL в коде.');
+                showError('Ошибка подключения к серверу.\n\nПроверьте работу сервера на Render.');
             };
             
             ws.onclose = (event) => {
@@ -418,7 +398,7 @@
                         }
                     }, 3000);
                 } else {
-                    showError('Не удалось подключиться к серверу после нескольких попыток.\n\nПроверьте:\n1. Правильность SERVER_URL\n2. Работает ли сервер на Render\n3. Настройки CORS');
+                    showError('Не удалось подключиться к серверу после нескольких попыток.\n\nПроверьте:\n1. Работает ли сервер на Render\n2. Настройки CORS\n3. WebSocket поддержка');
                 }
             };
         }
