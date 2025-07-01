@@ -1182,15 +1182,17 @@
         Telegram.WebApp.ready();
         Telegram.WebApp.expand();
 
-        // Подключение к WebSocket серверу
+        // Подключение к WebSocket серверу - ИСПРАВЛЕНО!
         function connectWebSocket() {
             const SERVER_URL = 'six-yevf.onrender.com'; // ← ВСТАВЬТЕ ВАШЕ НАЗВАНИЕ СЕРВИСА
             
             const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
             const isLocalhost = window.location.hostname === 'localhost';
+            
+            // ИСПРАВЛЕНО: добавлен путь /ws для всех подключений
             const wsUrl = isLocalhost ? 
-                'ws://localhost:10000' : 
-                `${protocol}//${SERVER_URL}`;
+                'ws://localhost:10000/ws' : 
+                `${protocol}//${SERVER_URL}/ws`;
             
             console.log('Connecting to WebSocket:', wsUrl);
             
