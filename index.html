@@ -7,6 +7,7 @@
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;700&display=swap" rel="stylesheet">
     <style>
+        /* Основные стили */
         body {
             margin: 0;
             font-family: 'Rubik', sans-serif;
@@ -15,6 +16,7 @@
             position: relative;
             overflow-x: hidden;
         }
+
         body::before {
             content: '';
             position: fixed;
@@ -27,120 +29,252 @@
             opacity: 0.2;
             z-index: -1;
         }
+
         .container {
             max-width: 100%;
             padding: 16px;
             box-sizing: border-box;
         }
+
+        /* Категории с новым дизайном */
         .categories {
             display: flex;
             overflow-x: auto;
-            padding: 8px 0;
+            padding: 8px 0 16px 0;
             scroll-snap-type: x mandatory;
             scrollbar-width: none;
             -ms-overflow-style: none;
+            border-bottom: 1px solid #f0f0f0;
+            margin-bottom: 16px;
         }
+
         .categories::-webkit-scrollbar {
             display: none;
         }
+
         .category {
             flex: 0 0 auto;
-            padding: 8px 16px;
-            margin: 0 4px;
-            background: #f8f7f6;
-            border-radius: 16px;
+            padding: 12px 20px;
+            margin: 0 8px;
+            background: transparent;
+            border: none;
             cursor: pointer;
             scroll-snap-align: center;
             transition: all 0.3s ease;
+            font-family: 'Rubik', sans-serif;
+            font-weight: 500;
+            font-size: 16px;
+            color: #666;
+            position: relative;
+            border-radius: 0;
         }
+
+        .category::after {
+            content: '';
+            position: absolute;
+            bottom: -8px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 0;
+            height: 3px;
+            background: #1d1c1b;
+            border-radius: 50px;
+            transition: width 0.3s ease;
+        }
+
         .category.active {
-            background: #1d1c1b;
-            color: #fff;
+            color: #1d1c1b;
+            font-weight: 700;
         }
-        .tags {
+
+        .category.active::after {
+            width: 100%;
+        }
+
+        /* Фильтры */
+        .filters-container {
+            margin-bottom: 16px;
+        }
+
+        .filters {
             display: flex;
-            flex-wrap: wrap;
             gap: 8px;
+            overflow-x: auto;
             padding: 8px 0;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
         }
-        .tag {
-            padding: 6px 12px;
+
+        .filters::-webkit-scrollbar {
+            display: none;
+        }
+
+        .filter-btn {
+            flex: 0 0 auto;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            padding: 8px 12px;
             background: #f8f7f6;
-            border-radius: 12px;
+            border: 1px solid #e0e0e0;
+            border-radius: 20px;
             cursor: pointer;
+            font-family: 'Rubik', sans-serif;
+            font-size: 14px;
+            color: #1d1c1b;
+            transition: all 0.3s ease;
         }
-        .tag.active {
+
+        .filter-btn:hover {
+            background: #ebebeb;
+        }
+
+        .filter-btn.active {
             background: #1d1c1b;
             color: #fff;
+            border-color: #1d1c1b;
         }
+
+        .filter-icon {
+            font-size: 10px;
+            transition: transform 0.3s ease;
+        }
+
+        .filter-btn.active .filter-icon {
+            transform: rotate(180deg);
+        }
+
+        /* Лента постов */
         .feed {
             margin-top: 16px;
         }
+
         .post {
             background: #fff;
-            border-radius: 12px;
-            padding: 12px;
-            margin-bottom: 12px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            border-radius: 16px;
+            padding: 16px;
+            margin-bottom: 16px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            border: 1px solid #f0f0f0;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
         }
+
+        .post:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+        }
+
         .post-description {
-            margin-bottom: 8px;
+            margin-bottom: 12px;
             font-size: 16px;
+            line-height: 1.5;
         }
+
         .post-creator {
             display: flex;
             align-items: center;
-            gap: 8px;
-            margin-bottom: 8px;
+            gap: 12px;
+            margin-bottom: 12px;
+            padding: 8px 0;
+            border-top: 1px solid #f5f5f5;
         }
+
         .post-creator img {
-            width: 32px;
-            height: 32px;
+            width: 36px;
+            height: 36px;
             border-radius: 50%;
+            object-fit: cover;
         }
+
         .post-creator a {
             color: #1d1c1b;
             text-decoration: none;
             font-weight: 500;
+            transition: color 0.3s ease;
         }
+
+        .post-creator a:hover {
+            color: #007aff;
+        }
+
         .post-actions {
             display: flex;
             justify-content: space-between;
             align-items: center;
         }
+
         .post-actions .like {
             display: flex;
             align-items: center;
-            gap: 4px;
+            gap: 6px;
             cursor: pointer;
+            padding: 8px 12px;
+            border-radius: 20px;
+            transition: background 0.3s ease;
         }
+
+        .post-actions .like:hover {
+            background: #f5f5f5;
+        }
+
         .post-actions .menu {
             cursor: pointer;
-            padding: 4px;
+            padding: 8px;
+            border-radius: 50%;
+            transition: background 0.3s ease;
+            font-size: 20px;
         }
+
+        .post-actions .menu:hover {
+            background: #f5f5f5;
+        }
+
+        /* Поисковая строка */
         .search-bar {
             position: sticky;
             bottom: 16px;
             display: flex;
-            gap: 8px;
-            padding: 8px;
+            gap: 12px;
+            padding: 12px;
             background: #fcfcfc;
+            border-radius: 16px;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+            border: 1px solid #e0e0e0;
         }
+
         .search-bar input {
             flex: 1;
-            padding: 8px;
-            border: 1px solid #f8f7f6;
-            border-radius: 8px;
+            padding: 12px;
+            border: 1px solid #e0e0e0;
+            border-radius: 12px;
             font-family: 'Rubik', sans-serif;
+            font-size: 16px;
+            outline: none;
+            transition: border-color 0.3s ease;
         }
+
+        .search-bar input:focus {
+            border-color: #1d1c1b;
+        }
+
         .search-bar button {
-            padding: 8px 16px;
+            padding: 12px 20px;
             background: #1d1c1b;
             color: #fff;
             border: none;
-            border-radius: 8px;
+            border-radius: 12px;
             cursor: pointer;
+            font-family: 'Rubik', sans-serif;
+            font-weight: 500;
+            font-size: 16px;
+            transition: background 0.3s ease;
         }
+
+        .search-bar button:hover {
+            background: #333;
+        }
+
+        /* Модальные окна */
         .modal {
             display: none;
             position: fixed;
@@ -148,26 +282,65 @@
             left: 0;
             width: 100%;
             background: #fff;
-            border-top-left-radius: 16px;
-            border-top-right-radius: 16px;
-            padding: 16px;
-            box-shadow: 0 -2px 8px rgba(0,0,0,0.2);
+            border-top-left-radius: 20px;
+            border-top-right-radius: 20px;
+            padding: 20px;
+            box-shadow: 0 -4px 16px rgba(0,0,0,0.2);
+            z-index: 1000;
         }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .modal-header h3 {
+            margin: 0;
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .modal-header button {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: #666;
+        }
+
+        .modal-content {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
         .modal button {
             display: block;
             width: 100%;
-            padding: 12px;
-            margin-bottom: 8px;
+            padding: 16px;
             background: #f8f7f6;
             border: none;
-            border-radius: 8px;
+            border-radius: 12px;
             font-family: 'Rubik', sans-serif;
+            font-size: 16px;
             cursor: pointer;
+            transition: background 0.3s ease;
         }
+
         .modal button:hover {
+            background: #ebebeb;
+        }
+
+        .modal button.active {
             background: #1d1c1b;
             color: #fff;
         }
+
+        /* Модальное окно создания поста */
         .create-post-modal {
             display: none;
             position: fixed;
@@ -176,69 +349,149 @@
             width: 100%;
             height: 100%;
             background: #fcfcfc;
-            padding: 16px;
+            padding: 20px;
             box-sizing: border-box;
             overflow-y: auto;
+            z-index: 1001;
         }
+
         .create-post-header {
             display: flex;
             align-items: center;
-            gap: 8px;
-            margin-bottom: 16px;
+            gap: 12px;
+            margin-bottom: 20px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid #f0f0f0;
         }
+
         .create-post-header img {
-            width: 40px;
-            height: 40px;
+            width: 44px;
+            height: 44px;
             border-radius: 50%;
+            object-fit: cover;
         }
+
         .create-post-header .name {
             flex: 1;
-            font-weight: 500;
+            font-weight: 600;
+            font-size: 18px;
         }
+
         .create-post-header .back {
             background: none;
             border: none;
             color: #1d1c1b;
             font-size: 16px;
             cursor: pointer;
+            padding: 8px;
+            border-radius: 8px;
+            transition: background 0.3s ease;
         }
+
+        .create-post-header .back:hover {
+            background: #f5f5f5;
+        }
+
         .create-post-content textarea {
             width: 100%;
-            min-height: 100px;
-            padding: 8px;
-            border: 1px solid #f8f7f6;
-            border-radius: 8px;
+            min-height: 120px;
+            padding: 16px;
+            border: 1px solid #e0e0e0;
+            border-radius: 12px;
             font-family: 'Rubik', sans-serif;
+            font-size: 16px;
             resize: vertical;
-            margin-bottom: 16px;
+            margin-bottom: 20px;
+            outline: none;
+            transition: border-color 0.3s ease;
+            box-sizing: border-box;
         }
+
+        .create-post-content textarea:focus {
+            border-color: #1d1c1b;
+        }
+
         .create-post-tags {
             display: flex;
             flex-wrap: wrap;
             gap: 8px;
-            margin-bottom: 16px;
+            margin-bottom: 20px;
         }
+
         .create-post-tags .tag {
-            padding: 6px 12px;
+            padding: 8px 16px;
             background: #f8f7f6;
-            border-radius: 12px;
+            border: 1px solid #e0e0e0;
+            border-radius: 20px;
             cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s ease;
         }
+
+        .create-post-tags .tag:hover {
+            background: #ebebeb;
+        }
+
         .create-post-tags .tag.active {
             background: #1d1c1b;
             color: #fff;
+            border-color: #1d1c1b;
         }
+
         .create-post-button {
-            padding: 12px;
+            padding: 16px;
             background: #1d1c1b;
             color: #fff;
             border: none;
-            border-radius: 8px;
+            border-radius: 12px;
             font-family: 'Rubik', sans-serif;
             cursor: pointer;
             width: 100%;
             font-size: 16px;
-            font-weight: 500;
+            font-weight: 600;
+            transition: background 0.3s ease;
+        }
+
+        .create-post-button:hover {
+            background: #333;
+        }
+
+        .create-post-button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        .no-posts {
+            text-align: center;
+            padding: 40px 20px;
+            color: #666;
+            font-size: 16px;
+        }
+
+        /* Адаптивность */
+        @media (max-width: 480px) {
+            .container {
+                padding: 12px;
+            }
+            
+            .post {
+                padding: 12px;
+                margin-bottom: 12px;
+            }
+            
+            .search-bar {
+                padding: 8px;
+                gap: 8px;
+            }
+            
+            .filters {
+                gap: 6px;
+            }
+            
+            .filter-btn {
+                padding: 6px 10px;
+                font-size: 13px;
+            }
         }
     </style>
 </head>
@@ -247,19 +500,55 @@
         <div class="categories" id="categories">
             <!-- Categories populated dynamically -->
         </div>
-        <div class="tags" id="tags">
-            <!-- Tags populated dynamically -->
+        
+        <div class="filters-container">
+            <div class="filters" id="filters">
+                <button class="filter-btn" id="cityFilter" onclick="showFilterOptions('city')">
+                    <span>Город</span>
+                    <span class="filter-icon">▼</span>
+                </button>
+                <button class="filter-btn" id="genderFilter" onclick="showFilterOptions('gender')">
+                    <span>Пол</span>
+                    <span class="filter-icon">▼</span>
+                </button>
+                <button class="filter-btn" id="ageFilter" onclick="showFilterOptions('age')">
+                    <span>Возраст</span>
+                    <span class="filter-icon">▼</span>
+                </button>
+                <button class="filter-btn" id="dateFilter" onclick="showFilterOptions('date')">
+                    <span>Дата</span>
+                    <span class="filter-icon">▼</span>
+                </button>
+                <button class="filter-btn" id="sortFilter" onclick="showFilterOptions('sort')">
+                    <span>Сортировка</span>
+                    <span class="filter-icon">▼</span>
+                </button>
+            </div>
         </div>
+
         <div class="feed" id="feed">
             <!-- Posts populated dynamically -->
         </div>
+        
         <div class="search-bar">
             <input type="text" id="search" placeholder="Поиск объявлений...">
             <button onclick="showCreatePostModal()">Создать</button>
         </div>
+        
         <div class="modal" id="postMenu">
             <!-- Menu options populated dynamically -->
         </div>
+        
+        <div class="modal" id="filterModal">
+            <div class="modal-header">
+                <h3 id="filterTitle">Фильтр</h3>
+                <button onclick="hideFilterModal()">✕</button>
+            </div>
+            <div class="modal-content" id="filterOptions">
+                <!-- Filter options populated dynamically -->
+            </div>
+        </div>
+        
         <div class="create-post-modal" id="createPostModal">
             <div class="create-post-header">
                 <button class="back" onclick="hideCreatePostModal()">Назад</button>
@@ -275,59 +564,76 @@
             </div>
         </div>
     </div>
+
     <script>
-        let wsAccounts = null;
-        let wsPosts = null;
+        // Глобальные переменные
+        let ws = null;
         let userId = null;
         let currentCategory = null;
-        let currentTags = [];
+        let currentFilters = {
+            city: [],
+            gender: [],
+            age: [],
+            date: [],
+            sort: 'new'
+        };
         let createPostTags = [];
         let currentPage = 1;
         let isLoading = false;
         let userData = null;
 
-        // Initialize Telegram Web App
+        // Инициализация Telegram Web App
         Telegram.WebApp.ready();
         Telegram.WebApp.expand();
 
-        // Connect to WebSocket servers
-        function connectWebSockets() {
-            wsAccounts = new WebSocket('wss://bottg-os1g.onrender.com');
-            wsPosts = new WebSocket('wss://six-yqrj.onrender.com');
-
-            wsAccounts.onmessage = handleAccountsMessage;
-            wsPosts.onmessage = handlePostsMessage;
-
-            wsAccounts.onopen = () => console.log('Accounts WebSocket connected');
-            wsPosts.onopen = () => console.log('Posts WebSocket connected');
-
-            wsAccounts.onerror = wsPosts.onerror = (error) => console.error('WebSocket error:', error);
+        // Подключение к WebSocket серверу
+        function connectWebSocket() {
+            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+            const host = window.location.hostname;
+            const port = window.location.hostname === 'localhost' ? ':10000' : '';
+            
+            ws = new WebSocket(`${protocol}//${host}${port}`);
+            
+            ws.onmessage = handleMessage;
+            ws.onopen = () => console.log('WebSocket connected');
+            ws.onerror = (error) => console.error('WebSocket error:', error);
+            ws.onclose = () => setTimeout(() => connectWebSocket(), 3000);
         }
 
-        // Handle Accounts WebSocket messages
-        function handleAccountsMessage(event) {
+        // Обработка сообщений WebSocket
+        function handleMessage(event) {
             const data = JSON.parse(event.data);
+            
             if (data.type === 'user_data') {
                 userId = data.user_id;
                 userData = data;
-                document.getElementById('userAvatar').src = data.photo_url || 'https://via.placeholder.com/40';
-                document.getElementById('userName').textContent = `${data.first_name} ${data.last_name || ''}`.trim();
-            }
-        }
-
-        // Handle Posts WebSocket messages
-        function handlePostsMessage(event) {
-            const data = JSON.parse(event.data);
-            if (data.type === 'posts') {
+                updateUserInterface(data);
+            } else if (data.type === 'posts') {
                 renderPosts(data.posts, data.append);
             } else if (data.type === 'post_updated') {
                 updatePost(data.post);
             } else if (data.type === 'post_deleted') {
-                document.querySelector(`.post[data-id="${data.post_id}"]`)?.remove();
+                removePostFromFeed(data.post_id);
+            } else if (data.type === 'banned') {
+                Telegram.WebApp.showAlert('Ваш аккаунт заблокирован за нарушение правил.');
+                Telegram.WebApp.close();
+            } else if (data.type === 'limit_exceeded') {
+                Telegram.WebApp.showAlert('Достигнут лимит объявлений. Попробуйте позже.');
+            } else if (data.type === 'post_created') {
+                Telegram.WebApp.showAlert('Объявление отправлено на модерацию.');
             }
         }
 
-        // Language selection
+        // Обновление интерфейса пользователя
+        function updateUserInterface(userData) {
+            const avatar = document.getElementById('userAvatar');
+            const userName = document.getElementById('userName');
+            
+            if (avatar) avatar.src = userData.photo_url || 'https://via.placeholder.com/40';
+            if (userName) userName.textContent = `${userData.first_name} ${userData.last_name || ''}`.trim();
+        }
+
+        // Выбор языка
         function showLanguageSelection() {
             Telegram.WebApp.showPopup({
                 title: 'Выберите язык',
@@ -345,11 +651,21 @@
             });
         }
 
-        // Initialize app after language selection
+        // Инициализация приложения
         function initApp() {
             const user = Telegram.WebApp.initDataUnsafe.user;
             if (user) {
-                wsAccounts.send(JSON.stringify({
+                syncUser(user);
+                loadCategories();
+                loadFilterOptions();
+                loadPosts();
+            }
+        }
+
+        // Синхронизация пользователя
+        function syncUser(user) {
+            if (ws && ws.readyState === WebSocket.OPEN) {
+                ws.send(JSON.stringify({
                     type: 'sync_user',
                     user_id: user.id,
                     username: user.username || '',
@@ -357,17 +673,12 @@
                     last_name: user.last_name || '',
                     photo_url: user.photo_url || ''
                 }));
-                loadCategories();
-                loadTags();
-                loadPosts();
             }
         }
 
-        // Load categories
+        // Загрузка категорий
         function loadCategories() {
-            const categories = [
-                'Работа', 'Хобби', 'Отдых', 'Мероприятия', 'Дружба', 'Здоровье'
-            ];
+            const categories = ['Работа', 'Хобби', 'Отдых', 'Мероприятия', 'Дружба', 'Здоровье'];
             const container = document.getElementById('categories');
             container.innerHTML = categories.map(cat => `
                 <div class="category" onclick="selectCategory('${cat}')">${cat}</div>
@@ -375,9 +686,10 @@
             selectCategory(categories[0]);
         }
 
-        // Select category
+        // Выбор категории
         function selectCategory(category) {
             if (currentCategory === category) return;
+            
             currentCategory = category;
             document.querySelectorAll('.category').forEach(el => {
                 el.classList.toggle('active', el.textContent === category);
@@ -385,233 +697,357 @@
                     el.scrollIntoView({ behavior: 'smooth', inline: 'center' });
                 }
             });
+            
             currentPage = 1;
             loadPosts();
         }
 
-        // Load tags
-        function loadTags() {
-            const tags = {
-                city: ['Москва', 'Санкт-Петербург', 'Новосибирск'],
-                gender: ['Мужской', 'Женский'],
-                age: ['18-25', '26-35', '36+'],
-                date: ['Сегодня', 'Завтра', 'На этой неделе']
+        // Загрузка опций фильтров
+        function loadFilterOptions() {
+            // Статические данные фильтров
+        }
+
+        // Показать опции фильтра
+        function showFilterOptions(filterType) {
+            const filterData = {
+                city: ['Все города', 'Москва', 'Санкт-Петербург', 'Новосибирск', 'Екатеринбург'],
+                gender: ['Все', 'Мужской', 'Женский'],
+                age: ['Все возрасты', '18-25', '26-35', '36-45', '46+'],
+                date: ['Все даты', 'Сегодня', 'Завтра', 'На этой неделе', 'В этом месяце'],
+                sort: ['Новые', 'Старые', 'По рейтингу', 'Мои', 'Избранные', 'Скрытые']
             };
-            const container = document.getElementById('tags');
-            container.innerHTML = Object.entries(tags).flatMap(([type, values]) =>
-                values.map(val => `
-                    <div class="tag" onclick="toggleTag('${type}', '${val}')">${val}</div>
-                `)
-            ).join('');
 
-            // Load tags for create post modal
-            const createTagsContainer = document.getElementById('createPostTags');
-            createTagsContainer.innerHTML = Object.entries(tags).flatMap(([type, values]) =>
-                values.map(val => `
-                    <div class="tag" onclick="toggleCreatePostTag('${type}', '${val}')">${val}</div>
-                `)
-            ).join('');
+            const modal = document.getElementById('filterModal');
+            const title = document.getElementById('filterTitle');
+            const options = document.getElementById('filterOptions');
+            
+            title.textContent = getFilterTitle(filterType);
+            options.innerHTML = filterData[filterType].map(option => `
+                <button onclick="selectFilterOption('${filterType}', '${option}')" 
+                        class="${isFilterActive(filterType, option) ? 'active' : ''}">
+                    ${option}
+                </button>
+            `).join('');
+            
+            modal.style.display = 'block';
         }
 
-        // Toggle tag for filtering
-        function toggleTag(type, value) {
-            const key = `${type}:${value}`;
-            if (currentTags.includes(key)) {
-                currentTags = currentTags.filter(t => t !== key);
-            } else {
-                currentTags.push(key);
+        // Получить заголовок фильтра
+        function getFilterTitle(filterType) {
+            const titles = {
+                city: 'Выбрать город',
+                gender: 'Выбрать пол',
+                age: 'Выбрать возраст',
+                date: 'Выбрать дату',
+                sort: 'Сортировка'
+            };
+            return titles[filterType];
+        }
+
+        // Проверить активность фильтра
+        function isFilterActive(filterType, option) {
+            if (filterType === 'sort') {
+                return currentFilters.sort === option.toLowerCase().replace(' ', '_');
             }
-            document.querySelectorAll('#tags .tag').forEach(el => {
-                el.classList.toggle('active', currentTags.includes(`${type}:${el.textContent}`));
-            });
+            return currentFilters[filterType].includes(option);
+        }
+
+        // Выбрать опцию фильтра
+        function selectFilterOption(filterType, option) {
+            if (filterType === 'sort') {
+                currentFilters.sort = option.toLowerCase().replace(' ', '_');
+            } else {
+                if (option.includes('Все')) {
+                    currentFilters[filterType] = [];
+                } else {
+                    const index = currentFilters[filterType].indexOf(option);
+                    if (index > -1) {
+                        currentFilters[filterType].splice(index, 1);
+                    } else {
+                        currentFilters[filterType].push(option);
+                    }
+                }
+            }
+            
+            updateFilterButtons();
+            hideFilterModal();
             currentPage = 1;
             loadPosts();
         }
 
-        // Toggle tag for create post
-        function toggleCreatePostTag(type, value) {
-            const key = `${type}:${value}`;
-            if (createPostTags.includes(key)) {
-                createPostTags = createPostTags.filter(t => t !== key);
-            } else {
-                createPostTags.push(key);
-            }
-            document.querySelectorAll('#createPostTags .tag').forEach(el => {
-                el.classList.toggle('active', createPostTags.includes(`${type}:${el.textContent}`));
+        // Обновить кнопки фильтров
+        function updateFilterButtons() {
+            Object.keys(currentFilters).forEach(filterType => {
+                const button = document.getElementById(`${filterType}Filter`);
+                if (button) {
+                    const hasActiveFilters = filterType === 'sort' ? 
+                        currentFilters.sort !== 'new' : 
+                        currentFilters[filterType].length > 0;
+                    
+                    button.classList.toggle('active', hasActiveFilters);
+                }
             });
         }
 
-        // Load posts
+        // Скрыть модальное окно фильтра
+        function hideFilterModal() {
+            document.getElementById('filterModal').style.display = 'none';
+        }
+
+        // Загрузка постов
         function loadPosts(append = false) {
-            if (isLoading) return;
+            if (isLoading || !ws || ws.readyState !== WebSocket.OPEN) return;
+            
             isLoading = true;
-            wsPosts.send(JSON.stringify({
+            ws.send(JSON.stringify({
                 type: 'get_posts',
                 category: currentCategory,
-                tags: currentTags,
+                filters: currentFilters,
                 page: currentPage,
                 limit: 20,
                 user_id: userId,
-                search: document.getElementById('search').value
+                search: document.getElementById('search').value,
+                append: append
             }));
         }
 
-        // Render posts
+        // Отрисовка постов
         function renderPosts(posts, append = false) {
             const feed = document.getElementById('feed');
             if (!append) feed.innerHTML = '';
-            feed.innerHTML += posts.map(post => `
+            
+            if (posts.length === 0 && !append) {
+                feed.innerHTML = '<div class="no-posts">Объявлений не найдено</div>';
+                isLoading = false;
+                return;
+            }
+            
+            feed.innerHTML += posts.map(post => createPostHTML(post)).join('');
+            isLoading = false;
+            currentPage++;
+        }
+
+        // Создание HTML для поста
+        function createPostHTML(post) {
+            const creator = typeof post.creator === 'string' ? JSON.parse(post.creator) : post.creator;
+            return `
                 <div class="post" data-id="${post.id}">
-                    <div class="post-description">${post.description}</div>
+                    <div class="post-description">${escapeHtml(post.description)}</div>
                     <div class="post-creator">
-                        <img src="${post.creator.photo_url || 'https://via.placeholder.com/32'}" alt="Avatar">
-                        <a href="tg://user?id=${post.creator.user_id}" target="_blank">
-                            ${post.creator.first_name} ${post.creator.last_name || ''}
+                        <img src="${creator.photo_url || 'https://via.placeholder.com/32'}" alt="Avatar">
+                        <a href="tg://user?id=${creator.user_id}" target="_blank">
+                            ${escapeHtml(creator.first_name)} ${escapeHtml(creator.last_name || '')}
                         </a>
                     </div>
                     <div class="post-actions">
                         <div class="like" onclick="likePost(${post.id})">
                             ❤️ <span>${post.likes}</span>
                         </div>
-                        <div class="menu" onclick="showPostMenu(${post.id}, ${post.creator.user_id === userId})">� Lakeside</div>
+                        <div class="menu" onclick="showPostMenu(${post.id}, ${creator.user_id === userId})">⋮</div>
                     </div>
                 </div>
-            `).join('');
-            isLoading = false;
-            currentPage++;
+            `;
         }
 
-        // Update post
+        // Экранирование HTML
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // Обновление поста
         function updatePost(post) {
             const postEl = document.querySelector(`.post[data-id="${post.id}"]`);
             if (postEl) {
-                postEl.querySelector('.like span').textContent = post.likes;
+                const likesSpan = postEl.querySelector('.like span');
+                if (likesSpan) likesSpan.textContent = post.likes;
             } else {
-                // Prepend new post to feed
                 const feed = document.getElementById('feed');
-                feed.innerHTML = `
-                    <div class="post" data-id="${post.id}">
-                        <div class="post-description">${post.description}</div>
-                        <div class="post-creator">
-                            <img src="${post.creator.photo_url || 'https://via.placeholder.com/32'}" alt="Avatar">
-                            <a href="tg://user?id=${post.creator.user_id}" target="_blank">
-                                ${post.creator.first_name} ${post.creator.last_name || ''}
-                            </a>
-                        </div>
-                        <div class="post-actions">
-                            <div class="like" onclick="likePost(${post.id})">
-                                ❤️ <span>${post.likes}</span>
-                            </div>
-                            <div class="menu" onclick="showPostMenu(${post.id}, ${post.creator.user_id === userId})">⋮</div>
-                        </div>
-                    </div>
-                ` + feed.innerHTML;
+                feed.insertAdjacentHTML('afterbegin', createPostHTML(post));
             }
         }
 
-        // Like post
-        function likePost(postId) {
-            wsPosts.send(JSON.stringify({
-                type: 'like_post',
-                post_id: postId,
-                user_id: userId
-            }));
+        // Удаление поста из ленты
+        function removePostFromFeed(postId) {
+            const postEl = document.querySelector(`.post[data-id="${postId}"]`);
+            if (postEl) postEl.remove();
         }
 
-        // Show post menu
+        // Лайк поста
+        function likePost(postId) {
+            if (ws && ws.readyState === WebSocket.OPEN) {
+                ws.send(JSON.stringify({
+                    type: 'like_post',
+                    post_id: postId,
+                    user_id: userId
+                }));
+            }
+        }
+
+        // Показать меню поста
         function showPostMenu(postId, isOwnPost) {
             const modal = document.getElementById('postMenu');
             modal.innerHTML = isOwnPost ? `
-                <button onclick="editPost(${postId})">Изменить</button>
                 <button onclick="deletePost(${postId})">Удалить</button>
+                <button onclick="hidePostMenu()">Отмена</button>
             ` : `
-                <button onclick="favoritePost(${postId})">В избранное</button>
-                <button onclick="hidePost(${postId})">Скрыть</button>
                 <button onclick="reportPost(${postId})">Пожаловаться</button>
+                <button onclick="hidePostMenu()">Отмена</button>
             `;
             modal.style.display = 'block';
-            setTimeout(() => modal.style.display = 'none', 5000);
+            setTimeout(() => hidePostMenu(), 10000);
         }
 
-        // Post actions
-        function editPost(postId) {
-            wsPosts.send(JSON.stringify({ type: 'get_post', post_id: postId }));
-            // Handle post editing in a modal (implementation omitted for brevity)
+        // Скрыть меню поста
+        function hidePostMenu() {
+            document.getElementById('postMenu').style.display = 'none';
         }
 
+        // Действия с постами
         function deletePost(postId) {
-            wsPosts.send(JSON.stringify({ type: 'delete_post', post_id: postId, user_id: userId }));
-        }
-
-        function favoritePost(postId) {
-            wsAccounts.send(JSON.stringify({ type: 'favorite_post', post_id: postId, user_id: userId }));
-        }
-
-        function hidePost(postId) {
-            wsAccounts.send(JSON.stringify({ type: 'hide_post', post_id: postIdというのは: postId, user_id: userId }));
+            if (ws && ws.readyState === WebSocket.OPEN) {
+                ws.send(JSON.stringify({
+                    type: 'delete_post',
+                    post_id: postId,
+                    user_id: userId
+                }));
+            }
+            hidePostMenu();
         }
 
         function reportPost(postId) {
-            wsPosts.send(JSON.stringify({ type: 'report_post', post_id: postId, user_id: userId }));
+            if (ws && ws.readyState === WebSocket.OPEN) {
+                ws.send(JSON.stringify({
+                    type: 'report_post',
+                    post_id: postId,
+                    user_id: userId
+                }));
+            }
+            Telegram.WebApp.showAlert('Жалоба отправлена модераторам.');
+            hidePostMenu();
         }
 
-        // Show create post modal
+        // Показать модальное окно создания поста
         function showCreatePostModal() {
             document.getElementById('createPostModal').style.display = 'block';
-            createPostTags = []; // Reset selected tags
-            document.querySelectorAll('#createPostTags .tag').forEach(el => el.classList.remove('active'));
+            createPostTags = [];
+            updateCreatePostTags();
             document.getElementById('postDescription').value = '';
+            
             Telegram.WebApp.MainButton.hide();
             Telegram.WebApp.BackButton.show();
             Telegram.WebApp.BackButton.onClick(hideCreatePostModal);
         }
 
-        // Hide create post modal
+        // Скрыть модальное окно создания поста
         function hideCreatePostModal() {
             document.getElementById('createPostModal').style.display = 'none';
             Telegram.WebApp.BackButton.hide();
         }
 
-        // Create post
+        // Загрузка тегов для создания поста
+        function loadCreatePostTags() {
+            const tags = {
+                city: ['Москва', 'Санкт-Петербург', 'Новосибирск'],
+                gender: ['Мужской', 'Женский'],
+                age: ['18-25', '26-35', '36+'],
+                date: ['Сегодня', 'Завтра', 'На этой неделе']
+            };
+            
+            const container = document.getElementById('createPostTags');
+            container.innerHTML = Object.entries(tags).flatMap(([type, values]) =>
+                values.map(val => `
+                    <div class="tag" onclick="toggleCreatePostTag('${type}', '${val}')">${val}</div>
+                `)
+            ).join('');
+        }
+
+        // Переключение тега для создания поста
+        function toggleCreatePostTag(type, value) {
+            const key = `${type}:${value}`;
+            const index = createPostTags.indexOf(key);
+            
+            if (index > -1) {
+                createPostTags.splice(index, 1);
+            } else {
+                createPostTags.push(key);
+            }
+            
+            updateCreatePostTags();
+        }
+
+        // Обновление тегов создания поста
+        function updateCreatePostTags() {
+            document.querySelectorAll('#createPostTags .tag').forEach(el => {
+                const tagText = el.textContent;
+                const isActive = createPostTags.some(tag => tag.includes(tagText));
+                el.classList.toggle('active', isActive);
+            });
+        }
+
+        // Создание поста
         function createPost() {
             const description = document.getElementById('postDescription').value.trim();
+            
             if (!description) {
                 Telegram.WebApp.showAlert('Пожалуйста, введите текст объявления.');
                 return;
             }
-            wsPosts.send(JSON.stringify({
-                type: 'create_post',
-                user_id: userId,
-                description,
-                category: currentCategory,
-                tags: createPostTags,
-                creator: {
+            
+            if (description.length < 10) {
+                Telegram.WebApp.showAlert('Текст объявления должен содержать минимум 10 символов.');
+                return;
+            }
+            
+            if (ws && ws.readyState === WebSocket.OPEN) {
+                ws.send(JSON.stringify({
+                    type: 'create_post',
                     user_id: userId,
-                    username: userData.username || '',
-                    first_name: userData.first_name || '',
-                    last_name: userData.last_name || '',
-                    photo_url: userData.photo_url || ''
-                }
-            }));
+                    description: description,
+                    category: currentCategory,
+                    tags: createPostTags,
+                    creator: {
+                        user_id: userId,
+                        username: userData.username || '',
+                        first_name: userData.first_name || '',
+                        last_name: userData.last_name || '',
+                        photo_url: userData.photo_url || ''
+                    }
+                }));
+            }
+            
             hideCreatePostModal();
         }
 
-        // Infinite scroll
+        // Бесконечная прокрутка
         window.addEventListener('scroll', () => {
-            if (window.innerHeight + window.scrollY >= document.body.offsetHeight - 100) {
+            if (window.innerHeight + window.scrollY >= document.body.offsetHeight - 300) {
                 loadPosts(true);
             }
         });
 
-        // Search
+        // Поиск
+        let searchTimeout;
         document.getElementById('search').addEventListener('input', () => {
-            currentPage = 1;
-            loadPosts();
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(() => {
+                currentPage = 1;
+                loadPosts();
+            }, 500);
         });
 
-        // Start app
-        connectWebSockets();
-        showLanguageSelection();
+        // Инициализация приложения
+        document.addEventListener('DOMContentLoaded', () => {
+            connectWebSocket();
+            loadCreatePostTags();
+            
+            setTimeout(() => {
+                if (ws && ws.readyState === WebSocket.OPEN) {
+                    showLanguageSelection();
+                }
+            }, 1000);
+        });
     </script>
 </body>
 </html>
