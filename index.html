@@ -1117,7 +1117,8 @@
         let connectionAttempts = 0;
         let maxConnectionAttempts = 5;
         let isConnectionActive = false;
-        
+        let isUserSynced = false;
+
         // Переменные для редактирования
         let isEditMode = false;
         let editingPostId = null;
@@ -1268,6 +1269,7 @@
                 
                 if (data.type === 'user_synced') {
                     telegramId = data.telegram_id;
+                    isUserSynced = true;
                     userData = {
                         telegram_id: data.telegram_id,
                         limits: data.limits || { used: 0, total: 60 },
@@ -1292,6 +1294,9 @@
                     updateUserInterface();
                     hideLoadingScreen();
                     console.log('User synced successfully:', telegramId);
+
+                    currentPage = 1;
+                    loadPosts();
                     
                 } else if (data.type === 'posts') {
                     console.log('Rendering posts:', data.posts.length, 'append:', data.append);
@@ -1322,8 +1327,6 @@
                     const message = isEditMode ? t('messages.editCreated') : t('messages.postCreated');
                     Telegram.WebApp.showAlert(message);
                     
-                    currentPage = 1;
-                    loadPosts();
                     
                 } else if (data.type === 'limits_updated') {
                     if (data.limits) {
@@ -1414,7 +1417,6 @@
                 
                 loadCategories();
                 loadFilterOptions();
-                setTimeout(() => loadPosts(), 1000);
             }
         }
 
@@ -1617,8 +1619,8 @@
 
         // Загрузка постов
         function loadPosts(append = false) {
-            if (isLoading) {
-                console.log('Already loading posts, skipping...');
+            if (!isUserSynced || !telegramId) {
+                console.log('User not synced yet, skipping loadPosts');
                 return;
             }
             
