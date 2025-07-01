@@ -740,14 +740,19 @@
 
         // Подключение к WebSocket серверу
         function connectWebSocket() {
-            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-            const host = window.location.hostname;
-            const port = window.location.hostname === 'localhost' ? ':10000' : '';
+            // ПОМЕНЯЙТЕ URL СЕРВЕРА ЗДЕСЬ:
+            const SERVER_URL = 'your-app-name.onrender.com'; // ← ВСТАВЬТЕ ВАШЕ НАЗВАНИЕ СЕРВИСА
             
-            ws = new WebSocket(`${protocol}//${host}${port}`);
+            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+            const isLocalhost = window.location.hostname === 'localhost';
+            const wsUrl = isLocalhost ? 
+                'ws://localhost:10000' : 
+                `${protocol}//${SERVER_URL}`;
+            
+            ws = new WebSocket(wsUrl);
             
             ws.onmessage = handleMessage;
-            ws.onopen = () => console.log('WebSocket connected');
+            ws.onopen = () => console.log('WebSocket connected to:', wsUrl);
             ws.onerror = (error) => console.error('WebSocket error:', error);
             ws.onclose = () => setTimeout(() => connectWebSocket(), 3000);
         }
@@ -756,13 +761,25 @@
         function handleMessage(event) {
             const data = JSON.parse(event.data);
             
-            if (data.type === 'user_data') {
+            if (data.type === 'user_synced') {
                 userId = data.user_id;
-                userData = data;
-                if (data.limits) {
-                    userLimits = data.limits;
+                // Сохраняем только метаданные на фронте
+                userData = {
+                    user_id: data.user_id,
+                    limits: data.limits || { used: 0, total: 60 },
+                    is_banned: data.is_banned || false
+                };
+                
+                // Данные для отображения берем из Telegram
+                const telegramUser = Telegram.WebApp.initDataUnsafe.user;
+                if (telegramUser) {
+                    userData.first_name = telegramUser.first_name;
+                    userData.last_name = telegramUser.last_name || '';
+                    userData.username = telegramUser.username || '';
+                    userData.photo_url = telegramUser.photo_url || '';
                 }
-                updateUserInterface(data);
+                
+                updateUserInterface();
             } else if (data.type === 'posts') {
                 renderPosts(data.posts, data.append);
             } else if (data.type === 'post_updated') {
@@ -776,20 +793,24 @@
                 Telegram.WebApp.showAlert('Достигнут лимит объявлений. Попробуйте позже.');
             } else if (data.type === 'post_created') {
                 if (data.limits) {
-                    userLimits = data.limits;
+                    userData.limits = data.limits;
                     updatePostLimit();
                 }
                 Telegram.WebApp.showAlert('Объявление отправлено на модерацию.');
             }
         }
 
-        // Обновление интерфейса пользователя
-        function updateUserInterface(userData) {
+        // Обновление интерфейса пользователя (данные из локального userData)
+        function updateUserInterface() {
             const avatar = document.getElementById('userAvatar');
             const userName = document.getElementById('userName');
             
-            if (avatar) avatar.src = userData.photo_url || 'https://via.placeholder.com/40';
-            if (userName) userName.textContent = `${userData.first_name} ${userData.last_name || ''}`.trim();
+            if (avatar && userData.photo_url) {
+                avatar.src = userData.photo_url;
+            }
+            if (userName) {
+                userName.textContent = `${userData.first_name} ${userData.last_name}`.trim();
+            }
             
             updatePostLimit();
         }
@@ -797,8 +818,8 @@
         // Обновление счетчика лимитов
         function updatePostLimit() {
             const limitElement = document.getElementById('postLimit');
-            if (limitElement) {
-                limitElement.textContent = `${userLimits.used}/${userLimits.total} - объявлений`;
+            if (limitElement && userData.limits) {
+                limitElement.textContent = `${userData.limits.used}/${userData.limits.total} - объявлений`;
             }
         }
 
@@ -831,16 +852,12 @@
             }
         }
 
-        // Синхронизация пользователя
-        function syncUser(user) {
+        // Синхронизация пользователя (отправляем только telegram_id)
+        function syncUser(telegramUser) {
             if (ws && ws.readyState === WebSocket.OPEN) {
                 ws.send(JSON.stringify({
                     type: 'sync_user',
-                    user_id: user.id,
-                    username: user.username || '',
-                    first_name: user.first_name || '',
-                    last_name: user.last_name || '',
-                    photo_url: user.photo_url || ''
+                    user_id: telegramUser.id
                 }));
             }
         }
@@ -998,21 +1015,20 @@
 
         // Создание HTML для поста
         function createPostHTML(post) {
-            const creator = typeof post.creator === 'string' ? JSON.parse(post.creator) : post.creator;
             return `
                 <div class="post" data-id="${post.id}">
                     <div class="post-description">${escapeHtml(post.description)}</div>
                     <div class="post-creator">
-                        <img src="${creator.photo_url || 'https://via.placeholder.com/32'}" alt="Avatar">
-                        <a href="tg://user?id=${creator.user_id}" target="_blank">
-                            ${escapeHtml(creator.first_name)} ${escapeHtml(creator.last_name || '')}
+                        <img src="${post.creator_photo_url || 'https://via.placeholder.com/32'}" alt="Avatar">
+                        <a href="tg://user?id=${post.creator_telegram_id}" target="_blank">
+                            ${escapeHtml(post.creator_first_name)} ${escapeHtml(post.creator_last_name || '')}
                         </a>
                     </div>
                     <div class="post-actions">
                         <div class="like" onclick="likePost(${post.id})">
                             ❤️ <span>${post.likes}</span>
                         </div>
-                        <div class="menu" onclick="showPostMenu(${post.id}, ${creator.user_id === userId})">⋮</div>
+                        <div class="menu" onclick="showPostMenu(${post.id}, ${post.creator_telegram_id === userId})">⋮</div>
                     </div>
                 </div>
             `;
@@ -1208,19 +1224,22 @@
                 return;
             }
             
+            // Данные создателя берем из Telegram (локально)
+            const telegramUser = Telegram.WebApp.initDataUnsafe.user;
+            
             if (ws && ws.readyState === WebSocket.OPEN) {
                 ws.send(JSON.stringify({
                     type: 'create_post',
                     user_id: userId,
                     description: description,
-                    category: createPostCategory, // Используем выбранную в модальном окне категорию
+                    category: createPostCategory,
                     tags: createPostTags,
-                    creator: {
-                        user_id: userId,
-                        username: userData.username || '',
-                        first_name: userData.first_name || '',
-                        last_name: userData.last_name || '',
-                        photo_url: userData.photo_url || ''
+                    creator_data: {
+                        telegram_id: telegramUser.id,
+                        username: telegramUser.username || '',
+                        first_name: telegramUser.first_name || '',
+                        last_name: telegramUser.last_name || '',
+                        photo_url: telegramUser.photo_url || ''
                     }
                 }));
             }
