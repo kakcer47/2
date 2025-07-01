@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="ru">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -154,14 +155,14 @@
             border-radius: 16px;
             padding: 16px;
             margin-bottom: 16px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
             border: 1px solid #f0f0f0;
             transition: transform 0.2s ease, box-shadow 0.2s ease;
         }
 
         .post:hover {
             transform: translateY(-2px);
-            box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
         }
 
         .post-description {
@@ -238,7 +239,7 @@
             padding: 12px;
             background: #fcfcfc;
             border-radius: 16px;
-            box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
             border: 1px solid #e0e0e0;
         }
 
@@ -285,7 +286,7 @@
             border-top-left-radius: 20px;
             border-top-right-radius: 20px;
             padding: 20px;
-            box-shadow: 0 -4px 16px rgba(0,0,0,0.2);
+            box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.2);
             z-index: 1000;
         }
 
@@ -393,7 +394,8 @@
         .create-post-content {
             flex: 1;
             overflow-y: auto;
-            padding-bottom: 80px; /* Место для кнопки внизу */
+            padding-bottom: 80px;
+            /* Место для кнопки внизу */
         }
 
         .create-post-content textarea {
@@ -419,7 +421,8 @@
             margin-bottom: 20px;
         }
 
-        .categories-label, .filters-label {
+        .categories-label,
+        .filters-label {
             font-size: 16px;
             font-weight: 600;
             color: #1d1c1b;
@@ -504,7 +507,7 @@
             background: #fcfcfc;
             padding: 16px 20px;
             border-top: 1px solid #f0f0f0;
-            box-shadow: 0 -2px 8px rgba(0,0,0,0.1);
+            box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.1);
         }
 
         .create-post-button {
@@ -542,21 +545,21 @@
             .container {
                 padding: 12px;
             }
-            
+
             .post {
                 padding: 12px;
                 margin-bottom: 12px;
             }
-            
+
             .search-bar {
                 padding: 8px;
                 gap: 8px;
             }
-            
+
             .filters {
                 gap: 6px;
             }
-            
+
             .filter-btn {
                 padding: 6px 10px;
                 font-size: 13px;
@@ -582,13 +585,15 @@
 
             .create-post-content {
                 padding: 0 16px;
-                padding-bottom: 90px; /* Больше места для кнопки на мобильных */
+                padding-bottom: 90px;
+                /* Больше места для кнопки на мобильных */
             }
 
             .create-post-content textarea {
                 min-height: 100px;
                 padding: 12px;
-                font-size: 16px; /* Предотвращает зум на iOS */
+                font-size: 16px;
+                /* Предотвращает зум на iOS */
             }
 
             .categories-scroll .category {
@@ -610,7 +615,8 @@
                 font-size: 15px;
             }
 
-            .categories-label, .filters-label {
+            .categories-label,
+            .filters-label {
                 font-size: 15px;
                 margin-bottom: 10px;
             }
@@ -621,7 +627,7 @@
             .create-post-modal {
                 -webkit-overflow-scrolling: touch;
             }
-            
+
             .create-post-content textarea {
                 -webkit-appearance: none;
                 border-radius: 12px;
@@ -629,12 +635,13 @@
         }
     </style>
 </head>
+
 <body>
     <div class="container">
         <div class="categories" id="categories">
             <!-- Categories populated dynamically -->
         </div>
-        
+
         <div class="filters-container">
             <div class="filters" id="filters">
                 <button class="filter-btn" id="cityFilter" onclick="showFilterOptions('city')">
@@ -663,16 +670,16 @@
         <div class="feed" id="feed">
             <!-- Posts populated dynamically -->
         </div>
-        
+
         <div class="search-bar">
             <input type="text" id="search" placeholder="Поиск объявлений...">
             <button onclick="showCreatePostModal()">Создать</button>
         </div>
-        
+
         <div class="modal" id="postMenu">
             <!-- Menu options populated dynamically -->
         </div>
-        
+
         <div class="modal" id="filterModal">
             <div class="modal-header">
                 <h3 id="filterTitle">Фильтр</h3>
@@ -682,7 +689,7 @@
                 <!-- Filter options populated dynamically -->
             </div>
         </div>
-        
+
         <div class="create-post-modal" id="createPostModal">
             <div class="create-post-header">
                 <img id="userAvatar" src="https://via.placeholder.com/40" alt="Avatar">
@@ -693,14 +700,14 @@
             </div>
             <div class="create-post-content">
                 <textarea id="postDescription" placeholder="Введите текст объявления..."></textarea>
-                
+
                 <div class="create-categories">
                     <div class="categories-label">Категория:</div>
                     <div class="categories-scroll" id="createCategories">
                         <!-- Categories populated dynamically -->
                     </div>
                 </div>
-                
+
                 <div class="create-filters">
                     <div class="filters-label">Фильтры:</div>
                     <div class="create-post-tags" id="createPostTags">
@@ -708,7 +715,7 @@
                     </div>
                 </div>
             </div>
-            
+
             <div class="create-post-footer">
                 <button class="create-post-button" onclick="createPost()">Создать объявление</button>
             </div>
@@ -742,76 +749,135 @@
         function connectWebSocket() {
             // ПОМЕНЯЙТЕ URL СЕРВЕРА ЗДЕСЬ:
             const SERVER_URL = 'six-yevf.onrender.com'; // ← ВСТАВЬТЕ ВАШЕ НАЗВАНИЕ СЕРВИСА
-            
+
             const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
             const isLocalhost = window.location.hostname === 'localhost';
-            const wsUrl = isLocalhost ? 
-                'ws://localhost:10000' : 
+            const wsUrl = isLocalhost ?
+                'ws://localhost:10000' :
                 `${protocol}//${SERVER_URL}`;
-            
+
+            console.log('Connecting to WebSocket:', wsUrl);
+
             ws = new WebSocket(wsUrl);
-            
+
+            ws.onopen = () => {
+                console.log('WebSocket connected to:', wsUrl);
+                // Повторно синхронизируем пользователя при переподключении
+                const user = Telegram.WebApp.initDataUnsafe.user;
+                if (user) {
+                    syncUser(user);
+                }
+            };
+
             ws.onmessage = handleMessage;
-            ws.onopen = () => console.log('WebSocket connected to:', wsUrl);
-            ws.onerror = (error) => console.error('WebSocket error:', error);
-            ws.onclose = () => setTimeout(() => connectWebSocket(), 3000);
+
+            ws.onerror = (error) => {
+                console.error('WebSocket error:', error);
+                // Показываем пользователю, что есть проблемы с соединением
+                showConnectionError();
+            };
+
+            ws.onclose = (event) => {
+                console.log('WebSocket closed:', event.code, event.reason);
+                // Пытаемся переподключиться через 3 секунды
+                setTimeout(() => {
+                    if (ws.readyState === WebSocket.CLOSED) {
+                        connectWebSocket();
+                    }
+                }, 3000);
+            };
+        }
+
+        // Функция для отображения ошибки соединения
+        function showConnectionError() {
+            const feed = document.getElementById('feed');
+            if (feed && feed.children.length === 0) {
+                feed.innerHTML = `
+            <div class="no-posts" style="text-align: center; color: #ff6b6b;">
+                <p>⚠️ Проблемы с подключением к серверу</p>
+                <p>Попробуйте перезагрузить страницу</p>
+            </div>
+        `;
+            }
         }
 
         // Обработка сообщений WebSocket
         function handleMessage(event) {
-            const data = JSON.parse(event.data);
-            
-            if (data.type === 'user_synced') {
-                userId = data.user_id;
-                // Сохраняем только метаданные на фронте
-                userData = {
-                    user_id: data.user_id,
-                    limits: data.limits || { used: 0, total: 60 },
-                    is_banned: data.is_banned || false
-                };
-                
-                // Данные для отображения берем из Telegram
-                const telegramUser = Telegram.WebApp.initDataUnsafe.user;
-                if (telegramUser) {
-                    userData.first_name = telegramUser.first_name;
-                    userData.last_name = telegramUser.last_name || '';
-                    userData.username = telegramUser.username || '';
-                    userData.photo_url = telegramUser.photo_url || '';
+            try {
+                const data = JSON.parse(event.data);
+                console.log('Received message:', data.type, data);
+
+                if (data.type === 'user_synced') {
+                    userId = data.user_id;
+                    userData = {
+                        user_id: data.user_id,
+                        limits: data.limits || { used: 0, total: 60 },
+                        is_banned: data.is_banned || false
+                    };
+
+                    // Данные для отображения берем из Telegram
+                    const telegramUser = Telegram.WebApp.initDataUnsafe.user;
+                    if (telegramUser) {
+                        userData.first_name = telegramUser.first_name;
+                        userData.last_name = telegramUser.last_name || '';
+                        userData.username = telegramUser.username || '';
+                        userData.photo_url = telegramUser.photo_url || '';
+                    }
+
+                    updateUserInterface();
+                    console.log('User synced successfully:', userId);
+
+                } else if (data.type === 'posts') {
+                    console.log('Rendering posts:', data.posts.length, 'append:', data.append);
+                    renderPosts(data.posts, data.append);
+
+                } else if (data.type === 'post_updated') {
+                    console.log('Post updated:', data.post.id);
+                    updatePost(data.post);
+
+                } else if (data.type === 'post_deleted') {
+                    console.log('Post deleted:', data.post_id);
+                    removePostFromFeed(data.post_id);
+
+                } else if (data.type === 'banned') {
+                    Telegram.WebApp.showAlert('Ваш аккаунт заблокирован за нарушение правил.');
+                    Telegram.WebApp.close();
+
+                } else if (data.type === 'limit_exceeded') {
+                    Telegram.WebApp.showAlert('Достигнут лимит объявлений. Попробуйте позже.');
+
+                } else if (data.type === 'post_created') {
+                    if (data.limits) {
+                        userData.limits = data.limits;
+                        updatePostLimit();
+                    }
+                    hideCreatePostModal();
+                    Telegram.WebApp.showAlert('Объявление отправлено на модерацию.');
+                    // Перезагружаем посты, чтобы увидеть новое объявление (если оно сразу одобрено)
+                    currentPage = 1;
+                    loadPosts();
+
+                } else if (data.type === 'error') {
+                    console.error('Server error:', data.message);
+                    Telegram.WebApp.showAlert('Ошибка сервера: ' + data.message);
                 }
-                
-                updateUserInterface();
-            } else if (data.type === 'posts') {
-                renderPosts(data.posts, data.append);
-            } else if (data.type === 'post_updated') {
-                updatePost(data.post);
-            } else if (data.type === 'post_deleted') {
-                removePostFromFeed(data.post_id);
-            } else if (data.type === 'banned') {
-                Telegram.WebApp.showAlert('Ваш аккаунт заблокирован за нарушение правил.');
-                Telegram.WebApp.close();
-            } else if (data.type === 'limit_exceeded') {
-                Telegram.WebApp.showAlert('Достигнут лимит объявлений. Попробуйте позже.');
-            } else if (data.type === 'post_created') {
-                if (data.limits) {
-                    userData.limits = data.limits;
-                    updatePostLimit();
-                }
-                Telegram.WebApp.showAlert('Объявление отправлено на модерацию.');
+
+            } catch (error) {
+                console.error('Error parsing WebSocket message:', error, event.data);
             }
         }
-
         // Обновление интерфейса пользователя (данные из локального userData)
         function updateUserInterface() {
             const avatar = document.getElementById('userAvatar');
             const userName = document.getElementById('userName');
-            
+
             if (avatar && userData.photo_url) {
                 avatar.src = userData.photo_url;
             }
             if (userName) {
                 userName.textContent = `${userData.first_name} ${userData.last_name}`.trim();
             }
-            
+
             updatePostLimit();
         }
 
@@ -845,22 +911,53 @@
         function initApp() {
             const user = Telegram.WebApp.initDataUnsafe.user;
             if (user) {
-                syncUser(user);
+                // Ждем подключения WebSocket перед синхронизацией
+                if (ws && ws.readyState === WebSocket.OPEN) {
+                    syncUser(user);
+                } else {
+                    // Ждем подключения
+                    const checkConnection = setInterval(() => {
+                        if (ws && ws.readyState === WebSocket.OPEN) {
+                            clearInterval(checkConnection);
+                            syncUser(user);
+                        }
+                    }, 100);
+
+                    // Таймаут на случай проблем с подключением
+                    setTimeout(() => {
+                        clearInterval(checkConnection);
+                        if (!ws || ws.readyState !== WebSocket.OPEN) {
+                            showConnectionError();
+                        }
+                    }, 10000);
+                }
+
                 loadCategories();
                 loadFilterOptions();
-                loadPosts();
+                setTimeout(() => loadPosts(), 1000); // Даем время на синхронизацию
             }
         }
 
         // Синхронизация пользователя (отправляем только telegram_id)
         function syncUser(telegramUser) {
-            if (ws && ws.readyState === WebSocket.OPEN) {
+            if (!ws || ws.readyState !== WebSocket.OPEN) {
+                console.log('WebSocket not ready for user sync, retrying...');
+                setTimeout(() => syncUser(telegramUser), 1000);
+                return;
+            }
+
+            console.log('Syncing user:', telegramUser.id);
+
+            try {
                 ws.send(JSON.stringify({
                     type: 'sync_user',
                     user_id: telegramUser.id
                 }));
+            } catch (error) {
+                console.error('Error syncing user:', error);
             }
         }
+
 
         // Загрузка категорий
         function loadCategories() {
@@ -875,7 +972,7 @@
         // Выбор категории
         function selectCategory(category) {
             if (currentCategory === category) return;
-            
+
             currentCategory = category;
             document.querySelectorAll('.category').forEach(el => {
                 el.classList.toggle('active', el.textContent === category);
@@ -883,7 +980,7 @@
                     el.scrollIntoView({ behavior: 'smooth', inline: 'center' });
                 }
             });
-            
+
             currentPage = 1;
             loadPosts();
         }
@@ -906,7 +1003,7 @@
             const modal = document.getElementById('filterModal');
             const title = document.getElementById('filterTitle');
             const options = document.getElementById('filterOptions');
-            
+
             title.textContent = getFilterTitle(filterType);
             options.innerHTML = filterData[filterType].map(option => `
                 <button onclick="selectFilterOption('${filterType}', '${option}')" 
@@ -914,7 +1011,7 @@
                     ${option}
                 </button>
             `).join('');
-            
+
             modal.style.display = 'block';
         }
 
@@ -954,7 +1051,7 @@
                     }
                 }
             }
-            
+
             updateFilterButtons();
             hideFilterModal();
             currentPage = 1;
@@ -966,10 +1063,10 @@
             Object.keys(currentFilters).forEach(filterType => {
                 const button = document.getElementById(`${filterType}Filter`);
                 if (button) {
-                    const hasActiveFilters = filterType === 'sort' ? 
-                        currentFilters.sort !== 'new' : 
+                    const hasActiveFilters = filterType === 'sort' ?
+                        currentFilters.sort !== 'new' :
                         currentFilters[filterType].length > 0;
-                    
+
                     button.classList.toggle('active', hasActiveFilters);
                 }
             });
@@ -982,56 +1079,123 @@
 
         // Загрузка постов
         function loadPosts(append = false) {
-            if (isLoading || !ws || ws.readyState !== WebSocket.OPEN) return;
-            
-            isLoading = true;
-            ws.send(JSON.stringify({
-                type: 'get_posts',
+            if (isLoading) {
+                console.log('Already loading posts, skipping...');
+                return;
+            }
+
+            if (!ws || ws.readyState !== WebSocket.OPEN) {
+                console.log('WebSocket not ready, retrying in 1 second...');
+                setTimeout(() => loadPosts(append), 1000);
+                return;
+            }
+
+            if (!currentCategory) {
+                console.log('No category selected, skipping load...');
+                return;
+            }
+
+            console.log('Loading posts:', {
                 category: currentCategory,
-                filters: currentFilters,
                 page: currentPage,
-                limit: 20,
-                user_id: userId,
-                search: document.getElementById('search').value,
-                append: append
-            }));
+                append: append,
+                filters: currentFilters
+            });
+
+            isLoading = true;
+
+            const searchValue = document.getElementById('search')?.value || '';
+
+            try {
+                ws.send(JSON.stringify({
+                    type: 'get_posts',
+                    category: currentCategory,
+                    filters: currentFilters,
+                    page: currentPage,
+                    limit: 20,
+                    user_id: userId,
+                    search: searchValue,
+                    append: append
+                }));
+            } catch (error) {
+                console.error('Error sending get_posts message:', error);
+                isLoading = false;
+            }
         }
 
         // Отрисовка постов
         function renderPosts(posts, append = false) {
+            console.log('Rendering posts:', posts.length, 'append:', append);
+
             const feed = document.getElementById('feed');
-            if (!append) feed.innerHTML = '';
-            
+            if (!feed) {
+                console.error('Feed element not found');
+                return;
+            }
+
+            if (!append) {
+                feed.innerHTML = '';
+            }
+
             if (posts.length === 0 && !append) {
                 feed.innerHTML = '<div class="no-posts">Объявлений не найдено</div>';
                 isLoading = false;
                 return;
             }
-            
-            feed.innerHTML += posts.map(post => createPostHTML(post)).join('');
+
+            const postsHTML = posts.map(post => {
+                try {
+                    return createPostHTML(post);
+                } catch (error) {
+                    console.error('Error creating post HTML:', error, post);
+                    return '';
+                }
+            }).join('');
+
+            if (append) {
+                feed.insertAdjacentHTML('beforeend', postsHTML);
+            } else {
+                feed.innerHTML = postsHTML;
+            }
+
             isLoading = false;
-            currentPage++;
+            if (posts.length > 0) {
+                currentPage++;
+            }
+
+            console.log('Posts rendered successfully');
         }
 
         // Создание HTML для поста
         function createPostHTML(post) {
+            if (!post || !post.id) {
+                console.error('Invalid post data:', post);
+                return '';
+            }
+
+            const creatorName = `${post.creator_first_name || ''} ${post.creator_last_name || ''}`.trim() || 'Пользователь';
+            const creatorPhoto = post.creator_photo_url || 'https://via.placeholder.com/32';
+            const description = escapeHtml(post.description || '');
+            const likes = post.likes || 0;
+            const creatorId = post.creator_telegram_id;
+
             return `
-                <div class="post" data-id="${post.id}">
-                    <div class="post-description">${escapeHtml(post.description)}</div>
-                    <div class="post-creator">
-                        <img src="${post.creator_photo_url || 'https://via.placeholder.com/32'}" alt="Avatar">
-                        <a href="tg://user?id=${post.creator_telegram_id}" target="_blank">
-                            ${escapeHtml(post.creator_first_name)} ${escapeHtml(post.creator_last_name || '')}
-                        </a>
-                    </div>
-                    <div class="post-actions">
-                        <div class="like" onclick="likePost(${post.id})">
-                            ❤️ <span>${post.likes}</span>
-                        </div>
-                        <div class="menu" onclick="showPostMenu(${post.id}, ${post.creator_telegram_id === userId})">⋮</div>
-                    </div>
+        <div class="post" data-id="${post.id}">
+            <div class="post-description">${description}</div>
+            <div class="post-creator">
+                <img src="${creatorPhoto}" alt="Avatar" onerror="this.src='https://via.placeholder.com/32'">
+                <a href="tg://user?id=${creatorId}" target="_blank">
+                    ${creatorName}
+                </a>
+            </div>
+            <div class="post-actions">
+                <div class="like" onclick="likePost(${post.id})">
+                    ❤️ <span>${likes}</span>
                 </div>
-            `;
+                <div class="menu" onclick="showPostMenu(${post.id}, ${creatorId === userId})">⋮</div>
+            </div>
+        </div>
+    `;
         }
 
         // Экранирование HTML
@@ -1121,15 +1285,15 @@
             updateCreatePostTags();
             loadCreateCategories();
             document.getElementById('postDescription').value = '';
-            
+
             // Обновляем лимиты
             updatePostLimit();
-            
+
             // Настройка Telegram Web App
             Telegram.WebApp.MainButton.hide();
             Telegram.WebApp.BackButton.show();
             Telegram.WebApp.BackButton.onClick(hideCreatePostModal);
-            
+
             // Блокируем прокрутку основной страницы
             document.body.style.overflow = 'hidden';
         }
@@ -1138,7 +1302,7 @@
         function hideCreatePostModal() {
             document.getElementById('createPostModal').style.display = 'none';
             Telegram.WebApp.BackButton.hide();
-            
+
             // Разрешаем прокрутку основной страницы
             document.body.style.overflow = 'auto';
         }
@@ -1155,7 +1319,7 @@
         // Выбор категории для создания поста
         function selectCreateCategory(category) {
             createPostCategory = category;
-            
+
             // Обновляем визуальное состояние категорий
             document.querySelectorAll('#createCategories .category').forEach(el => {
                 el.classList.toggle('active', el.textContent === category);
@@ -1173,7 +1337,7 @@
                 age: ['18-25', '26-35', '36+'],
                 date: ['Сегодня', 'Завтра', 'На этой неделе']
             };
-            
+
             const container = document.getElementById('createPostTags');
             container.innerHTML = Object.entries(tags).flatMap(([type, values]) =>
                 values.map(val => `
@@ -1186,13 +1350,13 @@
         function toggleCreatePostTag(type, value) {
             const key = `${type}:${value}`;
             const index = createPostTags.indexOf(key);
-            
+
             if (index > -1) {
                 createPostTags.splice(index, 1);
             } else {
                 createPostTags.push(key);
             }
-            
+
             updateCreatePostTags();
         }
 
@@ -1207,15 +1371,20 @@
 
         // Создание поста
         function createPost() {
-            const description = document.getElementById('postDescription').value.trim();
-            
+            const description = document.getElementById('postDescription')?.value?.trim();
+
             if (!description) {
                 Telegram.WebApp.showAlert('Пожалуйста, введите текст объявления.');
                 return;
             }
-            
+
             if (description.length < 10) {
                 Telegram.WebApp.showAlert('Текст объявления должен содержать минимум 10 символов.');
+                return;
+            }
+
+            if (description.length > 1000) {
+                Telegram.WebApp.showAlert('Текст объявления слишком длинный (максимум 1000 символов).');
                 return;
             }
 
@@ -1223,11 +1392,25 @@
                 Telegram.WebApp.showAlert('Пожалуйста, выберите категорию.');
                 return;
             }
-            
-            // Данные создателя берем из Telegram (локально)
+
+            if (!ws || ws.readyState !== WebSocket.OPEN) {
+                Telegram.WebApp.showAlert('Нет соединения с сервером. Попробуйте позже.');
+                return;
+            }
+
             const telegramUser = Telegram.WebApp.initDataUnsafe.user;
-            
-            if (ws && ws.readyState === WebSocket.OPEN) {
+            if (!telegramUser) {
+                Telegram.WebApp.showAlert('Ошибка получения данных пользователя.');
+                return;
+            }
+
+            console.log('Creating post:', {
+                description: description.substring(0, 50) + '...',
+                category: createPostCategory,
+                tags: createPostTags
+            });
+
+            try {
                 ws.send(JSON.stringify({
                     type: 'create_post',
                     user_id: userId,
@@ -1242,9 +1425,10 @@
                         photo_url: telegramUser.photo_url || ''
                     }
                 }));
+            } catch (error) {
+                console.error('Error creating post:', error);
+                Telegram.WebApp.showAlert('Ошибка при создании объявления.');
             }
-            
-            hideCreatePostModal();
         }
 
         // Бесконечная прокрутка
@@ -1268,25 +1452,25 @@
         document.addEventListener('DOMContentLoaded', () => {
             connectWebSocket();
             loadCreatePostTags();
-            
+
             // Закрытие модального окна по клику вне его
             window.addEventListener('click', (e) => {
                 const createModal = document.getElementById('createPostModal');
                 if (e.target === createModal) {
                     hideCreatePostModal();
                 }
-                
+
                 const filterModal = document.getElementById('filterModal');
                 if (e.target === filterModal) {
                     hideFilterModal();
                 }
-                
+
                 const postMenu = document.getElementById('postMenu');
                 if (e.target === postMenu) {
                     hidePostMenu();
                 }
             });
-            
+
             setTimeout(() => {
                 if (ws && ws.readyState === WebSocket.OPEN) {
                     showLanguageSelection();
@@ -1295,4 +1479,5 @@
         });
     </script>
 </body>
+
 </html>
