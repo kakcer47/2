@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html lang="ru">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -35,7 +34,6 @@
             z-index: -1;
         }
 
-        /* Загрузочный экран */
         .loading-screen {
             position: fixed;
             top: 0;
@@ -60,13 +58,8 @@
         }
 
         @keyframes spin {
-            0% {
-                transform: rotate(0deg);
-            }
-
-            100% {
-                transform: rotate(360deg);
-            }
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
         }
 
         .loading-text {
@@ -75,7 +68,6 @@
             font-size: 16px;
         }
 
-        /* Выбор языка */
         .language-selection {
             position: fixed;
             top: 0;
@@ -123,14 +115,6 @@
             transform: translateY(-2px);
         }
 
-        .character-counter {
-            text-align: right;
-            font-size: 12px;
-            color: #666;
-            margin-top: -15px;
-            margin-bottom: 20px;
-        }
-
         .container {
             max-width: 100%;
             padding: 16px 16px 100px 16px;
@@ -142,7 +126,6 @@
             display: block;
         }
 
-        /* Категории */
         .categories {
             display: flex;
             overflow-x: auto;
@@ -197,7 +180,6 @@
             width: 100%;
         }
 
-        /* Фильтры */
         .filters-container {
             margin-bottom: 16px;
         }
@@ -250,7 +232,6 @@
             transform: rotate(180deg);
         }
 
-        /* Лента постов */
         .feed {
             margin-top: 16px;
         }
@@ -349,7 +330,6 @@
             background: #f5f5f5;
         }
 
-        /* Нижнее меню */
         .bottom-menu {
             position: fixed;
             bottom: 0;
@@ -401,7 +381,6 @@
             background: #333;
         }
 
-        /* Модальные окна */
         .modal {
             display: none;
             position: fixed;
@@ -476,7 +455,6 @@
             color: #fff;
         }
 
-        /* Поиск городов */
         .city-search {
             margin-bottom: 16px;
         }
@@ -495,7 +473,6 @@
             border-color: #1d1c1b;
         }
 
-        /* Модальное окно создания/редактирования поста */
         .create-post-modal {
             display: none;
             position: fixed;
@@ -570,19 +547,26 @@
             border-color: #1d1c1b;
         }
 
-        .create-categories {
+        .character-counter {
+            text-align: right;
+            font-size: 12px;
+            color: #666;
+            margin-top: -15px;
             margin-bottom: 20px;
         }
 
-        .categories-label,
-        .filters-label {
+        .create-categories, .create-tags {
+            margin-bottom: 20px;
+        }
+
+        .section-label {
             font-size: 16px;
             font-weight: 600;
             color: #1d1c1b;
             margin-bottom: 12px;
         }
 
-        .categories-scroll {
+        .categories-scroll, .tags-scroll {
             display: flex;
             overflow-x: auto;
             padding: 8px 0;
@@ -592,11 +576,11 @@
             gap: 8px;
         }
 
-        .categories-scroll::-webkit-scrollbar {
+        .categories-scroll::-webkit-scrollbar, .tags-scroll::-webkit-scrollbar {
             display: none;
         }
 
-        .categories-scroll .category {
+        .category-item, .tag-item {
             flex: 0 0 auto;
             padding: 8px 16px;
             background: #f8f7f6;
@@ -612,28 +596,24 @@
             white-space: nowrap;
         }
 
-        .categories-scroll .category:hover {
+        .category-item:hover, .tag-item:hover {
             background: #ebebeb;
         }
 
-        .categories-scroll .category.active {
+        .category-item.active, .tag-item.active {
             background: #1d1c1b;
             color: #fff;
             border-color: #1d1c1b;
         }
 
-        .create-filters {
-            margin-bottom: 20px;
-        }
-
-        .create-filters-buttons {
+        .tag-groups {
             display: flex;
             flex-wrap: wrap;
             gap: 8px;
             margin-bottom: 16px;
         }
 
-        .create-filter-btn {
+        .tag-group-btn {
             flex: 0 0 auto;
             display: flex;
             align-items: center;
@@ -649,23 +629,23 @@
             transition: all 0.3s ease;
         }
 
-        .create-filter-btn:hover {
+        .tag-group-btn:hover {
             background: #ebebeb;
         }
 
-        .create-filter-btn.active {
+        .tag-group-btn.active {
             background: #1d1c1b;
             color: #fff;
             border-color: #1d1c1b;
         }
 
-        .create-post-tags {
+        .selected-tags {
             display: flex;
             flex-wrap: wrap;
             gap: 8px;
         }
 
-        .create-post-tags .tag {
+        .selected-tags .tag {
             padding: 6px 12px;
             background: #e8f4fd;
             border: 1px solid #b3d9ff;
@@ -715,7 +695,6 @@
             font-size: 16px;
         }
 
-        /* Адаптивность */
         @media (max-width: 480px) {
             .container {
                 padding: 12px 12px 100px 12px;
@@ -772,12 +751,12 @@
                 font-size: 16px;
             }
 
-            .categories-scroll .category {
+            .category-item, .tag-item {
                 padding: 6px 12px;
                 font-size: 13px;
             }
 
-            .create-post-tags .tag {
+            .selected-tags .tag {
                 padding: 4px 8px;
                 font-size: 11px;
             }
@@ -791,14 +770,12 @@
                 font-size: 15px;
             }
 
-            .categories-label,
-            .filters-label {
+            .section-label {
                 font-size: 15px;
                 margin-bottom: 10px;
             }
         }
 
-        /* Дополнительные стили для iOS Safari */
         @supports (-webkit-touch-callout: none) {
             .create-post-modal {
                 -webkit-overflow-scrolling: touch;
@@ -811,60 +788,51 @@
         }
     </style>
 </head>
-
 <body>
-    <!-- Загрузочный экран -->
     <div class="loading-screen" id="loadingScreen">
         <div class="spinner"></div>
         <div class="loading-text" id="loadingText">Подключение...</div>
     </div>
 
-    <!-- Выбор языка -->
     <div class="language-selection" id="languageSelection">
-        <div class="language-title" id="languageTitle">Выберите язык / Choose Language</div>
+        <div class="language-title">Выберите язык / Choose Language</div>
         <div class="language-buttons">
             <button class="language-btn" onclick="selectLanguage('ru')">🇷🇺 Русский</button>
             <button class="language-btn" onclick="selectLanguage('en')">🇬🇧 English</button>
         </div>
     </div>
 
-    <!-- Основной контент -->
     <div class="container" id="mainContainer">
-        <div class="categories" id="categories">
-            <!-- Categories populated dynamically -->
-        </div>
+        <div class="categories" id="categories"></div>
 
         <div class="filters-container">
             <div class="filters" id="filters">
-                <button class="filter-btn" id="cityFilter" onclick="showFilterOptions('city')">
+                <button class="filter-btn" id="cityFilter" onclick="showFilterModal('city')">
                     <span id="cityFilterText">Город</span>
                     <span class="filter-icon">▼</span>
                 </button>
-                <button class="filter-btn" id="genderFilter" onclick="showFilterOptions('gender')">
+                <button class="filter-btn" id="genderFilter" onclick="showFilterModal('gender')">
                     <span id="genderFilterText">Пол</span>
                     <span class="filter-icon">▼</span>
                 </button>
-                <button class="filter-btn" id="ageFilter" onclick="showFilterOptions('age')">
+                <button class="filter-btn" id="ageFilter" onclick="showFilterModal('age')">
                     <span id="ageFilterText">Возраст</span>
                     <span class="filter-icon">▼</span>
                 </button>
-                <button class="filter-btn" id="dateFilter" onclick="showFilterOptions('date')">
+                <button class="filter-btn" id="dateFilter" onclick="showFilterModal('date')">
                     <span id="dateFilterText">Дата</span>
                     <span class="filter-icon">▼</span>
                 </button>
-                <button class="filter-btn" id="sortFilter" onclick="showFilterOptions('sort')">
+                <button class="filter-btn" id="sortFilter" onclick="showFilterModal('sort')">
                     <span id="sortFilterText">Сортировка</span>
                     <span class="filter-icon">▼</span>
                 </button>
             </div>
         </div>
 
-        <div class="feed" id="feed">
-            <!-- Posts populated dynamically -->
-        </div>
+        <div class="feed" id="feed"></div>
     </div>
 
-    <!-- Нижнее меню -->
     <div class="bottom-menu" id="bottomMenu" style="display: none;">
         <div class="bottom-menu-content">
             <input type="text" id="search" placeholder="Поиск объявлений...">
@@ -872,23 +840,16 @@
         </div>
     </div>
 
-    <!-- Модальное окно меню поста -->
-    <div class="modal" id="postMenu">
-        <!-- Menu options populated dynamically -->
-    </div>
+    <div class="modal" id="postMenu"></div>
 
-    <!-- Модальное окно фильтров -->
     <div class="modal" id="filterModal">
         <div class="modal-header">
             <h3 id="filterTitle">Фильтр</h3>
-            <button onclick="hideFilterModal()">✕</button>
+            <button onclick="hideModal('filterModal')">✕</button>
         </div>
-        <div class="modal-content" id="filterOptions">
-            <!-- Filter options populated dynamically -->
-        </div>
+        <div class="modal-content" id="filterOptions"></div>
     </div>
 
-    <!-- Модальное окно создания/редактирования поста -->
     <div class="create-post-modal" id="createPostModal">
         <div class="create-post-header">
             <img id="userAvatar" src="https://via.placeholder.com/40" alt="Avatar">
@@ -898,27 +859,37 @@
             </div>
         </div>
         <div class="create-post-content">
-            <textarea id="postDescription" placeholder="Немного о себе и текст объявления..."
-                maxlength="450"></textarea>
+            <textarea id="postDescription" placeholder="Введите текст объявления..." maxlength="450"></textarea>
             <div class="character-counter">
                 <span id="characterCount">0</span>/450
             </div>
 
             <div class="create-categories">
-                <div class="categories-label" id="categoryLabel">Категория:</div>
-                <div class="categories-scroll" id="createCategories">
-                    <!-- Categories populated dynamically -->
-                </div>
+                <div class="section-label" id="categoryLabel">Категория:</div>
+                <div class="categories-scroll" id="createCategories"></div>
             </div>
 
-            <div class="create-filters">
-                <div class="filters-label" id="filtersLabel">Фильтры:</div>
-                <div class="create-filters-buttons" id="createFiltersButtons">
-                    <!-- Filter buttons populated dynamically -->
+            <div class="create-tags">
+                <div class="section-label" id="tagsLabel">Теги:</div>
+                <div class="tag-groups" id="tagGroups">
+                    <button class="tag-group-btn" onclick="showTagModal('city')">
+                        <span id="cityTagText">Город</span>
+                        <span class="filter-icon">▼</span>
+                    </button>
+                    <button class="tag-group-btn" onclick="showTagModal('gender')">
+                        <span id="genderTagText">Пол</span>
+                        <span class="filter-icon">▼</span>
+                    </button>
+                    <button class="tag-group-btn" onclick="showTagModal('age')">
+                        <span id="ageTagText">Возраст</span>
+                        <span class="filter-icon">▼</span>
+                    </button>
+                    <button class="tag-group-btn" onclick="showTagModal('date')">
+                        <span id="dateTagText">Дата</span>
+                        <span class="filter-icon">▼</span>
+                    </button>
                 </div>
-                <div class="create-post-tags" id="createPostTags">
-                    <!-- Selected tags displayed here -->
-                </div>
+                <div class="selected-tags" id="selectedTags"></div>
             </div>
         </div>
 
@@ -926,19 +897,17 @@
             <button class="create-post-button" onclick="createPost()" id="createPostButton">Создать объявление</button>
         </div>
     </div>
-    <!-- Модальное окно фильтров для создания поста -->
-    <div class="modal" id="createFilterModal">
+
+    <div class="modal" id="tagModal">
         <div class="modal-header">
-            <h3 id="createFilterTitle">Фильтр</h3>
-            <button onclick="hideCreateFilterModal()">✕</button>
+            <h3 id="tagTitle">Теги</h3>
+            <button onclick="hideModal('tagModal')">✕</button>
         </div>
-        <div class="modal-content" id="createFilterOptions">
-            <!-- Filter options populated dynamically -->
-        </div>
+        <div class="modal-content" id="tagOptions"></div>
     </div>
 
     <script>
-        // Локализация
+        // Переводы
         const translations = {
             ru: {
                 loading: 'Подключение...',
@@ -952,7 +921,7 @@
                 dateFilter: 'Дата',
                 sortFilter: 'Сортировка',
                 categoryLabel: 'Категория:',
-                filtersLabel: 'Фильтры:',
+                tagsLabel: 'Теги:',
                 postPlaceholder: 'Введите текст объявления...',
                 createPostButton: 'Создать объявление',
                 editPostButton: 'Сохранить изменения',
@@ -1018,11 +987,9 @@
                     postShown: 'Пост показан',
                     enterText: 'Пожалуйста, введите текст объявления.',
                     textTooShort: 'Текст объявления должен содержать минимум 10 символов.',
-                    textTooLong: 'Текст объявления слишком длинный (максимум 1000 символов).',
+                    textTooLong: 'Текст объявления слишком длинный (максимум 450 символов).',
                     selectCategory: 'Пожалуйста, выберите категорию.',
                     noConnection: 'Нет соединения с сервером. Попробуйте позже.',
-                    userDataError: 'Ошибка получения данных пользователя.',
-                    createError: 'Ошибка при создании объявления.',
                     postNotFound: 'Пост не найден или не принадлежит вам',
                     citySearchPlaceholder: 'Поиск города...'
                 }
@@ -1039,7 +1006,7 @@
                 dateFilter: 'Date',
                 sortFilter: 'Sort',
                 categoryLabel: 'Category:',
-                filtersLabel: 'Filters:',
+                tagsLabel: 'Tags:',
                 postPlaceholder: 'Enter ad text...',
                 createPostButton: 'Create ad',
                 editPostButton: 'Save changes',
@@ -1105,21 +1072,19 @@
                     postShown: 'Post shown',
                     enterText: 'Please enter ad text.',
                     textTooShort: 'Ad text must contain at least 10 characters.',
-                    textTooLong: 'Ad text is too long (maximum 1000 characters).',
+                    textTooLong: 'Ad text is too long (maximum 450 characters).',
                     selectCategory: 'Please select a category.',
                     noConnection: 'No connection to server. Try later.',
-                    userDataError: 'Error getting user data.',
-                    createError: 'Error creating ad.',
                     postNotFound: 'Post not found or does not belong to you',
                     citySearchPlaceholder: 'Search city...'
                 }
             }
         };
 
-        // Данные городов
+        // Данные
         const cities = {
-            ru: ['Все города', 'Москва', 'Санкт-Петербург', 'Новосибирск', 'Екатеринбург', 'Казань', 'Нижний Новгород', 'Челябинск', 'Самара', 'Омск', 'Ростов-на-Дону', 'Уфа', 'Красноярск', 'Воронеж', 'Пермь', 'Волгоград'],
-            en: ['All cities', 'Moscow', 'Saint Petersburg', 'Novosibirsk', 'Yekaterinburg', 'Kazan', 'Nizhny Novgorod', 'Chelyabinsk', 'Samara', 'Omsk', 'Rostov-on-Don', 'Ufa', 'Krasnoyarsk', 'Voronezh', 'Perm', 'Volgograd']
+            ru: ['Москва', 'Санкт-Петербург', 'Новосибирск', 'Екатеринбург', 'Казань', 'Нижний Новгород', 'Челябинск', 'Самара', 'Омск', 'Ростов-на-Дону', 'Уфа', 'Красноярск', 'Воронеж', 'Пермь', 'Волгоград'],
+            en: ['Moscow', 'Saint Petersburg', 'Novosibirsk', 'Yekaterinburg', 'Kazan', 'Nizhny Novgorod', 'Chelyabinsk', 'Samara', 'Omsk', 'Rostov-on-Don', 'Ufa', 'Krasnoyarsk', 'Voronezh', 'Perm', 'Volgograd']
         };
 
         // Глобальные переменные
@@ -1128,35 +1093,21 @@
         let currentLanguage = 'ru';
         let currentCategory = null;
         let createPostCategory = null;
-        let currentFilters = {
-            city: [],
-            gender: [],
-            age: [],
-            date: [],
-            sort: 'new'
-        };
-        let createPostTags = [];
-        let createPostFilters = {
-            city: [],
-            gender: [],
-            age: [],
-            date: []
-        };
+        let feedFilters = { city: [], gender: [], age: [], date: [], sort: 'new' };
+        let postTags = [];
+        let tagSelections = { city: [], gender: [], age: [], date: [] };
         let currentPage = 1;
         let isLoading = false;
         let userData = null;
-        let userLimits = { used: 0, total: 60 };
         let currentPostId = null;
         let connectionAttempts = 0;
         let maxConnectionAttempts = 5;
         let isConnectionActive = false;
         let isUserSynced = false;
-
-        // Переменные для редактирования
         let isEditMode = false;
         let editingPostId = null;
 
-        // Функция перевода
+        // Утилиты
         function t(key) {
             const keys = key.split('.');
             let value = translations[currentLanguage];
@@ -1167,40 +1118,30 @@
             return value || key;
         }
 
-        // Обновление интерфейса при смене языка
-        function updateLanguageInterface() {
-            // Загрузочный экран
-            document.getElementById('loadingText').textContent = t('loading');
-
-            // Поиск и кнопки
-            document.getElementById('search').placeholder = t('searchPlaceholder');
-            document.getElementById('createButton').textContent = t('createButton');
-
-            // Фильтры
-            document.getElementById('cityFilterText').textContent = t('cityFilter');
-            document.getElementById('genderFilterText').textContent = t('genderFilter');
-            document.getElementById('ageFilterText').textContent = t('ageFilter');
-            document.getElementById('dateFilterText').textContent = t('dateFilter');
-            document.getElementById('sortFilterText').textContent = t('sortFilter');
-
-            // Создание поста
-            document.getElementById('postDescription').placeholder = t('postPlaceholder');
-            document.getElementById('categoryLabel').textContent = t('categoryLabel');
-            document.getElementById('filtersLabel').textContent = t('filtersLabel');
-
-            // Обновляем категории и фильтры
-            loadCategories();
-            loadCreateCategories();
-            updatePostLimit();
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
         }
 
-        // Выбор языка
+        function showModal(modalId) {
+            const modal = document.getElementById(modalId);
+            modal.style.display = 'block';
+            setTimeout(() => modal.classList.add('visible'), 10);
+        }
+
+        function hideModal(modalId) {
+            const modal = document.getElementById(modalId);
+            modal.classList.remove('visible');
+            setTimeout(() => modal.style.display = 'none', 300);
+        }
+
+        // Языки и интерфейс
         function selectLanguage(lang) {
             currentLanguage = lang;
             document.getElementById('languageSelection').style.display = 'none';
-            updateLanguageInterface();
-
-            // Обновляем язык пользователя на сервере
+            updateInterface();
+            
             if (ws && ws.readyState === WebSocket.OPEN && telegramId) {
                 ws.send(JSON.stringify({
                     type: 'update_language',
@@ -1209,86 +1150,104 @@
                 }));
             }
 
-            // Загружаем категории и начинаем работу с приложением
             loadCategories();
-            loadFilterOptions();
             hideLoadingScreen();
-
             currentPage = 1;
             loadPosts();
         }
 
-        // Показать экран выбора языка
+        function updateInterface() {
+            document.getElementById('loadingText').textContent = t('loading');
+            document.getElementById('search').placeholder = t('searchPlaceholder');
+            document.getElementById('createButton').textContent = t('createButton');
+            document.getElementById('cityFilterText').textContent = t('cityFilter');
+            document.getElementById('genderFilterText').textContent = t('genderFilter');
+            document.getElementById('ageFilterText').textContent = t('ageFilter');
+            document.getElementById('dateFilterText').textContent = t('dateFilter');
+            document.getElementById('sortFilterText').textContent = t('sortFilter');
+            document.getElementById('postDescription').placeholder = t('postPlaceholder');
+            document.getElementById('categoryLabel').textContent = t('categoryLabel');
+            document.getElementById('tagsLabel').textContent = t('tagsLabel');
+            document.getElementById('cityTagText').textContent = t('cityFilter');
+            document.getElementById('genderTagText').textContent = t('genderFilter');
+            document.getElementById('ageTagText').textContent = t('ageFilter');
+            document.getElementById('dateTagText').textContent = t('dateFilter');
+
+            updatePostLimit();
+        }
+
+        function updatePostLimit() {
+            const limitElement = document.getElementById('postLimit');
+            if (limitElement && userData && userData.limits) {
+                limitElement.textContent = `${userData.limits.used}/${userData.limits.total}${t('postLimitText')}`;
+            }
+        }
+
+        function updateUserInterface() {
+            const avatar = document.getElementById('userAvatar');
+            const userName = document.getElementById('userName');
+
+            if (avatar && userData && userData.photo_url) {
+                avatar.src = userData.photo_url;
+            }
+            if (userName && userData) {
+                userName.textContent = `${userData.first_name || ''} ${userData.last_name || ''}`.trim();
+            }
+
+            updatePostLimit();
+        }
+
+        function showLoadingScreen(text = null) {
+            document.getElementById('loadingScreen').style.display = 'flex';
+            document.getElementById('languageSelection').style.display = 'none';
+            document.getElementById('mainContainer').classList.remove('visible');
+            document.getElementById('bottomMenu').style.display = 'none';
+
+            if (text) {
+                document.getElementById('loadingText').textContent = text;
+            }
+        }
+
+        function hideLoadingScreen() {
+            document.getElementById('loadingScreen').style.display = 'none';
+            document.getElementById('mainContainer').classList.add('visible');
+            document.getElementById('bottomMenu').style.display = 'block';
+        }
+
         function showLanguageSelection() {
             document.getElementById('loadingScreen').style.display = 'none';
             document.getElementById('languageSelection').style.display = 'flex';
         }
 
-        // Инициализация Telegram Web App
-        Telegram.WebApp.ready();
-        Telegram.WebApp.expand();
-
-        // Подключение к WebSocket серверу - ИСПРАВЛЕНО!
+        // WebSocket
         function connectWebSocket() {
-            const SERVER_URL = 'six-yevf.onrender.com'; // ← ВСТАВЬТЕ ВАШЕ НАЗВАНИЕ СЕРВИСА
-
+            const SERVER_URL = 'six-yevf.onrender.com';
             const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
             const protocol = isLocalhost ? 'ws:' : 'wss:';
-
-            // ИСПРАВЛЕНО: добавлен путь /ws для всех подключений
-            const wsUrl = isLocalhost ?
-                'ws://localhost:10000/ws' :
-                `${protocol}//${SERVER_URL}/ws`;
-
-            console.log('Connecting to WebSocket:', wsUrl);
+            const wsUrl = isLocalhost ? 'ws://localhost:10000/ws' : `${protocol}//${SERVER_URL}/ws`;
 
             ws = new WebSocket(wsUrl);
 
             ws.onopen = () => {
-                console.log('WebSocket connected to:', wsUrl);
                 isConnectionActive = true;
                 connectionAttempts = 0;
 
-                // Если язык не выбран, показываем выбор языка  
-                if (!currentLanguage || currentLanguage === 'ru') {
-                    const user = Telegram.WebApp.initDataUnsafe.user;
-                    const finalUser = (user && user.id) ? user : {
-                        id: 123456789,
-                        first_name: 'Test',
-                        last_name: 'User',
-                        username: 'testuser'
-                    };
-
-                    console.log('Starting user sync with:', finalUser.id);
-                    syncUser(finalUser);
+                const user = Telegram.WebApp.initDataUnsafe.user;
+                if (user && user.id) {
+                    syncUser(user);
                 } else {
-                    // Если язык уже выбран, инициализируем приложение
-                    const user = Telegram.WebApp.initDataUnsafe.user;
-                    if (user && user.id) {
-                        syncUser(user);
-                    } else {
-                        // Для тестирования вне Telegram
-                        console.log('No Telegram user data, using test user');
-                        syncUser({
-                            id: 123456789,
-                            first_name: 'Test',
-                            last_name: 'User',
-                            username: 'testuser'
-                        });
-                    }
+                    showLoadingScreen();
                 }
             };
 
             ws.onmessage = handleMessage;
 
             ws.onerror = (error) => {
-                console.error('WebSocket error:', error);
                 isConnectionActive = false;
                 showLoadingScreen(t('connectionLost'));
             };
 
             ws.onclose = (event) => {
-                console.log('WebSocket closed:', event.code, event.reason);
                 isConnectionActive = false;
 
                 if (connectionAttempts < maxConnectionAttempts) {
@@ -1305,30 +1264,30 @@
             };
         }
 
-        // Показать загрузочный экран
-        function showLoadingScreen(text = null) {
-            document.getElementById('loadingScreen').style.display = 'flex';
-            document.getElementById('languageSelection').style.display = 'none';
-            document.getElementById('mainContainer').classList.remove('visible');
-            document.getElementById('bottomMenu').style.display = 'none';
+        function syncUser(telegramUser) {
+            if (!ws || ws.readyState !== WebSocket.OPEN) {
+                setTimeout(() => syncUser(telegramUser), 1000);
+                return;
+            }
 
-            if (text) {
-                document.getElementById('loadingText').textContent = text;
+            try {
+                ws.send(JSON.stringify({
+                    type: 'sync_user',
+                    telegram_id: telegramUser.id,
+                    username: telegramUser.username || '',
+                    first_name: telegramUser.first_name || '',
+                    last_name: telegramUser.last_name || '',
+                    photo_url: telegramUser.photo_url || '',
+                    language: currentLanguage
+                }));
+            } catch (error) {
+                console.error('Error syncing user:', error);
             }
         }
 
-        // Скрыть загрузочный экран
-        function hideLoadingScreen() {
-            document.getElementById('loadingScreen').style.display = 'none';
-            document.getElementById('mainContainer').classList.add('visible');
-            document.getElementById('bottomMenu').style.display = 'block';
-        }
-
-        // Обработка сообщений WebSocket
         function handleMessage(event) {
             try {
                 const data = JSON.parse(event.data);
-                console.log('Received message:', data.type, data);
 
                 if (data.type === 'user_synced') {
                     telegramId = data.telegram_id;
@@ -1351,38 +1310,26 @@
                         userData.photo_url = telegramUser.photo_url || '';
                     }
 
-                    console.log('User synced successfully:', telegramId);
-
-                    // Если у пользователя уже есть сохраненный язык, используем его
                     if (data.language && data.language !== 'ru') {
                         currentLanguage = data.language;
-                        updateLanguageInterface();
+                        updateInterface();
                         updateUserInterface();
-
                         loadCategories();
-                        loadFilterOptions();
                         hideLoadingScreen();
-
                         currentPage = 1;
                         loadPosts();
                     } else {
-                        // Показываем выбор языка для новых пользователей
                         updateUserInterface();
                         showLanguageSelection();
                     }
 
                 } else if (data.type === 'posts') {
-                    console.log('Rendering posts:', data.posts.length, 'append:', data.append);
                     renderPosts(data.posts, data.append);
 
                 } else if (data.type === 'post_updated') {
-                    console.log('Post updated:', data.post.id);
                     updatePost(data.post);
 
                 } else if (data.type === 'post_approved') {
-                    console.log('New post approved:', data.post.id);
-
-                    // Если это редактирование, удаляем старый пост
                     if (data.post.original_post_id) {
                         removePostFromFeed(data.post.original_post_id);
                     }
@@ -1394,7 +1341,6 @@
                     }
 
                 } else if (data.type === 'post_deleted') {
-                    console.log('Post deleted:', data.post_id);
                     removePostFromFeed(data.post_id);
 
                 } else if (data.type === 'banned') {
@@ -1413,13 +1359,6 @@
 
                     const message = isEditMode ? t('messages.editCreated') : t('messages.postCreated');
                     Telegram.WebApp.showAlert(message);
-
-
-                } else if (data.type === 'limits_updated') {
-                    if (data.limits) {
-                        userData.limits = data.limits;
-                        updatePostLimit();
-                    }
 
                 } else if (data.type === 'user_limits_updated') {
                     if (data.telegram_id === telegramId && data.limits) {
@@ -1443,7 +1382,7 @@
 
                     const message = data.action === 'added' ? t('messages.addedToFavorites') : t('messages.removedFromFavorites');
                     Telegram.WebApp.showAlert(message);
-                    hidePostMenu();
+                    hideModal('postMenu');
 
                 } else if (data.type === 'hide_updated') {
                     if (userData) {
@@ -1459,22 +1398,19 @@
                     const message = data.action === 'hidden' ? t('messages.postHidden') : t('messages.postShown');
                     Telegram.WebApp.showAlert(message);
 
-                    // ИСПРАВЛЕНИЕ: убираем пост из ленты если скрыли
                     if (data.action === 'hidden') {
                         removePostFromFeed(currentPostId);
                     }
-                    hidePostMenu();
+                    hideModal('postMenu');
 
-                    // Перезагружаем посты
                     currentPage = 1;
                     loadPosts();
 
                 } else if (data.type === 'report_sent') {
                     Telegram.WebApp.showAlert(t('messages.reportSent'));
-                    hidePostMenu();
+                    hideModal('postMenu');
 
                 } else if (data.type === 'error') {
-                    console.error('Server error:', data.message);
                     if (data.message === 'Вы уже отправляли жалобу на это объявление') {
                         Telegram.WebApp.showAlert(t('messages.alreadyReported'));
                     } else if (data.message === 'Пост не найден или не принадлежит вам') {
@@ -1489,55 +1425,7 @@
             }
         }
 
-        // Обновление интерфейса пользователя
-        function updateUserInterface() {
-            const avatar = document.getElementById('userAvatar');
-            const userName = document.getElementById('userName');
-
-            if (avatar && userData && userData.photo_url) {
-                avatar.src = userData.photo_url;
-            }
-            if (userName && userData) {
-                userName.textContent = `${userData.first_name || ''} ${userData.last_name || ''}`.trim();
-            }
-
-            updatePostLimit();
-        }
-
-        // Обновление счетчика лимитов
-        function updatePostLimit() {
-            const limitElement = document.getElementById('postLimit');
-            if (limitElement && userData && userData.limits) {
-                limitElement.textContent = `${userData.limits.used}/${userData.limits.total}${t('postLimitText')}`;
-            }
-        }
-
-        // Синхронизация пользователя
-        function syncUser(telegramUser) {
-            if (!ws || ws.readyState !== WebSocket.OPEN) {
-                console.log('WebSocket not ready for user sync, retrying...');
-                setTimeout(() => syncUser(telegramUser), 1000);
-                return;
-            }
-
-            console.log('Syncing user:', telegramUser.id);
-
-            try {
-                ws.send(JSON.stringify({
-                    type: 'sync_user',
-                    telegram_id: telegramUser.id,
-                    username: telegramUser.username || '',
-                    first_name: telegramUser.first_name || '',
-                    last_name: telegramUser.last_name || '',
-                    photo_url: telegramUser.photo_url || '',
-                    language: currentLanguage
-                }));
-            } catch (error) {
-                console.error('Error syncing user:', error);
-            }
-        }
-
-        // Загрузка категорий
+        // Категории
         function loadCategories() {
             const categoriesData = [
                 t('categories.all'),
@@ -1553,10 +1441,9 @@
             container.innerHTML = categoriesData.map((cat, index) => `
                 <div class="category ${index === 0 ? 'active' : ''}" onclick="selectCategory('${cat}')">${cat}</div>
             `).join('');
-            currentCategory = categoriesData[0]; // Устанавливаем сразу
+            currentCategory = categoriesData[0];
         }
 
-        // Выбор категории
         function selectCategory(category) {
             if (currentCategory === category) return;
 
@@ -1572,26 +1459,43 @@
             loadPosts();
         }
 
-        // Загрузка опций фильтров
-        function loadFilterOptions() {
-            // Статические данные фильтров уже в функции showFilterOptions
+        function loadCreateCategories() {
+            const categoriesData = [
+                t('categories.work'),
+                t('categories.hobbies'),
+                t('categories.leisure'),
+                t('categories.events'),
+                t('categories.friendship'),
+                t('categories.health')
+            ];
+
+            const container = document.getElementById('createCategories');
+            container.innerHTML = categoriesData.map(cat => `
+                <div class="category-item ${cat === createPostCategory ? 'active' : ''}" onclick="selectCreateCategory('${cat}')">${cat}</div>
+            `).join('');
         }
 
-        function hideCreateFilterModal() {
-            hideModal(document.getElementById('createFilterModal'));
+        function selectCreateCategory(category) {
+            createPostCategory = category;
+
+            document.querySelectorAll('#createCategories .category-item').forEach(el => {
+                el.classList.toggle('active', el.textContent === category);
+                if (el.textContent === category) {
+                    el.scrollIntoView({ behavior: 'smooth', inline: 'center' });
+                }
+            });
         }
 
-        // Показать опции фильтра
-        function showFilterOptions(filterType) {
+        // Фильтры (для главной ленты)
+        function showFilterModal(filterType) {
             const filterData = {
-                city: cities[currentLanguage],
+                city: [t('filters.allCities'), ...cities[currentLanguage]],
                 gender: [t('filters.allGenders'), t('filters.male'), t('filters.female')],
                 age: [t('filters.allAges'), t('filters.age1'), t('filters.age2'), t('filters.age3'), t('filters.age4')],
                 date: [t('filters.allDates'), t('filters.today'), t('filters.tomorrow'), t('filters.thisWeek'), t('filters.thisMonth')],
                 sort: [t('filters.sortNew'), t('filters.sortOld'), t('filters.sortRating'), t('filters.sortMy'), t('filters.sortFavorites'), t('filters.sortHidden')]
             };
 
-            const modal = document.getElementById('filterModal');
             const title = document.getElementById('filterTitle');
             const options = document.getElementById('filterOptions');
 
@@ -1599,7 +1503,6 @@
 
             let content = '';
 
-            // Добавляем поиск для городов
             if (filterType === 'city') {
                 content += `
                     <div class="city-search">
@@ -1609,7 +1512,7 @@
             }
 
             content += filterData[filterType].map(option => `
-                <button onclick="selectFilterOption('${filterType}', '${option}', event)"
+                <button onclick="selectFilterOption('${filterType}', '${option}')"
                         class="${isFilterActive(filterType, option) ? 'active' : ''}"
                         data-city="${option}">
                     ${option}
@@ -1617,22 +1520,68 @@
             `).join('');
 
             options.innerHTML = content;
-            showModal(modal);
+            showModal('filterModal');
         }
 
-        // Показать модальное окно
-        function showModal(modal) {
-            modal.style.display = 'block';
-            setTimeout(() => modal.classList.add('visible'), 10);
+        function isFilterActive(filterType, option) {
+            if (filterType === 'sort') {
+                const sortMap = {};
+                sortMap[t('filters.sortNew')] = 'new';
+                sortMap[t('filters.sortOld')] = 'old';
+                sortMap[t('filters.sortRating')] = 'rating';
+                sortMap[t('filters.sortMy')] = 'my';
+                sortMap[t('filters.sortFavorites')] = 'favorites';
+                sortMap[t('filters.sortHidden')] = 'hidden';
+                return feedFilters.sort === sortMap[option];
+            }
+            return feedFilters[filterType].includes(option);
         }
 
-        // Скрыть модальное окно
-        function hideModal(modal) {
-            modal.classList.remove('visible');
-            setTimeout(() => modal.style.display = 'none', 300);
+        function selectFilterOption(filterType, option) {
+            if (filterType === 'sort') {
+                const sortMap = {};
+                sortMap[t('filters.sortNew')] = 'new';
+                sortMap[t('filters.sortOld')] = 'old';
+                sortMap[t('filters.sortRating')] = 'rating';
+                sortMap[t('filters.sortMy')] = 'my';
+                sortMap[t('filters.sortFavorites')] = 'favorites';
+                sortMap[t('filters.sortHidden')] = 'hidden';
+                feedFilters.sort = sortMap[option];
+            } else {
+                if (option.includes(t('filters.allCities')) || option.includes(t('filters.allGenders')) ||
+                    option.includes(t('filters.allAges')) || option.includes(t('filters.allDates'))) {
+                    feedFilters[filterType] = [];
+                } else {
+                    const index = feedFilters[filterType].indexOf(option);
+                    if (index > -1) {
+                        feedFilters[filterType].splice(index, 1);
+                    } else {
+                        feedFilters[filterType].push(option);
+                    }
+                }
+            }
+
+            updateFilterButtons();
+            if (filterType === 'sort') {
+                hideModal('filterModal');
+            }
+            currentPage = 1;
+            loadPosts();
         }
 
-        // Фильтрация городов
+        function updateFilterButtons() {
+            Object.keys(feedFilters).forEach(filterType => {
+                const button = document.getElementById(`${filterType}Filter`);
+                if (button) {
+                    const hasActiveFilters = filterType === 'sort' ?
+                        feedFilters.sort !== 'new' :
+                        feedFilters[filterType].length > 0;
+
+                    button.classList.toggle('active', hasActiveFilters);
+                }
+            });
+        }
+
         function filterCities() {
             const searchInput = document.getElementById('citySearchInput');
             const searchValue = searchInput.value.toLowerCase();
@@ -1648,103 +1597,113 @@
             });
         }
 
-        // Проверить активность фильтра
-        function isFilterActive(filterType, option) {
-            if (filterType === 'sort') {
-                const sortMap = {};
-                sortMap[t('filters.sortNew')] = 'new';
-                sortMap[t('filters.sortOld')] = 'old';
-                sortMap[t('filters.sortRating')] = 'rating';
-                sortMap[t('filters.sortMy')] = 'my';
-                sortMap[t('filters.sortFavorites')] = 'favorites';
-                sortMap[t('filters.sortHidden')] = 'hidden';
-                return currentFilters.sort === sortMap[option];
+        // Теги (для создания поста)
+        function showTagModal(tagType) {
+            const tagData = {
+                city: cities[currentLanguage],
+                gender: [t('filters.male'), t('filters.female')],
+                age: [t('filters.age1'), t('filters.age2'), t('filters.age3'), t('filters.age4')],
+                date: [t('filters.today'), t('filters.tomorrow'), t('filters.thisWeek'), t('filters.thisMonth')]
+            };
+
+            const title = document.getElementById('tagTitle');
+            const options = document.getElementById('tagOptions');
+
+            title.textContent = t(`filters.${tagType}Title`);
+
+            let content = '';
+
+            if (tagType === 'city') {
+                content += `
+                    <div class="city-search">
+                        <input type="text" id="tagCitySearchInput" placeholder="${t('messages.citySearchPlaceholder')}" oninput="filterTagCities()">
+                    </div>
+                `;
             }
-            return currentFilters[filterType].includes(option);
+
+            content += tagData[tagType].map(option => `
+                <button onclick="selectTagOption('${tagType}', '${option}')" 
+                        class="${tagSelections[tagType].includes(option) ? 'active' : ''}"
+                        data-city="${option}">
+                    ${option}
+                </button>
+            `).join('');
+
+            options.innerHTML = content;
+            showModal('tagModal');
         }
 
-        // Выбрать опцию фильтра
-        function selectFilterOption(filterType, option) {
-            if (filterType === 'sort') {
-                const sortMap = {};
-                sortMap[t('filters.sortNew')] = 'new';
-                sortMap[t('filters.sortOld')] = 'old';
-                sortMap[t('filters.sortRating')] = 'rating';
-                sortMap[t('filters.sortMy')] = 'my';
-                sortMap[t('filters.sortFavorites')] = 'favorites';
-                sortMap[t('filters.sortHidden')] = 'hidden';
-                currentFilters.sort = sortMap[option];
+        function selectTagOption(tagType, option) {
+            const index = tagSelections[tagType].indexOf(option);
+            if (index > -1) {
+                tagSelections[tagType].splice(index, 1);
             } else {
-                if (option.includes(t('filters.allCities')) || option.includes(t('filters.allGenders')) ||
-                    option.includes(t('filters.allAges')) || option.includes(t('filters.allDates'))) {
-                    currentFilters[filterType] = [];
-                } else {
-                    const index = currentFilters[filterType].indexOf(option);
-                    if (index > -1) {
-                        currentFilters[filterType].splice(index, 1);
-                    } else {
-                        currentFilters[filterType].push(option);
-                    }
-                }
+                tagSelections[tagType].push(option);
             }
 
-            const clickedButton = event.target.closest('button');
-            if (clickedButton) {
-                const isActive = isFilterActive(filterType, option);
-                clickedButton.classList.toggle('active', isActive);
-            }
+            postTags = [];
+            Object.entries(tagSelections).forEach(([type, values]) => {
+                values.forEach(value => {
+                    postTags.push(`${type}:${value}`);
+                });
+            });
 
-            updateFilterButtons();
-            if (filterType === 'sort') {
-                hideFilterModal();
-            }
-            currentPage = 1;
-            loadPosts();
+            updateSelectedTags();
+            updateTagButtons();
         }
 
-        // Обновить кнопки фильтров
-        function updateFilterButtons() {
-            Object.keys(currentFilters).forEach(filterType => {
-                const button = document.getElementById(`${filterType}Filter`);
-                if (button) {
-                    const hasActiveFilters = filterType === 'sort' ?
-                        currentFilters.sort !== 'new' :
-                        currentFilters[filterType].length > 0;
+        function updateSelectedTags() {
+            const container = document.getElementById('selectedTags');
+            if (postTags.length === 0) {
+                container.innerHTML = `<div style="color: #999; font-style: italic;">${currentLanguage === 'ru' ? 'Теги не выбраны' : 'No tags selected'}</div>`;
+                return;
+            }
 
-                    button.classList.toggle('active', hasActiveFilters);
+            container.innerHTML = postTags.map(tag => {
+                const [type, value] = tag.split(':');
+                return `<div class="tag">${value}</div>`;
+            }).join('');
+        }
+
+        function updateTagButtons() {
+            Object.keys(tagSelections).forEach(tagType => {
+                const button = document.querySelector(`[onclick="showTagModal('${tagType}')"]`);
+                if (button) {
+                    const hasActiveTags = tagSelections[tagType].length > 0;
+                    button.classList.toggle('active', hasActiveTags);
                 }
             });
         }
 
-        // Скрыть модальное окно фильтра
-        function hideFilterModal() {
-            hideModal(document.getElementById('filterModal'));
+        function filterTagCities() {
+            const searchInput = document.getElementById('tagCitySearchInput');
+            const searchValue = searchInput.value.toLowerCase();
+            const cityButtons = document.querySelectorAll('#tagOptions button[data-city]');
+
+            cityButtons.forEach(button => {
+                const cityName = button.getAttribute('data-city').toLowerCase();
+                if (cityName.includes(searchValue)) {
+                    button.style.display = 'block';
+                } else {
+                    button.style.display = 'none';
+                }
+            });
         }
 
-        // Загрузка постов
+        // Посты
         function loadPosts(append = false) {
             if (!isUserSynced || !telegramId) {
-                console.log('User not synced yet, skipping loadPosts');
                 return;
             }
 
             if (!ws || ws.readyState !== WebSocket.OPEN) {
-                console.log('WebSocket not ready, retrying in 1 second...');
                 setTimeout(() => loadPosts(append), 1000);
                 return;
             }
 
             if (!currentCategory) {
-                console.log('No category selected, skipping load...');
                 return;
             }
-
-            console.log('Loading posts:', {
-                category: currentCategory,
-                page: currentPage,
-                append: append,
-                filters: currentFilters
-            });
 
             isLoading = true;
 
@@ -1755,7 +1714,7 @@
                 ws.send(JSON.stringify({
                     type: 'get_posts',
                     category: categoryToSend,
-                    filters: currentFilters,
+                    filters: feedFilters,
                     page: currentPage,
                     limit: 20,
                     telegram_id: telegramId,
@@ -1768,13 +1727,9 @@
             }
         }
 
-        // Отрисовка постов
         function renderPosts(posts, append = false) {
-            console.log('Rendering posts:', posts.length, 'append:', append);
-
             const feed = document.getElementById('feed');
             if (!feed) {
-                console.error('Feed element not found');
                 return;
             }
 
@@ -1807,14 +1762,10 @@
             if (posts.length > 0) {
                 currentPage++;
             }
-
-            console.log('Posts rendered successfully');
         }
 
-        // Создание HTML для поста
         function createPostHTML(post) {
             if (!post || !post.id) {
-                console.error('Invalid post data:', post);
                 return '';
             }
 
@@ -1836,12 +1787,10 @@
             const likes = post.likes || 0;
             const creatorId = creator.telegram_id;
 
-            // ИСПРАВЛЕНИЕ: показываем лайк только если ТЕКУЩИЙ пользователь лайкнул
             const userLiked = post.user_liked === true;
             const likeClass = userLiked ? 'like liked' : 'like';
             const likeIcon = userLiked ? '❤️' : '🤍';
 
-            // ИСПРАВЛЕНИЕ: приоритет @username, потом ссылка по ID
             const creatorLink = creator.username
                 ? `https://t.me/${creator.username}`
                 : `tg://user?id=${creatorId}`;
@@ -1867,26 +1816,6 @@
             `;
         }
 
-        function openTelegramProfile(event, link) {
-            event.preventDefault();
-
-            // Для Telegram Desktop - не закрываем мини-апп
-            if (window.Telegram && window.Telegram.WebApp) {
-                window.Telegram.WebApp.openTelegramLink(link);
-            } else {
-                // Фолбэк для браузеров
-                window.open(link, '_blank');
-            }
-        }
-
-        // Экранирование HTML
-        function escapeHtml(text) {
-            const div = document.createElement('div');
-            div.textContent = text;
-            return div.innerHTML;
-        }
-
-        // Обновление поста
         function updatePost(post) {
             const postEl = document.querySelector(`.post[data-id="${post.id}"]`);
             if (postEl) {
@@ -1894,10 +1823,8 @@
                 const likeDiv = postEl.querySelector('.like');
                 const likeIcon = postEl.querySelector('.like-icon');
 
-                // Обновляем счетчик лайков
                 if (likeCountSpan) likeCountSpan.textContent = post.likes || 0;
 
-                // ИСПРАВЛЕНИЕ: обновляем визуал лайка ТОЛЬКО для текущего пользователя
                 if (likeDiv && likeIcon && post.like_action) {
                     if (post.user_liked === true) {
                         likeDiv.classList.add('liked');
@@ -1910,13 +1837,11 @@
             }
         }
 
-        // Удаление поста из ленты
         function removePostFromFeed(postId) {
             const postEl = document.querySelector(`.post[data-id="${postId}"]`);
             if (postEl) postEl.remove();
         }
 
-        // Лайк поста
         function likePost(postId) {
             if (ws && ws.readyState === WebSocket.OPEN) {
                 ws.send(JSON.stringify({
@@ -1927,16 +1852,24 @@
             }
         }
 
-        // Показать меню поста
+        function openTelegramProfile(event, link) {
+            event.preventDefault();
+
+            if (window.Telegram && window.Telegram.WebApp) {
+                window.Telegram.WebApp.openTelegramLink(link);
+            } else {
+                window.open(link, '_blank');
+            }
+        }
+
+        // Меню постов
         function showPostMenu(postId, isOwnPost) {
             currentPostId = postId;
             const modal = document.getElementById('postMenu');
 
-            // ИСПРАВЛЕНИЕ: определяем состояние на основе данных пользователя
             let favoriteText = t('menu.addToFavorites');
             let hideText = t('menu.hidePost');
 
-            // Проверяем состояние в кеше пользователя
             if (userData && userData.favorites && userData.favorites.includes(postId)) {
                 favoriteText = t('menu.removeFromFavorites');
             }
@@ -1947,7 +1880,7 @@
             modal.innerHTML = isOwnPost ? `
                 <div class="modal-header">
                     <h3>${t('menu.myPost')}</h3>
-                    <button onclick="hidePostMenu()">✕</button>
+                    <button onclick="hideModal('postMenu')">✕</button>
                 </div>
                 <div class="modal-content">
                     <button onclick="editPost(${postId})">${t('menu.edit')}</button>
@@ -1956,7 +1889,7 @@
             ` : `
                 <div class="modal-header">
                     <h3>${t('menu.actions')}</h3>
-                    <button onclick="hidePostMenu()">✕</button>
+                    <button onclick="hideModal('postMenu')">✕</button>
                 </div>
                 <div class="modal-content">
                     <button onclick="addToFavorites(${postId})">${favoriteText}</button>
@@ -1965,16 +1898,10 @@
                 </div>
             `;
 
-            showModal(modal);
-            setTimeout(() => hidePostMenu(), 10000);
+            showModal('postMenu');
+            setTimeout(() => hideModal('postMenu'), 10000);
         }
 
-        // Скрыть меню поста
-        function hidePostMenu() {
-            hideModal(document.getElementById('postMenu'));
-        }
-
-        // Действия с постами
         function deletePost(postId) {
             if (ws && ws.readyState === WebSocket.OPEN) {
                 ws.send(JSON.stringify({
@@ -1983,7 +1910,7 @@
                     telegram_id: telegramId
                 }));
             }
-            hidePostMenu();
+            hideModal('postMenu');
         }
 
         function reportPost(postId) {
@@ -1999,10 +1926,9 @@
                     reporter_username: telegramUser.username || ''
                 }));
             }
-            hidePostMenu();
+            hideModal('postMenu');
         }
 
-        // Редактирование поста
         function editPost(postId) {
             if (ws && ws.readyState === WebSocket.OPEN) {
                 ws.send(JSON.stringify({
@@ -2011,10 +1937,9 @@
                     telegram_id: telegramId
                 }));
             }
-            hidePostMenu();
+            hideModal('postMenu');
         }
 
-        // Добавить в избранные
         function addToFavorites(postId) {
             if (ws && ws.readyState === WebSocket.OPEN) {
                 ws.send(JSON.stringify({
@@ -2025,7 +1950,6 @@
             }
         }
 
-        // Скрыть пост
         function hidePost(postId) {
             if (ws && ws.readyState === WebSocket.OPEN) {
                 ws.send(JSON.stringify({
@@ -2036,46 +1960,19 @@
             }
         }
 
-        function updateCharacterCount() {
-            const textArea = document.getElementById('postDescription');
-            const counter = document.getElementById('characterCount');
-            if (textArea && counter) {
-                counter.textContent = textArea.value.length;
-
-                // Меняем цвет при приближении к лимиту
-                if (textArea.value.length > 400) {
-                    counter.style.color = '#ff4757';
-                } else if (textArea.value.length > 350) {
-                    counter.style.color = '#ffa726';
-                } else {
-                    counter.style.color = '#666';
-                }
-            }
-        }
-
-        // Показать модальное окно создания поста
+        // Создание/редактирование постов
         function showCreatePostModal() {
             isEditMode = false;
             editingPostId = null;
 
             document.getElementById('createPostModal').style.display = 'block';
-            createPostTags = [];
-            createPostFilters = {
-                city: [],
-                gender: [],
-                age: [],
-                date: []
-            };
+            postTags = [];
+            tagSelections = { city: [], gender: [], age: [], date: [] };
             createPostCategory = currentCategory === t('categories.all') ? t('categories.work') : currentCategory;
-            updateCreatePostTags();
+            updateSelectedTags();
             loadCreateCategories();
-            loadCreateFilterButtons();
+            updateTagButtons();
             document.getElementById('postDescription').value = '';
-
-            const modalTitle = document.querySelector('.create-post-header .name');
-            if (modalTitle && userData) {
-                modalTitle.textContent = `${userData.first_name} ${userData.last_name}`.trim();
-            }
 
             const createButton = document.getElementById('createPostButton');
             if (createButton) {
@@ -2095,8 +1992,6 @@
             textArea.addEventListener('input', updateCharacterCount);
         }
 
-
-        // Открыть модальное окно редактирования поста
         function openEditPostModal(post) {
             isEditMode = true;
             editingPostId = post.id;
@@ -2105,31 +2000,20 @@
 
             document.getElementById('postDescription').value = post.description;
             createPostCategory = post.category;
-            createPostTags = JSON.parse(post.tags || '[]');
+            postTags = JSON.parse(post.tags || '[]');
 
-            // Парсим теги в фильтры
-            createPostFilters = {
-                city: [],
-                gender: [],
-                age: [],
-                date: []
-            };
+            tagSelections = { city: [], gender: [], age: [], date: [] };
 
-            createPostTags.forEach(tag => {
+            postTags.forEach(tag => {
                 const [type, value] = tag.split(':');
-                if (createPostFilters[type]) {
-                    createPostFilters[type].push(value);
+                if (tagSelections[type]) {
+                    tagSelections[type].push(value);
                 }
             });
 
-            updateCreatePostTags();
+            updateSelectedTags();
             loadCreateCategories();
-            loadCreateFilterButtons();
-
-            const modalTitle = document.querySelector('.create-post-header .name');
-            if (modalTitle && userData) {
-                modalTitle.textContent = `${userData.first_name} ${userData.last_name}`.trim();
-            }
+            updateTagButtons();
 
             const createButton = document.getElementById('createPostButton');
             if (createButton) {
@@ -2143,7 +2027,6 @@
             document.body.style.overflow = 'hidden';
         }
 
-        // Скрыть модальное окно создания поста
         function hideCreatePostModal() {
             document.getElementById('createPostModal').style.display = 'none';
             Telegram.WebApp.BackButton.hide();
@@ -2154,149 +2037,22 @@
             document.body.style.overflow = 'auto';
         }
 
-        // Загрузка категорий для создания поста
-        function loadCreateCategories() {
-            const categoriesData = [
-                t('categories.work'),
-                t('categories.hobbies'),
-                t('categories.leisure'),
-                t('categories.events'),
-                t('categories.friendship'),
-                t('categories.health')
-            ];
+        function updateCharacterCount() {
+            const textArea = document.getElementById('postDescription');
+            const counter = document.getElementById('characterCount');
+            if (textArea && counter) {
+                counter.textContent = textArea.value.length;
 
-            const container = document.getElementById('createCategories');
-            container.innerHTML = categoriesData.map(cat => `
-                <div class="category ${cat === createPostCategory ? 'active' : ''}" onclick="selectCreateCategory('${cat}')">${cat}</div>
-            `).join('');
-        }
-
-        // Выбор категории для создания поста
-        function selectCreateCategory(category) {
-            createPostCategory = category;
-
-            document.querySelectorAll('#createCategories .category').forEach(el => {
-                el.classList.toggle('active', el.textContent === category);
-                if (el.textContent === category) {
-                    el.scrollIntoView({ behavior: 'smooth', inline: 'center' });
-                }
-            });
-        }
-
-        // Загрузка кнопок фильтров для создания поста
-        function loadCreateFilterButtons() {
-            const filterTypes = [
-                { type: 'city', label: t('cityFilter') },
-                { type: 'gender', label: t('genderFilter') },
-                { type: 'age', label: t('ageFilter') },
-                { type: 'date', label: t('dateFilter') }
-            ];
-
-            const container = document.getElementById('createFiltersButtons');
-            container.innerHTML = filterTypes.map(filter => {
-                const hasActive = createPostFilters[filter.type].length > 0;
-                return `
-                    <button class="create-filter-btn ${hasActive ? 'active' : ''}" 
-                            onclick="showCreateFilterOptions('${filter.type}')">
-                        <span>${filter.label}</span>
-                        <span class="filter-icon">▼</span>
-                    </button>
-                `;
-            }).join('');
-        }
-
-        // Показать опции фильтра для создания поста
-        function showCreateFilterOptions(filterType) {
-            const filterData = {
-                city: cities[currentLanguage].slice(1), // Убираем "Все города"
-                gender: [t('filters.male'), t('filters.female')],
-                age: [t('filters.age1'), t('filters.age2'), t('filters.age3'), t('filters.age4')],
-                date: [t('filters.today'), t('filters.tomorrow'), t('filters.thisWeek'), t('filters.thisMonth')]
-            };
-
-            const modal = document.getElementById('createFilterModal');
-            const title = document.getElementById('createFilterTitle');
-            const options = document.getElementById('createFilterOptions');
-
-            title.textContent = t(`filters.${filterType}Title`);
-
-            let content = '';
-
-            // Добавляем поиск для городов
-            if (filterType === 'city') {
-                content += `
-            <div class="city-search">
-                <input type="text" id="createCitySearchInput" placeholder="${t('messages.citySearchPlaceholder')}" oninput="filterCitiesForCreate()">
-            </div>
-        `;
-            }
-
-            content += filterData[filterType].map(option => `
-        <button onclick="selectCreateFilterOption('${filterType}', '${option}')" 
-                class="${createPostFilters[filterType].includes(option) ? 'active' : ''}"
-                data-city="${option}">
-            ${option}
-        </button>
-    `).join('');
-
-            options.innerHTML = content;
-            showModal(modal);
-        }
-
-        // Фильтрация городов для создания поста
-        function filterCitiesForCreate() {
-            const searchInput = document.getElementById('createCitySearchInput');
-            const searchValue = searchInput.value.toLowerCase();
-            const cityButtons = document.querySelectorAll('#createFilterOptions button[data-city]');
-
-            cityButtons.forEach(button => {
-                const cityName = button.getAttribute('data-city').toLowerCase();
-                if (cityName.includes(searchValue)) {
-                    button.style.display = 'block';
+                if (textArea.value.length > 400) {
+                    counter.style.color = '#ff4757';
+                } else if (textArea.value.length > 350) {
+                    counter.style.color = '#ffa726';
                 } else {
-                    button.style.display = 'none';
+                    counter.style.color = '#666';
                 }
-            });
-        }
-
-        // Выбрать опцию фильтра для создания поста
-        function selectCreateFilterOption(filterType, option) {
-
-            const index = createPostFilters[filterType].indexOf(option);
-            if (index > -1) {
-                createPostFilters[filterType].splice(index, 1);
-            } else {
-                createPostFilters[filterType].push(option);
             }
-
-            // Обновляем теги
-            createPostTags = [];
-            Object.entries(createPostFilters).forEach(([type, values]) => {
-                values.forEach(value => {
-                    createPostTags.push(`${type}:${value}`);
-                });
-            });
-
-            updateCreatePostTags();
-            loadCreateFilterButtons();
-
         }
 
-        // Обновление тегов создания поста
-        function updateCreatePostTags() {
-            const container = document.getElementById('createPostTags');
-            if (createPostTags.length === 0) {
-                container.innerHTML = `<div style="color: #999; font-style: italic;">${currentLanguage === 'ru' ? 'Теги не выбраны' : 'No tags selected'}</div>`;
-                return;
-            }
-
-            container.innerHTML = createPostTags.map(tag => {
-                const [type, value] = tag.split(':');
-                return `<div class="tag">${value}</div>`;
-            }).join('');
-        }
-
-        // Создание/редактирование поста
         function createPost() {
             const description = document.getElementById('postDescription').value.trim();
 
@@ -2310,7 +2066,7 @@
                 return;
             }
 
-            if (description.length > 1000) {
+            if (description.length > 450) {
                 Telegram.WebApp.showAlert(t('messages.textTooLong'));
                 return;
             }
@@ -2327,16 +2083,8 @@
 
             const telegramUser = Telegram.WebApp.initDataUnsafe.user;
             if (!telegramUser) {
-                Telegram.WebApp.showAlert(t('messages.userDataError'));
                 return;
             }
-
-            console.log('Creating/updating post:', {
-                description: description.substring(0, 50) + '...',
-                category: createPostCategory,
-                tags: createPostTags,
-                isEdit: isEditMode
-            });
 
             try {
                 const message = {
@@ -2344,7 +2092,7 @@
                     telegram_id: telegramId,
                     description: description,
                     category: createPostCategory,
-                    tags: createPostTags,
+                    tags: postTags,
                     creator_data: {
                         telegram_id: telegramUser.id,
                         username: telegramUser.username || '',
@@ -2362,18 +2110,19 @@
                 ws.send(JSON.stringify(message));
             } catch (error) {
                 console.error('Error creating/updating post:', error);
-                Telegram.WebApp.showAlert(t('messages.createError'));
             }
         }
 
-        // Бесконечная прокрутка
+        // Инициализация
+        Telegram.WebApp.ready();
+        Telegram.WebApp.expand();
+
         window.addEventListener('scroll', () => {
             if (window.innerHeight + window.scrollY >= document.body.offsetHeight - 300) {
                 loadPosts(true);
             }
         });
 
-        // Поиск
         let searchTimeout;
         document.addEventListener('DOMContentLoaded', () => {
             const searchInput = document.getElementById('search');
@@ -2386,7 +2135,6 @@
                     }, 500);
                 });
 
-                // Скрытие клавиатуры при клике вне поля поиска
                 document.addEventListener('click', (e) => {
                     if (e.target !== searchInput && !searchInput.contains(e.target)) {
                         searchInput.blur();
@@ -2395,11 +2143,9 @@
             }
         });
 
-        // Инициализация приложения
         document.addEventListener('DOMContentLoaded', () => {
             connectWebSocket();
 
-            // Закрытие модального окна по клику вне его
             window.addEventListener('click', (e) => {
                 const createModal = document.getElementById('createPostModal');
                 if (e.target === createModal) {
@@ -2408,22 +2154,20 @@
 
                 const filterModal = document.getElementById('filterModal');
                 if (e.target === filterModal) {
-                    hideFilterModal();
+                    hideModal('filterModal');
                 }
 
-                const createFilterModal = document.getElementById('createFilterModal');
-                if (e.target === createFilterModal) {
-                    hideCreateFilterModal();
+                const tagModal = document.getElementById('tagModal');
+                if (e.target === tagModal) {
+                    hideModal('tagModal');
                 }
 
                 const postMenu = document.getElementById('postMenu');
                 if (e.target === postMenu) {
-                    hidePostMenu();
+                    hideModal('postMenu');
                 }
             });
         });
-
     </script>
 </body>
-
 </html>
