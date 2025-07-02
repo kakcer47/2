@@ -1281,7 +1281,10 @@
                         telegram_id: data.telegram_id,
                         limits: data.limits || { used: 0, total: 60 },
                         is_banned: data.is_banned || false,
-                        language: data.language || 'ru'
+                        language: data.language || 'ru',
+                        favorites: data.favorites || [],
+                        hidden: data.hidden || [],
+                        liked: data.liked || []
                     };
 
                     const telegramUser = Telegram.WebApp.initDataUnsafe.user;
@@ -1345,17 +1348,43 @@
                     openEditPostModal(data.post);
 
                 } else if (data.type === 'favorites_updated') {
+                    if (userData) {
+                        if (data.action === 'added') {
+                            if (!userData.favorites.includes(currentPostId)) {
+                                userData.favorites.push(currentPostId);
+                            }
+                        } else {
+                            userData.favorites = userData.favorites.filter(id => id !== currentPostId);
+                        }
+                    }
+
                     const message = data.action === 'added' ? t('messages.addedToFavorites') : t('messages.removedFromFavorites');
                     Telegram.WebApp.showAlert(message);
                     hidePostMenu();
 
                 } else if (data.type === 'hide_updated') {
+                    if (userData) {
+                        if (data.action === 'hidden') {
+                            if (!userData.hidden.includes(currentPostId)) {
+                                userData.hidden.push(currentPostId);
+                            }
+                        } else {
+                            userData.hidden = userData.hidden.filter(id => id !== currentPostId);
+                        }
+                    }
+                    
                     const message = data.action === 'hidden' ? t('messages.postHidden') : t('messages.postShown');
                     Telegram.WebApp.showAlert(message);
+
+                    // ИСПРАВЛЕНИЕ: убираем пост из ленты если скрыли
                     if (data.action === 'hidden') {
                         removePostFromFeed(currentPostId);
                     }
                     hidePostMenu();
+
+                    // Перезагружаем посты
+                    currentPage = 1;
+                    loadPosts();
 
                 } else if (data.type === 'report_sent') {
                     Telegram.WebApp.showAlert(t('messages.reportSent'));
@@ -1779,20 +1808,16 @@
                 const likeIcon = postEl.querySelector('.like-icon');
 
                 if (likeCountSpan) likeCountSpan.textContent = post.likes || 0;
+
+                // ИСПРАВЛЕНИЕ: используем post.user_liked вместо post.like_action
                 if (likeDiv && likeIcon) {
-                    if (post.user_liked) {
+                    if (post.user_liked === true) {
                         likeDiv.classList.add('liked');
                         likeIcon.textContent = '❤️';
                     } else {
                         likeDiv.classList.remove('liked');
                         likeIcon.textContent = '🤍';
                     }
-                }
-            } else {
-                // Если поста нет в ленте, добавляем его
-                const feed = document.getElementById('feed');
-                if (feed && post.status === 'approved') {
-                    feed.insertAdjacentHTML('afterbegin', createPostHTML(post));
                 }
             }
         }
@@ -1819,18 +1844,16 @@
             currentPostId = postId;
             const modal = document.getElementById('postMenu');
 
-            const post = Array.from(document.querySelectorAll('.post')).find(p =>
-                parseInt(p.dataset.id) === postId
-            );
+            // ИСПРАВЛЕНИЕ: определяем состояние на основе данных пользователя
+            let favoriteText = t('menu.addToFavorites');
+            let hideText = t('menu.hidePost');
 
-            let favoriteText, hideText;
-            if (post) {
-                // Определяем текст для кнопок на основе текущего состояния
-                favoriteText = t('menu.addToFavorites'); // По умолчанию
-                hideText = t('menu.hidePost'); // По умолчанию
-            } else {
-                favoriteText = t('menu.addToFavorites');
-                hideText = t('menu.hidePost');
+            // Проверяем состояние в кеше пользователя
+            if (userData && userData.favorites && userData.favorites.includes(postId)) {
+                favoriteText = t('menu.removeFromFavorites');
+            }
+            if (userData && userData.hidden && userData.hidden.includes(postId)) {
+                hideText = t('menu.showPost');
             }
 
             modal.innerHTML = isOwnPost ? `
@@ -2074,6 +2097,8 @@
 
         // Показать опции фильтра для создания поста
         function showCreateFilterOptions(filterType) {
+            const modal = document.getElementById('filterModal');
+            modal.setAttribute('data-mode', 'create'); // Добавь это
             const filterData = {
                 city: cities[currentLanguage].slice(1), // Убираем "Все города"
                 gender: [t('filters.male'), t('filters.female')],
@@ -2081,7 +2106,6 @@
                 date: [t('filters.today'), t('filters.tomorrow'), t('filters.thisWeek'), t('filters.thisMonth')]
             };
 
-            const modal = document.getElementById('filterModal');
             const title = document.getElementById('filterTitle');
             const options = document.getElementById('filterOptions');
 
@@ -2128,6 +2152,9 @@
 
         // Выбрать опцию фильтра для создания поста
         function selectCreateFilterOption(filterType, option) {
+            const modal = document.getElementById('filterModal');
+            if (modal.getAttribute('data-mode') !== 'create') return;
+
             const index = createPostFilters[filterType].indexOf(option);
             if (index > -1) {
                 createPostFilters[filterType].splice(index, 1);
