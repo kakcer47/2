@@ -74,6 +74,29 @@
             font-size: 16px;
         }
 
+        .scroll-to-top {
+            position: fixed;
+            bottom: 110px;
+            right: 16px;
+            width: 48px;
+            height: 32px;
+            background: #1d1c1b;
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 18px;
+            font-weight: bold;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+            z-index: 99;
+            transition: all 0.3s ease;
+        }
+
+        .scroll-to-top:hover {
+            background: #333;
+            transform: translateY(-2px);
+        }
+
         .language-selection {
             position: fixed;
             top: 0;
@@ -123,11 +146,9 @@
 
         .container {
             max-width: 100%;
-            padding: 80px 16px 100px 16px;
+            padding: 16px 16px 100px 16px;
             box-sizing: border-box;
             display: none;
-            background: rgba(255, 255, 255, 0);
-            backdrop-filter: blur(2px);
         }
 
         .container.visible {
@@ -135,19 +156,13 @@
         }
 
         .categories {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            z-index: 50;
-            background: rgba(252, 252, 252, 0);
             display: flex;
             overflow-x: auto;
             padding: 8px 0 16px 0;
             scroll-snap-type: x mandatory;
             scrollbar-width: none;
             -ms-overflow-style: none;
-            border-bottom: 1px solid rgba(240, 240, 240, 0);
+            border-bottom: 1px solid #f0f0f0;
             margin-bottom: 16px;
         }
 
@@ -2247,7 +2262,26 @@
                 }
             });
         });
+
+        // Показать/скрыть кнопку при скролле
+        window.addEventListener('scroll', () => {
+            const scrollButton = document.getElementById('scrollToTop');
+            if (window.scrollY > 300) {
+                scrollButton.style.display = 'block';
+            } else {
+                scrollButton.style.display = 'none';
+            }
+        });
+
+        // Функция возврата наверх
+        function scrollToTop() {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
     </script>
+
+    <button class="scroll-to-top" id="scrollToTop" onclick="scrollToTop()" style="display: none;">
+        ▲
+    </button>
 </body>
 
 </html>
