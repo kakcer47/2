@@ -1333,11 +1333,49 @@
                     renderPosts(data.posts, data.append);
 
                 } else if (data.type === 'post_updated') {
-                    updatePost(data.post);
+                    // Если это обновление лайка от текущего пользователя
+                    if (data.post.like_action && data.post.telegram_id !== undefined) {
+                        // Обновляем визуальное состояние только для собственных действий
+                        const postEl = document.querySelector(`.post[data-id="${data.post.id}"]`);
+                        if (postEl) {
+                            const likeCountSpan = postEl.querySelector('.like-count');
+                            const likeDiv = postEl.querySelector('.like');
+                            const likeIcon = postEl.querySelector('.like-icon');
+
+                            // Обновляем счетчик
+                            if (likeCountSpan) likeCountSpan.textContent = data.post.likes || 0;
+
+                            // Обновляем визуал только если это действие текущего пользователя
+                            if (likeDiv && likeIcon && data.post.like_action) {
+                                if (data.post.user_liked === true) {
+                                    likeDiv.classList.add('liked');
+                                    likeIcon.textContent = '❤️';
+                                } else {
+                                    likeDiv.classList.remove('liked');
+                                    likeIcon.textContent = '🤍';
+                                }
+                            }
+                        }
+                    } else {
+                        // Для остальных обновлений используем стандартную функцию (только счетчик)
+                        updatePost(data.post);
+                    }
 
                 } else if (data.type === 'post_approved') {
                     if (data.post.original_post_id) {
                         removePostFromFeed(data.post.original_post_id);
+                    }
+
+                    // Обновляем лимиты если это пост текущего пользователя
+                    const creator = typeof data.post.creator === 'string' ? JSON.parse(data.post.creator) : data.post.creator;
+                    if (creator.telegram_id === telegramId) {
+                        // Получаем обновленные лимиты с сервера
+                        if (ws && ws.readyState === WebSocket.OPEN) {
+                            ws.send(JSON.stringify({
+                                type: 'get_user_limits',
+                                telegram_id: telegramId
+                            }));
+                        }
                     }
 
                     if (currentCategory === t('categories.all') || currentCategory === data.post.category) {
@@ -1357,10 +1395,7 @@
                     Telegram.WebApp.showAlert(t('messages.limitExceeded'));
 
                 } else if (data.type === 'post_created') {
-                    if (data.limits) {
-                        userData.limits = data.limits;
-                        updatePostLimit();
-                    }
+                    // При создании поста НЕ обновляем лимиты, только показываем сообщение
                     hideCreatePostModal();
 
                     const message = isEditMode ? t('messages.editCreated') : t('messages.postCreated');
@@ -1855,22 +1890,12 @@
             const postEl = document.querySelector(`.post[data-id="${post.id}"]`);
             if (postEl) {
                 const likeCountSpan = postEl.querySelector('.like-count');
-                const likeDiv = postEl.querySelector('.like');
-                const likeIcon = postEl.querySelector('.like-icon');
-
-                // Всегда обновляем счетчик лайков
+                
+                // ТОЛЬКО обновляем счетчик лайков, НЕ трогаем визуальное состояние
                 if (likeCountSpan) likeCountSpan.textContent = post.likes || 0;
-
-                // Обновляем визуал лайка ТОЛЬКО если это действие текущего пользователя
-                if (likeDiv && likeIcon && post.like_action && post.hasOwnProperty('user_liked')) {
-                    if (post.user_liked === true) {
-                        likeDiv.classList.add('liked');
-                        likeIcon.textContent = '❤️';
-                    } else {
-                        likeDiv.classList.remove('liked');
-                        likeIcon.textContent = '🤍';
-                    }
-                }
+                
+                // Визуальное состояние кнопки лайка НЕ меняем при обновлениях от других пользователей
+                // Оно должно зависеть только от собственных действий пользователя
             }
         }
 
