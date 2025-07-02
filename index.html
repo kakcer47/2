@@ -975,8 +975,9 @@
                     report: 'Пожаловаться'
                 },
                 messages: {
-                    limitExceeded: 'Достигнут дневной лимит объявлений',
+                    limitExceeded: 'Достигнут лимит объявлений',
                     banned: 'Ваш аккаунт заблокирован',
+                    actionBanned: 'Это действие недоступно для заблокированных пользователей',
                     postCreated: 'Объявление отправлено на модерацию',
                     editCreated: 'Изменения отправлены на модерацию',
                     alreadyReported: 'Вы уже отправляли жалобу на это объявление',
@@ -1060,8 +1061,9 @@
                     report: 'Report'
                 },
                 messages: {
-                    limitExceeded: 'Daily ad limit reached',
+                    limitExceeded: 'Ad limit reached',
                     banned: 'Your account is blocked',
+                    actionBanned: 'This action is not available for blocked users',
                     postCreated: 'Ad sent for moderation',
                     editCreated: 'Changes sent for moderation',
                     alreadyReported: 'You already reported this ad',
@@ -1362,14 +1364,14 @@
                     }
 
                 } else if (data.type === 'post_approved') {
-                    if (data.post.original_post_id) {
+                    // Если это редактирование, удаляем оригинальный пост из ленты
+                    if (data.post.is_edit && data.post.original_post_id) {
                         removePostFromFeed(data.post.original_post_id);
                     }
 
                     // Обновляем лимиты если это пост текущего пользователя
                     const creator = typeof data.post.creator === 'string' ? JSON.parse(data.post.creator) : data.post.creator;
                     if (creator.telegram_id === telegramId) {
-                        // Получаем обновленные лимиты с сервера
                         if (ws && ws.readyState === WebSocket.OPEN) {
                             ws.send(JSON.stringify({
                                 type: 'get_user_limits',
@@ -1378,6 +1380,7 @@
                         }
                     }
 
+                    // Добавляем обновленный пост в ленту (если это редактирование, он заменит старый)
                     if (currentCategory === t('categories.all') || currentCategory === data.post.category) {
                         const feed = document.getElementById('feed');
                         const postHTML = createPostHTML(data.post);
@@ -1390,6 +1393,9 @@
                 } else if (data.type === 'banned') {
                     Telegram.WebApp.showAlert(t('messages.banned'));
                     Telegram.WebApp.close();
+
+                } else if (data.type === 'action_banned') {
+                    Telegram.WebApp.showAlert(data.message);
 
                 } else if (data.type === 'limit_exceeded') {
                     Telegram.WebApp.showAlert(t('messages.limitExceeded'));
