@@ -123,6 +123,14 @@
             transform: translateY(-2px);
         }
 
+        .character-counter {
+            text-align: right;
+            font-size: 12px;
+            color: #666;
+            margin-top: -15px;
+            margin-bottom: 20px;
+        }
+
         .container {
             max-width: 100%;
             padding: 16px 16px 100px 16px;
@@ -266,6 +274,8 @@
             margin-bottom: 12px;
             font-size: 16px;
             line-height: 1.5;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
         }
 
         .post-creator {
@@ -888,7 +898,11 @@
             </div>
         </div>
         <div class="create-post-content">
-            <textarea id="postDescription" placeholder="Введите текст объявления..."></textarea>
+            <textarea id="postDescription" placeholder="Немного о себе и текст объявления..."
+                maxlength="450"></textarea>
+            <div class="character-counter">
+                <span id="characterCount">0</span>/450
+            </div>
 
             <div class="create-categories">
                 <div class="categories-label" id="categoryLabel">Категория:</div>
@@ -1372,7 +1386,7 @@
                             userData.hidden = userData.hidden.filter(id => id !== currentPostId);
                         }
                     }
-                    
+
                     const message = data.action === 'hidden' ? t('messages.postHidden') : t('messages.postShown');
                     Telegram.WebApp.showAlert(message);
 
@@ -1767,9 +1781,16 @@
             const description = escapeHtml(post.description || '');
             const likes = post.likes || 0;
             const creatorId = creator.telegram_id;
-            const userLiked = post.user_liked || false;
+
+            // ИСПРАВЛЕНИЕ: показываем лайк только если ТЕКУЩИЙ пользователь лайкнул
+            const userLiked = post.user_liked === true;
             const likeClass = userLiked ? 'like liked' : 'like';
             const likeIcon = userLiked ? '❤️' : '🤍';
+
+            // ИСПРАВЛЕНИЕ: приоритет @username, потом ссылка по ID
+            const creatorLink = creator.username
+                ? `https://t.me/${creator.username}`
+                : `tg://user?id=${creatorId}`;
 
             return `
                 <div class="post" data-id="${post.id}">
@@ -1777,8 +1798,8 @@
                     <div class="post-creator">
                         <div class="post-creator-info">
                             <img src="${creatorPhoto}" alt="Avatar" onerror="this.src='https://via.placeholder.com/32'">
-                            <a href="tg://user?id=${creatorId}" target="_blank">
-                                ${creatorName}
+                            <a href="${creatorLink}" target="_blank">
+                                ${creator.username ? '@' + creator.username : creatorName}
                             </a>
                         </div>
                         <div class="post-actions">
@@ -1807,10 +1828,11 @@
                 const likeDiv = postEl.querySelector('.like');
                 const likeIcon = postEl.querySelector('.like-icon');
 
+                // Обновляем счетчик лайков
                 if (likeCountSpan) likeCountSpan.textContent = post.likes || 0;
 
-                // ИСПРАВЛЕНИЕ: используем post.user_liked вместо post.like_action
-                if (likeDiv && likeIcon) {
+                // ИСПРАВЛЕНИЕ: обновляем визуал лайка ТОЛЬКО для текущего пользователя
+                if (likeDiv && likeIcon && post.like_action && post.telegram_id === telegramId) {
                     if (post.user_liked === true) {
                         likeDiv.classList.add('liked');
                         likeIcon.textContent = '❤️';
@@ -1948,6 +1970,23 @@
             }
         }
 
+        function updateCharacterCount() {
+            const textArea = document.getElementById('postDescription');
+            const counter = document.getElementById('characterCount');
+            if (textArea && counter) {
+                counter.textContent = textArea.value.length;
+
+                // Меняем цвет при приближении к лимиту
+                if (textArea.value.length > 400) {
+                    counter.style.color = '#ff4757';
+                } else if (textArea.value.length > 350) {
+                    counter.style.color = '#ffa726';
+                } else {
+                    counter.style.color = '#666';
+                }
+            }
+        }
+
         // Показать модальное окно создания поста
         function showCreatePostModal() {
             isEditMode = false;
@@ -1984,7 +2023,12 @@
             Telegram.WebApp.BackButton.onClick(hideCreatePostModal);
 
             document.body.style.overflow = 'hidden';
+
+            updateCharacterCount();
+            const textArea = document.getElementById('postDescription');
+            textArea.addEventListener('input', updateCharacterCount);
         }
+
 
         // Открыть модальное окно редактирования поста
         function openEditPostModal(post) {
@@ -2097,8 +2141,6 @@
 
         // Показать опции фильтра для создания поста
         function showCreateFilterOptions(filterType) {
-            const modal = document.getElementById('filterModal');
-            modal.setAttribute('data-mode', 'create'); // Добавь это
             const filterData = {
                 city: cities[currentLanguage].slice(1), // Убираем "Все города"
                 gender: [t('filters.male'), t('filters.female')],
@@ -2106,8 +2148,9 @@
                 date: [t('filters.today'), t('filters.tomorrow'), t('filters.thisWeek'), t('filters.thisMonth')]
             };
 
-            const title = document.getElementById('filterTitle');
-            const options = document.getElementById('filterOptions');
+            const modal = document.getElementById('createFilterModal');
+            const title = document.getElementById('createFilterTitle');
+            const options = document.getElementById('createFilterOptions');
 
             title.textContent = t(`filters.${filterType}Title`);
 
@@ -2116,19 +2159,19 @@
             // Добавляем поиск для городов
             if (filterType === 'city') {
                 content += `
-                    <div class="city-search">
-                        <input type="text" id="citySearchInput" placeholder="${t('messages.citySearchPlaceholder')}" oninput="filterCitiesForCreate()">
-                    </div>
-                `;
+            <div class="city-search">
+                <input type="text" id="createCitySearchInput" placeholder="${t('messages.citySearchPlaceholder')}" oninput="filterCitiesForCreate()">
+            </div>
+        `;
             }
 
             content += filterData[filterType].map(option => `
-                <button onclick="selectCreateFilterOption('${filterType}', '${option}')" 
-                        class="${createPostFilters[filterType].includes(option) ? 'active' : ''}"
-                        data-city="${option}">
-                    ${option}
-                </button>
-            `).join('');
+        <button onclick="selectCreateFilterOption('${filterType}', '${option}')" 
+                class="${createPostFilters[filterType].includes(option) ? 'active' : ''}"
+                data-city="${option}">
+            ${option}
+        </button>
+    `).join('');
 
             options.innerHTML = content;
             showModal(modal);
@@ -2136,9 +2179,9 @@
 
         // Фильтрация городов для создания поста
         function filterCitiesForCreate() {
-            const searchInput = document.getElementById('citySearchInput');
+            const searchInput = document.getElementById('createCitySearchInput');
             const searchValue = searchInput.value.toLowerCase();
-            const cityButtons = document.querySelectorAll('#filterOptions button[data-city]');
+            const cityButtons = document.querySelectorAll('#createFilterOptions button[data-city]');
 
             cityButtons.forEach(button => {
                 const cityName = button.getAttribute('data-city').toLowerCase();
@@ -2176,7 +2219,7 @@
         }
 
         function hideCreateFilterModal() {
-            hideModal(document.getElementById('filterModal'));
+            hideModal(document.getElementById('createFilterModal'));
         }
 
         // Обновление тегов создания поста
@@ -2307,6 +2350,15 @@
                 if (e.target === filterModal) {
                     hideFilterModal();
                 }
+                <div class="modal" id="createFilterModal">
+                    <div class="modal-header">
+                        <h3 id="createFilterTitle">Фильтр</h3>
+                        <button onclick="hideCreateFilterModal()">✕</button>
+                    </div>
+                    <div class="modal-content" id="createFilterOptions">
+        <!-- Filter options populated dynamically -->
+                    </div>
+                </div>
 
                 const postMenu = document.getElementById('postMenu');
                 if (e.target === postMenu) {
