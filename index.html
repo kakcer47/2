@@ -926,6 +926,16 @@
             <button class="create-post-button" onclick="createPost()" id="createPostButton">Создать объявление</button>
         </div>
     </div>
+        <!-- Модальное окно фильтров для создания поста -->
+    <div class="modal" id="createFilterModal">
+        <div class="modal-header">
+            <h3 id="createFilterTitle">Фильтр</h3>
+            <button onclick="hideCreateFilterModal()">✕</button>
+        </div>
+        <div class="modal-content" id="createFilterOptions">
+        <!-- Filter options populated dynamically -->
+        </div>
+    </div>
 
     <script>
         // Локализация
@@ -2362,15 +2372,11 @@
                 if (e.target === filterModal) {
                     hideFilterModal();
                 }
-                <div class="modal" id="createFilterModal">
-                    <div class="modal-header">
-                        <h3 id="createFilterTitle">Фильтр</h3>
-                        <button onclick="hideCreateFilterModal()">✕</button>
-                    </div>
-                    <div class="modal-content" id="createFilterOptions">
-        <!-- Filter options populated dynamically -->
-                    </div>
-                </div>
+
+                const createFilterModal = document.getElementById('createFilterModal');
+                if (e.target === createFilterModal) {
+                    hideCreateFilterModal();
+                }
 
                 const postMenu = document.getElementById('postMenu');
                 if (e.target === postMenu) {
@@ -2378,6 +2384,7 @@
                 }
             });
         });
+
     </script>
 </body>
 
