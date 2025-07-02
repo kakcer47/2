@@ -1225,14 +1225,23 @@
                 isConnectionActive = true;
                 connectionAttempts = 0;
 
-                // Если язык не выбран, показываем выбор языка
+                // Если язык не выбран, показываем выбор языка  
                 if (!currentLanguage || currentLanguage === 'ru') {
                     showLanguageSelection();
                 } else {
                     // Если язык уже выбран, инициализируем приложение
                     const user = Telegram.WebApp.initDataUnsafe.user;
-                    if (user) {
+                    if (user && user.id) {
                         syncUser(user);
+                    } else {
+                        // Для тестирования вне Telegram
+                        console.log('No Telegram user data, using test user');
+                        syncUser({
+                            id: 123456789,
+                            first_name: 'Test',
+                            last_name: 'User',
+                            username: 'testuser'
+                        });
                     }
                 }
             };
@@ -1446,7 +1455,7 @@
         // Инициализация приложения
         function initApp() {
             const user = Telegram.WebApp.initDataUnsafe.user;
-            if (user) {
+            if (user && user.id) {
                 if (ws && ws.readyState === WebSocket.OPEN) {
                     syncUser(user);
                 } else {
@@ -1464,10 +1473,30 @@
                         }
                     }, 10000);
                 }
+            } else {
+                // Для тестирования вне Telegram
+                console.log('No Telegram user data, using test user');
+                const testUser = {
+                    id: 123456789,
+                    first_name: 'Test',
+                    last_name: 'User',
+                    username: 'testuser'
+                };
 
-                loadCategories();
-                loadFilterOptions();
+                if (ws && ws.readyState === WebSocket.OPEN) {
+                    syncUser(testUser);
+                } else {
+                    const checkConnection = setInterval(() => {
+                        if (ws && ws.readyState === WebSocket.OPEN) {
+                            clearInterval(checkConnection);
+                            syncUser(testUser);
+                        }
+                    }, 100);
+                }
             }
+
+            loadCategories();
+            loadFilterOptions();
         }
 
         // Синхронизация пользователя
