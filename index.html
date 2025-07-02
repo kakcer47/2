@@ -1512,9 +1512,9 @@
             }
 
             content += filterData[filterType].map(option => `
-                <button onclick="selectFilterOption('${filterType}', '${option}')"
+                <button onclick="selectFilterOption('${filterType}', '${option}', event)"
                         class="${isFilterActive(filterType, option) ? 'active' : ''}"
-                        data-city="${option}">
+                        data-filter-city="${option}">
                     ${option}
                 </button>
             `).join('');
@@ -1537,7 +1537,7 @@
             return feedFilters[filterType].includes(option);
         }
 
-        function selectFilterOption(filterType, option) {
+        function selectFilterOption(filterType, option, event) {
             if (filterType === 'sort') {
                 const sortMap = {};
                 sortMap[t('filters.sortNew')] = 'new';
@@ -1558,6 +1558,15 @@
                     } else {
                         feedFilters[filterType].push(option);
                     }
+                }
+            }
+
+            // Обновляем визуальное состояние кнопки в модальном окне
+            if (event) {
+                const clickedButton = event.target.closest('button');
+                if (clickedButton) {
+                    const isActive = isFilterActive(filterType, option);
+                    clickedButton.classList.toggle('active', isActive);
                 }
             }
 
@@ -1585,10 +1594,10 @@
         function filterCities() {
             const searchInput = document.getElementById('citySearchInput');
             const searchValue = searchInput.value.toLowerCase();
-            const cityButtons = document.querySelectorAll('#filterOptions button[data-city]');
+            const cityButtons = document.querySelectorAll('#filterOptions button[data-filter-city]');
 
             cityButtons.forEach(button => {
-                const cityName = button.getAttribute('data-city').toLowerCase();
+                const cityName = button.getAttribute('data-filter-city').toLowerCase();
                 if (cityName.includes(searchValue) || cityName === t('filters.allCities').toLowerCase()) {
                     button.style.display = 'block';
                 } else {
@@ -1622,9 +1631,9 @@
             }
 
             content += tagData[tagType].map(option => `
-                <button onclick="selectTagOption('${tagType}', '${option}')" 
+                <button onclick="selectTagOption('${tagType}', '${option}', event)" 
                         class="${tagSelections[tagType].includes(option) ? 'active' : ''}"
-                        data-city="${option}">
+                        data-tag-city="${option}">
                     ${option}
                 </button>
             `).join('');
@@ -1633,7 +1642,7 @@
             showModal('tagModal');
         }
 
-        function selectTagOption(tagType, option) {
+        function selectTagOption(tagType, option, event) {
             const index = tagSelections[tagType].indexOf(option);
             if (index > -1) {
                 tagSelections[tagType].splice(index, 1);
@@ -1641,6 +1650,14 @@
                 tagSelections[tagType].push(option);
             }
 
+            // Обновляем визуальное состояние кнопки
+            const clickedButton = event.target.closest('button');
+            if (clickedButton) {
+                const isActive = tagSelections[tagType].includes(option);
+                clickedButton.classList.toggle('active', isActive);
+            }
+
+            // Обновляем массив тегов
             postTags = [];
             Object.entries(tagSelections).forEach(([type, values]) => {
                 values.forEach(value => {
@@ -1678,10 +1695,10 @@
         function filterTagCities() {
             const searchInput = document.getElementById('tagCitySearchInput');
             const searchValue = searchInput.value.toLowerCase();
-            const cityButtons = document.querySelectorAll('#tagOptions button[data-city]');
+            const cityButtons = document.querySelectorAll('#tagOptions button[data-tag-city]');
 
             cityButtons.forEach(button => {
-                const cityName = button.getAttribute('data-city').toLowerCase();
+                const cityName = button.getAttribute('data-tag-city').toLowerCase();
                 if (cityName.includes(searchValue)) {
                     button.style.display = 'block';
                 } else {
