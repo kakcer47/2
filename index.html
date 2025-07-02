@@ -1600,7 +1600,7 @@
             }
 
             updateFilterButtons();
-            hideFilterModal();
+            hideCreateFilterModal();
             currentPage = 1;
             loadPosts();
         }
@@ -2146,6 +2146,10 @@
             updateCreatePostTags();
             loadCreateFilterButtons();
             hideFilterModal();
+        }
+
+        function hideCreateFilterModal() {
+            hideModal(document.getElementById('filterModal'));
         }
 
         // Обновление тегов создания поста
