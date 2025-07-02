@@ -1372,6 +1372,12 @@
                         updatePostLimit();
                     }
 
+                } else if (data.type === 'user_limits_updated') {
+                    if (data.telegram_id === telegramId && data.limits) {
+                        userData.limits = data.limits;
+                        updatePostLimit();
+                    }
+
                 } else if (data.type === 'post_for_edit') {
                     openEditPostModal(data.post);
 
@@ -1557,6 +1563,8 @@
                 if (option.includes(t('filters.allCities')) || option.includes(t('filters.allGenders')) ||
                     option.includes(t('filters.allAges')) || option.includes(t('filters.allDates'))) {
                     feedFilters[filterType] = [];
+                    // Закрываем модальное окно при выборе "все"
+                    hideModal('filterModal');
                 } else {
                     const index = feedFilters[filterType].indexOf(option);
                     if (index > -1) {
@@ -1850,9 +1858,11 @@
                 const likeDiv = postEl.querySelector('.like');
                 const likeIcon = postEl.querySelector('.like-icon');
 
+                // Всегда обновляем счетчик лайков
                 if (likeCountSpan) likeCountSpan.textContent = post.likes || 0;
 
-                if (likeDiv && likeIcon && post.like_action) {
+                // Обновляем визуал лайка ТОЛЬКО если это действие текущего пользователя
+                if (likeDiv && likeIcon && post.like_action && post.hasOwnProperty('user_liked')) {
                     if (post.user_liked === true) {
                         likeDiv.classList.add('liked');
                         likeIcon.textContent = '❤️';
