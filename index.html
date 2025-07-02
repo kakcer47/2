@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="ru">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -58,8 +59,13 @@
         }
 
         @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
         }
 
         .loading-text {
@@ -117,7 +123,7 @@
 
         .container {
             max-width: 100%;
-            padding: 16px 16px 100px 16px;
+            padding: 80px 16px 100px 16px;
             box-sizing: border-box;
             display: none;
         }
@@ -127,6 +133,12 @@
         }
 
         .categories {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 50;
+            background: #fcfcfc;
             display: flex;
             overflow-x: auto;
             padding: 8px 0 16px 0;
@@ -424,8 +436,8 @@
             font-size: 24px;
             cursor: pointer;
             color: #666;
-            width: 20px;        
-            text-align: center; 
+            width: 20px;
+            text-align: center;
         }
 
         .modal-content {
@@ -557,7 +569,8 @@
             margin-bottom: 20px;
         }
 
-        .create-categories, .create-tags {
+        .create-categories,
+        .create-tags {
             margin-bottom: 20px;
         }
 
@@ -568,7 +581,8 @@
             margin-bottom: 12px;
         }
 
-        .categories-scroll, .tags-scroll {
+        .categories-scroll,
+        .tags-scroll {
             display: flex;
             overflow-x: auto;
             padding: 8px 0;
@@ -578,11 +592,13 @@
             gap: 8px;
         }
 
-        .categories-scroll::-webkit-scrollbar, .tags-scroll::-webkit-scrollbar {
+        .categories-scroll::-webkit-scrollbar,
+        .tags-scroll::-webkit-scrollbar {
             display: none;
         }
 
-        .category-item, .tag-item {
+        .category-item,
+        .tag-item {
             flex: 0 0 auto;
             padding: 8px 16px;
             background: #f8f7f6;
@@ -598,11 +614,13 @@
             white-space: nowrap;
         }
 
-        .category-item:hover, .tag-item:hover {
+        .category-item:hover,
+        .tag-item:hover {
             background: #ebebeb;
         }
 
-        .category-item.active, .tag-item.active {
+        .category-item.active,
+        .tag-item.active {
             background: #1d1c1b;
             color: #fff;
             border-color: #1d1c1b;
@@ -753,7 +771,8 @@
                 font-size: 16px;
             }
 
-            .category-item, .tag-item {
+            .category-item,
+            .tag-item {
                 padding: 6px 12px;
                 font-size: 13px;
             }
@@ -790,6 +809,7 @@
         }
     </style>
 </head>
+
 <body>
     <div class="loading-screen" id="loadingScreen">
         <div class="spinner"></div>
@@ -1151,7 +1171,7 @@
             currentLanguage = lang;
             document.getElementById('languageSelection').style.display = 'none';
             updateInterface();
-            
+
             if (ws && ws.readyState === WebSocket.OPEN && telegramId) {
                 ws.send(JSON.stringify({
                     type: 'update_language',
@@ -1697,7 +1717,7 @@
             `).join('');
 
             options.innerHTML = content;
-            
+
             // Устанавливаем более высокий z-index для модального окна тегов
             modal.style.zIndex = '1002';
             showModal('tagModal');
@@ -2227,4 +2247,5 @@
         });
     </script>
 </body>
+
 </html>
