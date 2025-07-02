@@ -1381,6 +1381,12 @@
 
                 } else if (data.type === 'post_approved') {
                     console.log('New post approved:', data.post.id);
+
+                    // Если это редактирование, удаляем старый пост
+                    if (data.post.original_post_id) {
+                        removePostFromFeed(data.post.original_post_id);
+                    }
+
                     if (currentCategory === t('categories.all') || currentCategory === data.post.category) {
                         const feed = document.getElementById('feed');
                         const postHTML = createPostHTML(data.post);
@@ -1571,6 +1577,10 @@
             // Статические данные фильтров уже в функции showFilterOptions
         }
 
+        function hideCreateFilterModal() {
+            hideModal(document.getElementById('createFilterModal'));
+        }
+
         // Показать опции фильтра
         function showFilterOptions(filterType) {
             const filterData = {
@@ -1599,7 +1609,7 @@
             }
 
             content += filterData[filterType].map(option => `
-                <button onclick="selectFilterOption('${filterType}', '${option}')" 
+                <button onclick="selectFilterOption('${filterType}', '${option}', event)"
                         class="${isFilterActive(filterType, option) ? 'active' : ''}"
                         data-city="${option}">
                     ${option}
@@ -1676,6 +1686,12 @@
                         currentFilters[filterType].push(option);
                     }
                 }
+            }
+
+            const clickedButton = event.target.closest('button');
+            if (clickedButton) {
+                const isActive = isFilterActive(filterType, option);
+                clickedButton.classList.toggle('active', isActive);
             }
 
             updateFilterButtons();
@@ -1836,8 +1852,8 @@
                     <div class="post-creator">
                         <div class="post-creator-info">
                             <img src="${creatorPhoto}" alt="Avatar" onerror="this.src='https://via.placeholder.com/32'">
-                            <a href="${creatorLink}" target="_blank">
-                                ${creator.username ? '@' + creator.username : creatorName}
+                            <a href="${creatorLink}" onclick="openTelegramProfile(event, '${creatorLink}')">
+                                ${creatorName}
                             </a>
                         </div>
                         <div class="post-actions">
@@ -1849,6 +1865,18 @@
                     </div>
                 </div>
             `;
+        }
+
+        function openTelegramProfile(event, link) {
+            event.preventDefault();
+
+            // Для Telegram Desktop - не закрываем мини-апп
+            if (window.Telegram && window.Telegram.WebApp) {
+                window.Telegram.WebApp.openTelegramLink(link);
+            } else {
+                // Фолбэк для браузеров
+                window.open(link, '_blank');
+            }
         }
 
         // Экранирование HTML
@@ -1870,7 +1898,7 @@
                 if (likeCountSpan) likeCountSpan.textContent = post.likes || 0;
 
                 // ИСПРАВЛЕНИЕ: обновляем визуал лайка ТОЛЬКО для текущего пользователя
-                if (likeDiv && likeIcon && post.like_action && post.telegram_id === telegramId) {
+                if (likeDiv && likeIcon && post.like_action) {
                     if (post.user_liked === true) {
                         likeDiv.classList.add('liked');
                         likeIcon.textContent = '❤️';
@@ -2186,8 +2214,7 @@
                 date: [t('filters.today'), t('filters.tomorrow'), t('filters.thisWeek'), t('filters.thisMonth')]
             };
 
-            const modal = document.getElementById('filterModal');
-            modal.setAttribute('data-mode', 'create');
+            const modal = document.getElementById('createFilterModal');
             const title = document.getElementById('createFilterTitle');
             const options = document.getElementById('createFilterOptions');
 
