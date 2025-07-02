@@ -1133,7 +1133,13 @@
         function hideModal(modalId) {
             const modal = document.getElementById(modalId);
             modal.classList.remove('visible');
-            setTimeout(() => modal.style.display = 'none', 300);
+            setTimeout(() => {
+                modal.style.display = 'none';
+                // Сбрасываем z-index для модального окна тегов
+                if (modalId === 'tagModal') {
+                    modal.style.zIndex = '1000';
+                }
+            }, 300);
         }
 
         // Языки и интерфейс
@@ -1617,6 +1623,7 @@
 
             const title = document.getElementById('tagTitle');
             const options = document.getElementById('tagOptions');
+            const modal = document.getElementById('tagModal');
 
             title.textContent = t(`filters.${tagType}Title`);
 
@@ -1639,6 +1646,9 @@
             `).join('');
 
             options.innerHTML = content;
+            
+            // Устанавливаем более высокий z-index для модального окна тегов
+            modal.style.zIndex = '1002';
             showModal('tagModal');
         }
 
