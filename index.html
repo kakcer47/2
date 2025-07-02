@@ -1208,8 +1208,8 @@
         function connectWebSocket() {
             const SERVER_URL = 'six-yevf.onrender.com'; // ← ВСТАВЬТЕ ВАШЕ НАЗВАНИЕ СЕРВИСА
 
-            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-            const isLocalhost = window.location.hostname === 'localhost';
+            const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+            const protocol = isLocalhost ? 'ws:' : 'wss:';
 
             // ИСПРАВЛЕНО: добавлен путь /ws для всех подключений
             const wsUrl = isLocalhost ?
