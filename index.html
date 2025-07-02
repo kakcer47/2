@@ -926,14 +926,14 @@
             <button class="create-post-button" onclick="createPost()" id="createPostButton">Создать объявление</button>
         </div>
     </div>
-        <!-- Модальное окно фильтров для создания поста -->
+    <!-- Модальное окно фильтров для создания поста -->
     <div class="modal" id="createFilterModal">
         <div class="modal-header">
             <h3 id="createFilterTitle">Фильтр</h3>
             <button onclick="hideCreateFilterModal()">✕</button>
         </div>
         <div class="modal-content" id="createFilterOptions">
-        <!-- Filter options populated dynamically -->
+            <!-- Filter options populated dynamically -->
         </div>
     </div>
 
@@ -1379,6 +1379,14 @@
                     console.log('Post updated:', data.post.id);
                     updatePost(data.post);
 
+                } else if (data.type === 'post_approved') {
+                    console.log('New post approved:', data.post.id);
+                    if (currentCategory === t('categories.all') || currentCategory === data.post.category) {
+                        const feed = document.getElementById('feed');
+                        const postHTML = createPostHTML(data.post);
+                        feed.insertAdjacentHTML('afterbegin', postHTML);
+                    }
+
                 } else if (data.type === 'post_deleted') {
                     console.log('Post deleted:', data.post_id);
                     removePostFromFeed(data.post_id);
@@ -1403,6 +1411,12 @@
 
                 } else if (data.type === 'limits_updated') {
                     if (data.limits) {
+                        userData.limits = data.limits;
+                        updatePostLimit();
+                    }
+
+                } else if (data.type === 'user_limits_updated') {
+                    if (data.telegram_id === telegramId && data.limits) {
                         userData.limits = data.limits;
                         updatePostLimit();
                     }
@@ -1530,10 +1544,10 @@
             ];
 
             const container = document.getElementById('categories');
-            container.innerHTML = categoriesData.map(cat => `
-                <div class="category" onclick="selectCategory('${cat}')">${cat}</div>
+            container.innerHTML = categoriesData.map((cat, index) => `
+                <div class="category ${index === 0 ? 'active' : ''}" onclick="selectCategory('${cat}')">${cat}</div>
             `).join('');
-            selectCategory(categoriesData[0]);
+            currentCategory = categoriesData[0]; // Устанавливаем сразу
         }
 
         // Выбор категории
@@ -1665,7 +1679,9 @@
             }
 
             updateFilterButtons();
-            hideCreateFilterModal();
+            if (filterType === 'sort') {
+                hideFilterModal();
+            }
             currentPage = 1;
             loadPosts();
         }
@@ -2170,7 +2186,8 @@
                 date: [t('filters.today'), t('filters.tomorrow'), t('filters.thisWeek'), t('filters.thisMonth')]
             };
 
-            const modal = document.getElementById('createFilterModal');
+            const modal = document.getElementById('filterModal');
+            modal.setAttribute('data-mode', 'create');
             const title = document.getElementById('createFilterTitle');
             const options = document.getElementById('createFilterOptions');
 
@@ -2217,8 +2234,6 @@
 
         // Выбрать опцию фильтра для создания поста
         function selectCreateFilterOption(filterType, option) {
-            const modal = document.getElementById('filterModal');
-            if (modal.getAttribute('data-mode') !== 'create') return;
 
             const index = createPostFilters[filterType].indexOf(option);
             if (index > -1) {
@@ -2237,11 +2252,7 @@
 
             updateCreatePostTags();
             loadCreateFilterButtons();
-            hideFilterModal();
-        }
 
-        function hideCreateFilterModal() {
-            hideModal(document.getElementById('createFilterModal'));
         }
 
         // Обновление тегов создания поста
