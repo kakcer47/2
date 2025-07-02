@@ -332,7 +332,7 @@
 
         .bottom-menu {
             position: fixed;
-            bottom: 0;
+            bottom: 20;
             left: 0;
             right: 0;
             background: #fcfcfc;
@@ -791,14 +791,14 @@
 <body>
     <div class="loading-screen" id="loadingScreen">
         <div class="spinner"></div>
-        <div class="loading-text" id="loadingText">Подключение...</div>
+        <div class="loading-text" id="loadingText">ϡ</div>
     </div>
 
     <div class="language-selection" id="languageSelection">
-        <div class="language-title">Выберите язык / Choose Language</div>
+        <div class="language-title">Language</div>
         <div class="language-buttons">
-            <button class="language-btn" onclick="selectLanguage('ru')">🇷🇺 Русский</button>
-            <button class="language-btn" onclick="selectLanguage('en')">🇬🇧 English</button>
+            <button class="language-btn" onclick="selectLanguage('ru')">Русский</button>
+            <button class="language-btn" onclick="selectLanguage('en')">English</button>
         </div>
     </div>
 
@@ -910,7 +910,7 @@
         // Переводы
         const translations = {
             ru: {
-                loading: 'Подключение...',
+                loading: '',
                 connectionLost: 'Соединение потеряно',
                 reconnecting: 'Переподключение...',
                 searchPlaceholder: 'Поиск объявлений...',
