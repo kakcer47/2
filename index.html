@@ -1190,8 +1190,22 @@
             document.getElementById('languageSelection').style.display = 'none';
             updateLanguageInterface();
 
-            // Всегда инициализируем приложение после выбора языка
-            initApp();
+            // Обновляем язык пользователя на сервере
+            if (ws && ws.readyState === WebSocket.OPEN && telegramId) {
+                ws.send(JSON.stringify({
+                    type: 'update_language',
+                    telegram_id: telegramId,
+                    language: lang
+                }));
+            }
+
+            // Загружаем категории и начинаем работу с приложением
+            loadCategories();
+            loadFilterOptions();
+            hideLoadingScreen();
+
+            currentPage = 1;
+            loadPosts();
         }
 
         // Показать экран выбора языка
@@ -1227,7 +1241,16 @@
 
                 // Если язык не выбран, показываем выбор языка  
                 if (!currentLanguage || currentLanguage === 'ru') {
-                    showLanguageSelection();
+                    const user = Telegram.WebApp.initDataUnsafe.user;
+                    const finalUser = (user && user.id) ? user : {
+                        id: 123456789,
+                        first_name: 'Test',
+                        last_name: 'User',
+                        username: 'testuser'
+                    };
+
+                    console.log('Starting user sync with:', finalUser.id);
+                    syncUser(finalUser);
                 } else {
                     // Если язык уже выбран, инициализируем приложение
                     const user = Telegram.WebApp.initDataUnsafe.user;
@@ -1318,18 +1341,25 @@
                         userData.photo_url = telegramUser.photo_url || '';
                     }
 
-                    // Устанавливаем язык пользователя
-                    if (data.language) {
-                        currentLanguage = data.language;
-                        updateLanguageInterface();
-                    }
-
-                    updateUserInterface();
-                    hideLoadingScreen();
                     console.log('User synced successfully:', telegramId);
 
-                    currentPage = 1;
-                    loadPosts();
+                    // Если у пользователя уже есть сохраненный язык, используем его
+                    if (data.language && data.language !== 'ru') {
+                        currentLanguage = data.language;
+                        updateLanguageInterface();
+                        updateUserInterface();
+
+                        loadCategories();
+                        loadFilterOptions();
+                        hideLoadingScreen();
+
+                        currentPage = 1;
+                        loadPosts();
+                    } else {
+                        // Показываем выбор языка для новых пользователей
+                        updateUserInterface();
+                        showLanguageSelection();
+                    }
 
                 } else if (data.type === 'posts') {
                     console.log('Rendering posts:', data.posts.length, 'append:', data.append);
@@ -1450,53 +1480,6 @@
             if (limitElement && userData && userData.limits) {
                 limitElement.textContent = `${userData.limits.used}/${userData.limits.total}${t('postLimitText')}`;
             }
-        }
-
-        // Инициализация приложения
-        function initApp() {
-            const user = Telegram.WebApp.initDataUnsafe.user;
-            if (user && user.id) {
-                if (ws && ws.readyState === WebSocket.OPEN) {
-                    syncUser(user);
-                } else {
-                    const checkConnection = setInterval(() => {
-                        if (ws && ws.readyState === WebSocket.OPEN) {
-                            clearInterval(checkConnection);
-                            syncUser(user);
-                        }
-                    }, 100);
-
-                    setTimeout(() => {
-                        clearInterval(checkConnection);
-                        if (!ws || ws.readyState !== WebSocket.OPEN) {
-                            showLoadingScreen(t('connectionLost'));
-                        }
-                    }, 10000);
-                }
-            } else {
-                // Для тестирования вне Telegram
-                console.log('No Telegram user data, using test user');
-                const testUser = {
-                    id: 123456789,
-                    first_name: 'Test',
-                    last_name: 'User',
-                    username: 'testuser'
-                };
-
-                if (ws && ws.readyState === WebSocket.OPEN) {
-                    syncUser(testUser);
-                } else {
-                    const checkConnection = setInterval(() => {
-                        if (ws && ws.readyState === WebSocket.OPEN) {
-                            clearInterval(checkConnection);
-                            syncUser(testUser);
-                        }
-                    }, 100);
-                }
-            }
-
-            loadCategories();
-            loadFilterOptions();
         }
 
         // Синхронизация пользователя
