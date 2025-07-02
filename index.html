@@ -1892,19 +1892,6 @@
             `;
         }
 
-        function updatePost(post) {
-            const postEl = document.querySelector(`.post[data-id="${post.id}"]`);
-            if (postEl) {
-                const likeCountSpan = postEl.querySelector('.like-count');
-                
-                // ТОЛЬКО обновляем счетчик лайков, НЕ трогаем визуальное состояние
-                if (likeCountSpan) likeCountSpan.textContent = post.likes || 0;
-                
-                // Визуальное состояние кнопки лайка НЕ меняем при обновлениях от других пользователей
-                // Оно должно зависеть только от собственных действий пользователя
-            }
-        }
-
         function removePostFromFeed(postId) {
             const postEl = document.querySelector(`.post[data-id="${postId}"]`);
             if (postEl) postEl.remove();
