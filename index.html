@@ -126,6 +126,8 @@
             padding: 80px 16px 100px 16px;
             box-sizing: border-box;
             display: none;
+            background: rgba(255, 255, 255, 0);
+            backdrop-filter: blur(2px);
         }
 
         .container.visible {
@@ -138,14 +140,14 @@
             left: 0;
             right: 0;
             z-index: 50;
-            background: #fcfcfc;
+            background: rgba(252, 252, 252, 0);
             display: flex;
             overflow-x: auto;
             padding: 8px 0 16px 0;
             scroll-snap-type: x mandatory;
             scrollbar-width: none;
             -ms-overflow-style: none;
-            border-bottom: 1px solid #f0f0f0;
+            border-bottom: 1px solid rgba(240, 240, 240, 0);
             margin-bottom: 16px;
         }
 
