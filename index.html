@@ -1594,7 +1594,23 @@
                             new_posts: false, new_posts_categories: [], new_posts_tags: []
                         }
                     };
-                    notificationSettings = userData.notification_settings;
+                    // Парсим notification_settings если это строка
+                    if (typeof userData.notification_settings === 'string') {
+                        try {
+                            notificationSettings = JSON.parse(userData.notification_settings);
+                        } catch (e) {
+                            console.error('Error parsing notification_settings:', e);
+                            notificationSettings = {
+                                likes: true, system: true, account: true,
+                                new_posts: false, new_posts_categories: [], new_posts_tags: []
+                            };
+                        }
+                    } else {
+                        notificationSettings = userData.notification_settings || {
+                            likes: true, system: true, account: true,
+                            new_posts: false, new_posts_categories: [], new_posts_tags: []
+                        };
+                    }
                     const telegramUser = Telegram.WebApp.initDataUnsafe.user;
                     if (telegramUser) {
                         userData.first_name = telegramUser.first_name;
@@ -2349,6 +2365,9 @@
             }
 
             // Обновляем настройки уведомлений
+            if (!notificationSettings.new_posts_tags) {
+                notificationSettings.new_posts_tags = [];
+            }
             notificationSettings.new_posts_tags = [];
             Object.entries(notificationTagSelections).forEach(([type, values]) => {
                 values.forEach(value => {
@@ -2364,12 +2383,12 @@
             const container = document.getElementById('notificationTags');
             if (!container) return;
 
-            if (notificationSettings.new_posts_tags.length === 0) {
+            if (!notificationSettings.new_posts_tags || notificationSettings.new_posts_tags.length === 0) {
                 container.innerHTML = `<div style="color: #999; font-style: italic;">Теги не выбраны</div>`;
                 return;
             }
 
-            container.innerHTML = notificationSettings.new_posts_tags.map(tag => {
+            container.innerHTML = (notificationSettings.new_posts_tags || []).map(tag => {
                 const [type, value] = tag.split(':');
                 return `<div class="tag-item">${value}</div>`;
             }).join('');
