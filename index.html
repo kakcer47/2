@@ -486,13 +486,14 @@
             align-items: center;
             margin-bottom: 16px;
             border-bottom: 1px solid #f0f0f0;
+            padding: 0 10px;
         }
 
         .modal-header h3 {
             margin: 0;
             font-size: 18px;
             font-weight: 600;
-            flex: 1;
+            flex: 0 1 auto;
         }
 
         .modal-header button {
@@ -505,7 +506,11 @@
             display: flex;
             align-items: center;
             justify-content: center;
+            background: transparent;
+            border: none;
+            cursor: pointer;
             transition: background 0.3s ease, color 0.3s ease;
+            flex-shrink: 0;
         }
 
         .modal-header button:hover {
