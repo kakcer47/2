@@ -1405,8 +1405,6 @@
         }
         // WebSocket
         function connectWebSocket() {
-            console.log('Telegram WebApp available:', !!window.Telegram?.WebApp);
-            console.log('Telegram WebApp initData:', window.Telegram?.WebApp?.initData);
             if (!window.Telegram || !window.Telegram.WebApp) {
                 console.log('Creating mock Telegram WebApp for testing');
                 window.Telegram = {
@@ -1479,11 +1477,6 @@
 
             ws.onclose = (event) => {
                 console.log('WebSocket closed:', event.code, event.reason);
-                console.log('Close event details:', {
-                    code: event.code,
-                    reason: event.reason,
-                    wasClean: event.wasClean
-                });
                 isConnectionActive = false;
                 if (connectionAttempts < maxConnectionAttempts) {
                     connectionAttempts++;
@@ -1520,13 +1513,17 @@
                     language: currentLanguage
                 };
 
-                console.log('Sync message:', message);
+                console.log('Sync message to send:', message);
+                console.log('WebSocket readyState:', ws.readyState);
+                console.log('WebSocket URL:', ws.url);
+
                 ws.send(JSON.stringify(message));
+                console.log('Message sent successfully');
 
                 // Таймаут на случай если сервер не ответит
                 setTimeout(() => {
                     if (!isUserSynced) {
-                        console.error('User sync timeout');
+                        console.error('User sync timeout - no response from server');
                         showLanguageSelection(); // Показываем выбор языка как fallback
                     }
                 }, 5000);
@@ -1537,14 +1534,9 @@
             }
         }
         function handleMessage(event) {
-            console.log('Received WebSocket message:', event.data);
-
             try {
                 const data = JSON.parse(event.data);
-                console.log('Parsed message type:', data.type);
-
                 if (data.type === 'user_synced') {
-                    console.log('User synced response:', data);
                     console.log('User synced:', data);
                     telegramId = data.telegram_id;
                     isUserSynced = true;
