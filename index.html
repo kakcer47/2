@@ -2498,21 +2498,4 @@
     </button>
 </body>
 
-</html>Loaded', () => {
-const searchInput = document.getElementById('search');
-if (searchInput) {
-searchInput.addEventListener('input', () => {
-clearTimeout(searchTimeout);
-searchTimeout = setTimeout(() => {
-currentPage = 1;
-loadPosts();
-}, 500);
-});
-document.addEventListener('click', (e) => {
-if (e.target !== searchInput && !searchInput.contains(e.target)) {
-searchInput.blur();
-}
-});
-}
-});
-document.addEventListener('DOMContent
+</html>
