@@ -1,1308 +1,2460 @@
-#!/usr/bin/env python3
-"""
-Telegram Web App Server
-"""
+<!DOCTYPE html>
+<html lang="ru">
 
-import asyncio
-import logging
-import os
-import json
-from datetime import datetime
-from typing import Optional, List, Dict
-import asyncpg
-from contextlib import asynccontextmanager
-from telegram import Bot, Update, InlineKeyboardButton, InlineKeyboardMarkup
-from telegram.ext import Application, CommandHandler, CallbackQueryHandler, ContextTypes
-from aiohttp import web, WSMsgType
-import aiohttp_cors
-from dataclasses import dataclass
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+        content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
+    <title>Telegram Mini App</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
-@dataclass
-class Config:
-    DATABASE_URL: str = os.getenv("DATABASE_URL")
-    BOT_TOKEN: str = os.getenv("BOT_TOKEN")
-    MODERATION_CHAT_ID: int = int(os.getenv("MODERATION_CHAT_ID", "0"))
-    REPORTS_THREAD_ID: int = int(os.getenv("REPORTS_THREAD_ID", "126"))
-    PORT: int = int(os.getenv("PORT", "10000"))
-    DAILY_POST_LIMIT: int = 60
-    DB_MIN_SIZE: int = 1
-    DB_MAX_SIZE: int = 3
-    DB_COMMAND_TIMEOUT: int = 30
+        body {
+            font-family: 'Rubik', sans-serif;
+            background: #fcfcfc;
+            color: #1d1c1b;
+            position: relative;
+            overflow-x: hidden;
+        }
 
-config = Config()
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
-logger = logging.getLogger(__name__)
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: radial-gradient(circle, #999999 1px, transparent 1px);
+            background-size: 12px 12px;
+            opacity: 0.2;
+            z-index: -1;
+        }
 
-db_pool = None
-telegram_bot = None
-connected_clients = set()
-user_cache = {}
+        .loading-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #1d1c1b;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+        }
 
-@asynccontextmanager
-async def get_db_connection():
-    async with db_pool.acquire() as connection:
-        try:
-            yield connection
-        except Exception as e:
-            logger.error(f"Database error: {e}")
-            raise
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-top: 4px solid #fff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
 
-class DatabaseService:
-    @staticmethod
-    async def init_database():
-        global db_pool
-        if not config.DATABASE_URL:
-            logger.error("DATABASE_URL not set!")
-            raise ValueError("DATABASE_URL not set")
-        
-        logger.info(f"Attempting to connect to database...")
-        database_url = config.DATABASE_URL
-        if database_url.startswith('postgres://'):
-            database_url = database_url.replace('postgres://', 'postgresql://', 1)
-        
-        ssl_context = None
-        if 'localhost' not in database_url and 'sslmode' not in database_url:
-            import ssl
-            ssl_context = ssl.create_default_context()
-            ssl_context.check_hostname = False
-            ssl_context.verify_mode = ssl.CERT_NONE
-        
-        try:
-            db_pool = await asyncpg.create_pool(
-                database_url,
-                min_size=config.DB_MIN_SIZE,
-                max_size=config.DB_MAX_SIZE,
-                command_timeout=config.DB_COMMAND_TIMEOUT,
-                ssl=ssl_context
-            )
-            logger.info("Database pool created successfully")
-        except Exception as e:
-            logger.error(f"Failed to create database pool: {e}")
-            raise
-        
-        async with get_db_connection() as conn:
-            await conn.execute("""
-                CREATE TABLE IF NOT EXISTS users (
-                    telegram_id BIGINT PRIMARY KEY,
-                    username TEXT,
-                    first_name TEXT,
-                    last_name TEXT,
-                    photo_url TEXT,
-                    favorites BIGINT[] DEFAULT '{}',
-                    hidden BIGINT[] DEFAULT '{}',
-                    liked BIGINT[] DEFAULT '{}',
-                    reported_posts BIGINT[] DEFAULT '{}',
-                    posts BIGINT[] DEFAULT '{}',
-                    is_banned BOOLEAN DEFAULT FALSE,
-                    ban_reason TEXT,
-                    post_limit INTEGER DEFAULT 60,
-                    last_post_count_reset DATE DEFAULT CURRENT_DATE,
-                    posts_today INTEGER DEFAULT 0,
-                    language TEXT DEFAULT 'ru',
-                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                    notification_settings JSONB DEFAULT '{"likes": true, "system": true, "account": true, "new_posts": false, "new_posts_categories": [], "new_posts_tags": []}'
-                )
-            """)
-            
-            await conn.execute("""
-                CREATE TABLE IF NOT EXISTS posts (
-                    id SERIAL PRIMARY KEY,
-                    telegram_id BIGINT NOT NULL REFERENCES users(telegram_id),
-                    description TEXT NOT NULL,
-                    category TEXT NOT NULL,
-                    tags JSONB NOT NULL DEFAULT '[]',
-                    likes INTEGER DEFAULT 0,
-                    status TEXT DEFAULT 'approved',
-                    moderation_message_id INTEGER,
-                    is_edit BOOLEAN DEFAULT FALSE,
-                    original_post_id INTEGER,
-                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                    creator JSONB NOT NULL
-                )
-            """)
-            
-            await conn.execute("""
-                CREATE TABLE IF NOT EXISTS post_reports (
-                    id SERIAL PRIMARY KEY,
-                    post_id INTEGER REFERENCES posts(id) ON DELETE CASCADE,
-                    reporter_id BIGINT NOT NULL REFERENCES users(telegram_id),
-                    reason TEXT,
-                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-                )
-            """)
-            
-            try:
-                await conn.execute("ALTER TABLE users ADD COLUMN IF NOT EXISTS language TEXT DEFAULT 'ru'")
-                await conn.execute("ALTER TABLE users ADD COLUMN IF NOT EXISTS notification_settings JSONB DEFAULT '{\"likes\": true, \"system\": true, \"account\": true, \"new_posts\": false, \"new_posts_categories\": [], \"new_posts_tags\": []}'")
-                await conn.execute("ALTER TABLE posts ADD COLUMN IF NOT EXISTS is_edit BOOLEAN DEFAULT FALSE")
-                await conn.execute("ALTER TABLE posts ADD COLUMN IF NOT EXISTS original_post_id INTEGER")
-                await conn.execute("ALTER TABLE posts ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
-                
-                await conn.execute("UPDATE users SET liked = '{}' WHERE liked IS NULL")
-                await conn.execute("UPDATE users SET reported_posts = '{}' WHERE reported_posts IS NULL")
-                await conn.execute("UPDATE users SET favorites = '{}' WHERE favorites IS NULL")
-                await conn.execute("UPDATE users SET hidden = '{}' WHERE hidden IS NULL")
-                await conn.execute("UPDATE users SET posts = '{}' WHERE posts IS NULL")
-                await conn.execute("UPDATE users SET notification_settings = '{\"likes\": true, \"system\": true, \"account\": true, \"new_posts\": false, \"new_posts_categories\": [], \"new_posts_tags\": []}' WHERE notification_settings IS NULL")
-                
-                # Обновляем статус всех постов на approved (новая логика)
-                await conn.execute("UPDATE posts SET status = 'approved' WHERE status = 'pending'")
-            except Exception as e:
-                logger.warning(f"Migration warning: {e}")
-            
-            try:
-                await conn.execute("CREATE INDEX IF NOT EXISTS idx_posts_telegram_id ON posts(telegram_id)")
-                await conn.execute("CREATE INDEX IF NOT EXISTS idx_posts_category ON posts(category)")
-                await conn.execute("CREATE INDEX IF NOT EXISTS idx_posts_status ON posts(status)")
-                await conn.execute("CREATE INDEX IF NOT EXISTS idx_posts_created_at ON posts(created_at DESC)")
-                await conn.execute("CREATE INDEX IF NOT EXISTS idx_users_telegram_id ON users(telegram_id)")
-            except Exception as e:
-                logger.error(f"Error creating indexes: {e}")
-
-    @staticmethod
-    async def sync_user(user_data: Dict) -> Dict:
-        async with get_db_connection() as conn:
-            user = await conn.fetchrow("SELECT * FROM users WHERE telegram_id = $1", user_data['telegram_id'])
-            
-            if not user:
-                await conn.execute("""
-                    INSERT INTO users (telegram_id, username, first_name, last_name, photo_url, language)
-                    VALUES ($1, $2, $3, $4, $5, $6)
-                """, user_data['telegram_id'], user_data['username'], user_data['first_name'],
-                    user_data['last_name'], user_data['photo_url'], user_data.get('language', 'ru'))
-                user = await conn.fetchrow("SELECT * FROM users WHERE telegram_id = $1", user_data['telegram_id'])
-            else:
-                await conn.execute("""
-                    UPDATE users SET username = $2, first_name = $3, last_name = $4, photo_url = $5
-                    WHERE telegram_id = $1
-                """, user_data['telegram_id'], user_data['username'], user_data['first_name'],
-                    user_data['last_name'], user_data['photo_url'])
-            
-            published_count = await conn.fetchval("""
-                SELECT COUNT(*) FROM posts 
-                WHERE telegram_id = $1 AND status = 'approved'
-            """, user_data['telegram_id'])
-            
-            user_dict = dict(user)
-            user_dict['published_posts'] = published_count
-            user_cache[user_data['telegram_id']] = user_dict
-            
-            return {
-                'telegram_id': user_dict['telegram_id'],
-                'limits': {
-                    'used': published_count,
-                    'total': user_dict.get('post_limit', config.DAILY_POST_LIMIT)
-                },
-                'is_banned': user_dict.get('is_banned', False),
-                'language': user_dict.get('language', 'ru'),
-                'favorites': user_dict.get('favorites', []),
-                'hidden': user_dict.get('hidden', []),
-                'liked': user_dict.get('liked', []),
-                'notification_settings': user_dict.get('notification_settings', {
-                    'likes': True, 'system': True, 'account': True, 
-                    'new_posts': False, 'new_posts_categories': [], 'new_posts_tags': []
-                })
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
             }
 
-    @staticmethod
-    async def create_post(post_data: Dict) -> Dict:
-        async with get_db_connection() as conn:
-            # Посты теперь сразу публикуются
-            post_id = await conn.fetchval("""
-                INSERT INTO posts (telegram_id, description, category, tags, creator, status, is_edit, original_post_id)
-                VALUES ($1, $2, $3, $4, $5, 'approved', $6, $7) RETURNING id
-            """, post_data['telegram_id'], post_data['description'], post_data['category'],
-                json.dumps(post_data['tags']), json.dumps(post_data['creator']),
-                post_data.get('is_edit', False), post_data.get('original_post_id'))
-            
-            post = await conn.fetchrow("SELECT * FROM posts WHERE id = $1", post_id)
-            
-            # Отправляем уведомления пользователям с настроенными фильтрами
-            await NotificationService.send_new_post_notifications(dict(post))
-            
-            return dict(post)
-
-    @staticmethod
-    async def get_posts(filters: Dict, page: int, limit: int, search: str = '', telegram_id: int = None) -> List[Dict]:
-        async with get_db_connection() as conn:
-            if telegram_id:
-                query = """
-                    SELECT p.*, 
-                        (CASE WHEN p.id = ANY(COALESCE(u.liked, ARRAY[]::BIGINT[])) THEN TRUE ELSE FALSE END) as user_liked,
-                        (CASE WHEN p.id = ANY(COALESCE(u.favorites, ARRAY[]::BIGINT[])) THEN TRUE ELSE FALSE END) as user_favorited,
-                        (CASE WHEN p.id = ANY(COALESCE(u.hidden, ARRAY[]::BIGINT[])) THEN TRUE ELSE FALSE END) as user_hidden
-                    FROM posts p
-                    LEFT JOIN users u ON u.telegram_id = $1
-                    WHERE p.status = 'approved'
-                """
-                params = [telegram_id]
-            else:
-                query = """
-                    SELECT p.*, FALSE as user_liked, FALSE as user_favorited, FALSE as user_hidden
-                    FROM posts p
-                    WHERE p.status = 'approved'
-                """
-                params = []
-            
-            if filters.get('filters', {}).get('sort') != 'hidden' and telegram_id:
-                query += " AND (p.id <> ALL(COALESCE(u.hidden, ARRAY[]::BIGINT[])))"
-            
-            if filters.get('category'):
-                params.append(filters['category'])
-                query += f" AND p.category = ${len(params)}"
-            
-            if search:
-                params.append(f"%{search}%")
-                query += f" AND LOWER(p.description) LIKE LOWER(${len(params)})"
-            
-            if filters.get('filters'):
-                for filter_type, values in filters['filters'].items():
-                    if values and filter_type != 'sort' and isinstance(values, list):
-                        for value in values:
-                            params.append(json.dumps([f"{filter_type}:{value}"]))
-                            query += f" AND p.tags @> ${len(params)}::JSONB"
-            
-            if filters.get('filters', {}).get('sort'):
-                sort_type = filters['filters']['sort']
-                if sort_type == 'my' and telegram_id:
-                    params.append(telegram_id)
-                    query += f" AND p.telegram_id = ${len(params)}"
-                elif sort_type == 'favorites' and telegram_id:
-                    query += " AND p.id = ANY(COALESCE(u.favorites, ARRAY[]::BIGINT[]))"
-                elif sort_type == 'hidden' and telegram_id:
-                    query += " AND p.id = ANY(COALESCE(u.hidden, ARRAY[]::BIGINT[]))"
-            
-            sort_type = filters.get('filters', {}).get('sort', 'new')
-            if sort_type == 'old':
-                query += " ORDER BY p.created_at ASC"
-            elif sort_type == 'rating':
-                query += " ORDER BY p.likes DESC, p.created_at DESC"
-            else:
-                query += " ORDER BY p.created_at DESC"
-            
-            query += f" LIMIT {limit} OFFSET {(page - 1) * limit}"
-            
-            posts = await conn.fetch(query, *params)
-            return [dict(post) for post in posts]
-
-    @staticmethod
-    async def delete_post(post_id: int, telegram_id: int = None) -> bool:
-        async with get_db_connection() as conn:
-            if telegram_id:
-                result = await conn.execute("DELETE FROM posts WHERE id = $1 AND telegram_id = $2", post_id, telegram_id)
-            else:
-                result = await conn.execute("DELETE FROM posts WHERE id = $1", post_id)
-            return result.split()[-1] == '1'
-
-    @staticmethod
-    async def like_post(post_id: int, telegram_id: int) -> Optional[Dict]:
-        async with get_db_connection() as conn:
-            user = await conn.fetchrow("SELECT liked FROM users WHERE telegram_id = $1", telegram_id)
-            if not user:
-                return None
-            
-            liked_posts = user['liked'] or []
-            
-            if post_id in liked_posts:
-                await conn.execute("""
-                    UPDATE users SET liked = array_remove(liked, $1) WHERE telegram_id = $2
-                """, post_id, telegram_id)
-                await conn.execute("""
-                    UPDATE posts SET likes = likes - 1 WHERE id = $1 AND status = 'approved'
-                """, post_id)
-                action = 'removed'
-            else:
-                await conn.execute("""
-                    UPDATE users SET liked = array_append(COALESCE(liked, ARRAY[]::BIGINT[]), $1) WHERE telegram_id = $2
-                """, post_id, telegram_id)
-                await conn.execute("""
-                    UPDATE posts SET likes = likes + 1 WHERE id = $1 AND status = 'approved'
-                """, post_id)
-                action = 'added'
-                
-                # Отправляем уведомление автору поста о лайке
-                post = await conn.fetchrow("SELECT * FROM posts WHERE id = $1", post_id)
-                if post and action == 'added':
-                    await NotificationService.send_like_notification(dict(post), telegram_id)
-            
-            post = await conn.fetchrow("SELECT * FROM posts WHERE id = $1", post_id)
-            if post:
-                post_dict = dict(post)
-                post_dict['like_action'] = action
-                post_dict['user_liked'] = action == 'added'
-                return post_dict
-            return None
-
-    @staticmethod
-    async def report_post(post_id: int, reporter_id: int, reason: str = None) -> Dict:
-        async with get_db_connection() as conn:
-            user = await conn.fetchrow("SELECT reported_posts FROM users WHERE telegram_id = $1", reporter_id)
-            if user and user['reported_posts'] and post_id in user['reported_posts']:
-                return {'success': False, 'message': 'already_reported'}
-            
-            await conn.execute("""
-                INSERT INTO post_reports (post_id, reporter_id, reason) VALUES ($1, $2, $3)
-            """, post_id, reporter_id, reason)
-            
-            await conn.execute("""
-                UPDATE users SET reported_posts = array_append(COALESCE(reported_posts, ARRAY[]::BIGINT[]), $1) WHERE telegram_id = $2
-            """, post_id, reporter_id)
-            
-            return {'success': True, 'message': 'reported'}
-
-    @staticmethod
-    async def get_post_by_id(post_id: int) -> Optional[Dict]:
-        async with get_db_connection() as conn:
-            post = await conn.fetchrow("SELECT * FROM posts WHERE id = $1", post_id)
-            return dict(post) if post else None
-
-    @staticmethod
-    async def add_to_favorites(post_id: int, telegram_id: int) -> Dict:
-        async with get_db_connection() as conn:
-            user = await conn.fetchrow("SELECT favorites FROM users WHERE telegram_id = $1", telegram_id)
-            if not user:
-                return {'success': False, 'message': 'user_not_found'}
-            
-            favorites = user['favorites'] or []
-            
-            if post_id in favorites:
-                await conn.execute("""
-                    UPDATE users SET favorites = array_remove(COALESCE(favorites, ARRAY[]::BIGINT[]), $1) WHERE telegram_id = $2
-                """, post_id, telegram_id)
-                return {'success': True, 'action': 'removed', 'message': 'removed_from_favorites'}
-            else:
-                await conn.execute("""
-                    UPDATE users SET favorites = array_append(COALESCE(favorites, ARRAY[]::BIGINT[]), $1) WHERE telegram_id = $2
-                """, post_id, telegram_id)
-                return {'success': True, 'action': 'added', 'message': 'added_to_favorites'}
-
-    @staticmethod
-    async def hide_post(post_id: int, telegram_id: int) -> Dict:
-        async with get_db_connection() as conn:
-            user = await conn.fetchrow("SELECT hidden FROM users WHERE telegram_id = $1", telegram_id)
-            if not user:
-                return {'success': False, 'message': 'user_not_found'}
-            
-            hidden = user['hidden'] or []
-            
-            if post_id in hidden:
-                await conn.execute("""
-                    UPDATE users SET hidden = array_remove(COALESCE(hidden, ARRAY[]::BIGINT[]), $1) WHERE telegram_id = $2
-                """, post_id, telegram_id)
-                return {'success': True, 'action': 'shown', 'message': 'post_shown'}
-            else:
-                await conn.execute("""
-                    UPDATE users SET hidden = array_append(COALESCE(hidden, ARRAY[]::BIGINT[]), $1) WHERE telegram_id = $2
-                """, post_id, telegram_id)
-                return {'success': True, 'action': 'hidden', 'message': 'post_hidden'}
-
-    @staticmethod
-    async def is_user_banned(telegram_id: int) -> bool:
-        if telegram_id in user_cache:
-            return user_cache[telegram_id].get('is_banned', False)
-        
-        async with get_db_connection() as conn:
-            result = await conn.fetchval("SELECT is_banned FROM users WHERE telegram_id = $1", telegram_id)
-            return result or False
-
-    @staticmethod
-    async def get_user_limit(telegram_id: int) -> int:
-        if telegram_id in user_cache:
-            return user_cache[telegram_id].get('post_limit', config.DAILY_POST_LIMIT)
-        
-        async with get_db_connection() as conn:
-            result = await conn.fetchval("SELECT post_limit FROM users WHERE telegram_id = $1", telegram_id)
-            return result or config.DAILY_POST_LIMIT
-
-    @staticmethod
-    async def get_user_published_posts_count(telegram_id: int) -> int:
-        async with get_db_connection() as conn:
-            result = await conn.fetchval("""
-                SELECT COUNT(*) FROM posts 
-                WHERE telegram_id = $1 AND status = 'approved'
-            """, telegram_id)
-            return result or 0
-
-    @staticmethod
-    async def ban_user(telegram_id: int, reason: str = None) -> bool:
-        async with get_db_connection() as conn:
-            await conn.execute("""
-                UPDATE users SET is_banned = TRUE, ban_reason = $2 WHERE telegram_id = $1
-            """, telegram_id, reason)
-            if telegram_id in user_cache:
-                user_cache[telegram_id]['is_banned'] = True
-                user_cache[telegram_id]['ban_reason'] = reason
-            
-            # Отправляем уведомление пользователю
-            await NotificationService.send_account_notification(telegram_id, 'ban', reason)
-            return True
-
-    @staticmethod
-    async def hard_ban_user(telegram_id: int, reason: str = None) -> bool:
-        async with get_db_connection() as conn:
-            user_posts = await conn.fetch("SELECT id FROM posts WHERE telegram_id = $1", telegram_id)
-            
-            await conn.execute("""
-                UPDATE users SET is_banned = TRUE, ban_reason = $2 WHERE telegram_id = $1
-            """, telegram_id, reason)
-            
-            await conn.execute("DELETE FROM posts WHERE telegram_id = $1", telegram_id)
-            
-            if telegram_id in user_cache:
-                user_cache[telegram_id]['is_banned'] = True
-                user_cache[telegram_id]['ban_reason'] = reason
-            
-            # Отправляем уведомление пользователю
-            await NotificationService.send_account_notification(telegram_id, 'hard_ban', reason)
-            return [dict(post)['id'] for post in user_posts]
-
-    @staticmethod
-    async def unban_user(telegram_id: int) -> bool:
-        async with get_db_connection() as conn:
-            await conn.execute("""
-                UPDATE users SET is_banned = FALSE, ban_reason = NULL WHERE telegram_id = $1
-            """, telegram_id)
-            if telegram_id in user_cache:
-                user_cache[telegram_id]['is_banned'] = False
-                user_cache[telegram_id]['ban_reason'] = None
-            
-            # Отправляем уведомление пользователю
-            await NotificationService.send_account_notification(telegram_id, 'unban')
-            return True
-
-    @staticmethod
-    async def set_user_limit(telegram_id: int, limit: int) -> bool:
-        async with get_db_connection() as conn:
-            await conn.execute("""
-                UPDATE users SET post_limit = $2 WHERE telegram_id = $1
-            """, telegram_id, limit)
-            if telegram_id in user_cache:
-                user_cache[telegram_id]['post_limit'] = limit
-            
-            published_count = await DatabaseService.get_user_published_posts_count(telegram_id)
-            
-            # Отправляем уведомление пользователю
-            await NotificationService.send_account_notification(telegram_id, 'limit_change', f'Новый лимит: {limit}')
-            
-            await broadcast_message({
-                'type': 'user_limits_updated',
-                'telegram_id': telegram_id,
-                'limits': {
-                    'used': published_count,
-                    'total': limit
-                }
-            })
-            
-            return True
-
-    @staticmethod
-    async def get_user_info(telegram_id: int) -> Optional[Dict]:
-        async with get_db_connection() as conn:
-            user = await conn.fetchrow("SELECT * FROM users WHERE telegram_id = $1", telegram_id)
-            return dict(user) if user else None
-
-    @staticmethod
-    async def update_notification_settings(telegram_id: int, settings: Dict) -> bool:
-        async with get_db_connection() as conn:
-            await conn.execute("""
-                UPDATE users SET notification_settings = $2 WHERE telegram_id = $1
-            """, telegram_id, json.dumps(settings))
-            if telegram_id in user_cache:
-                user_cache[telegram_id]['notification_settings'] = settings
-            return True
-
-class NotificationService:
-    @staticmethod
-    async def send_like_notification(post: Dict, liker_id: int):
-        if not telegram_bot:
-            return
-        
-        try:
-            creator = json.loads(post['creator']) if isinstance(post['creator'], str) else post['creator']
-            author_id = creator['telegram_id']
-            
-            # Проверяем настройки уведомлений автора
-            user_info = await DatabaseService.get_user_info(author_id)
-            if not user_info or not user_info.get('notification_settings', {}).get('likes', True):
-                return
-            
-            # Получаем информацию о том, кто поставил лайк
-            liker_info = await DatabaseService.get_user_info(liker_id)
-            if not liker_info:
-                return
-            
-            liker_username = liker_info.get('username', '')
-            liker_name = f"{liker_info.get('first_name', '')} {liker_info.get('last_name', '')}".strip()
-            
-            username_text = f"@{liker_username}" if liker_username else liker_name
-            
-            text = (
-                f"❤️ {username_text} поставил лайк на ваше объявление #{post['id']}\n\n"
-                f"📄 Текст: {post['description'][:100]}{'...' if len(post['description']) > 100 else ''}"
-            )
-            
-            await telegram_bot.send_message(
-                chat_id=author_id,
-                text=text
-            )
-        except Exception as e:
-            logger.error(f"Failed to send like notification: {e}")
-
-    @staticmethod
-    async def send_account_notification(telegram_id: int, action: str, reason: str = None):
-        if not telegram_bot:
-            return
-        
-        try:
-            # Проверяем настройки уведомлений пользователя
-            user_info = await DatabaseService.get_user_info(telegram_id)
-            if not user_info or not user_info.get('notification_settings', {}).get('account', True):
-                return
-            
-            messages = {
-                'ban': f"🚫 Ваш аккаунт заблокирован{f'. Причина: {reason}' if reason else ''}",
-                'hard_ban': f"🚫 Ваш аккаунт заблокирован, все объявления удалены{f'. Причина: {reason}' if reason else ''}",
-                'unban': "✅ Ваш аккаунт разблокирован",
-                'limit_change': f"📊 {reason if reason else 'Лимит объявлений изменен'}",
-                'post_deleted': f"🗑 Ваше объявление удалено модератором{f'. Причина: {reason}' if reason else ''}"
+            100% {
+                transform: rotate(360deg);
             }
-            
-            if action in messages:
-                await telegram_bot.send_message(
-                    chat_id=telegram_id,
-                    text=messages[action]
-                )
-        except Exception as e:
-            logger.error(f"Failed to send account notification: {e}")
+        }
 
-    @staticmethod
-    async def send_system_notification(telegram_id: int, message: str):
-        if not telegram_bot:
-            return
-        
-        try:
-            # Проверяем настройки уведомлений пользователя
-            user_info = await DatabaseService.get_user_info(telegram_id)
-            if not user_info or not user_info.get('notification_settings', {}).get('system', True):
-                return
-            
-            await telegram_bot.send_message(
-                chat_id=telegram_id,
-                text=f"📢 {message}"
-            )
-        except Exception as e:
-            logger.error(f"Failed to send system notification: {e}")
+        .loading-text {
+            color: #fff;
+            margin-top: 20px;
+            font-size: 16px;
+        }
 
-    @staticmethod
-    async def send_new_post_notifications(post: Dict):
-        if not telegram_bot:
-            return
-        
-        try:
-            async with get_db_connection() as conn:
-                # Получаем пользователей с настроенными уведомлениями о новых постах
-                users = await conn.fetch("""
-                    SELECT telegram_id, notification_settings 
-                    FROM users 
-                    WHERE notification_settings->>'new_posts' = 'true'
-                """)
-                
-                for user_row in users:
-                    user = dict(user_row)
-                    settings = user['notification_settings']
-                    
-                    # Проверяем категории
-                    categories = settings.get('new_posts_categories', [])
-                    if categories and post['category'] not in categories:
-                        continue
-                    
-                    # Проверяем теги
-                    tags = settings.get('new_posts_tags', [])
-                    if tags:
-                        post_tags = json.loads(post.get('tags', '[]'))
-                        if not any(tag in post_tags for tag in tags):
-                            continue
-                    
-                    # Отправляем уведомление
-                    creator = json.loads(post['creator']) if isinstance(post['creator'], str) else post['creator']
-                    text = (
-                        f"🆕 Новое объявление в категории '{post['category']}'\n\n"
-                        f"📄 {post['description'][:150]}{'...' if len(post['description']) > 150 else ''}\n\n"
-                        f"👤 От: {creator.get('first_name', '')} {creator.get('last_name', '')}"
-                    )
-                    
-                    await telegram_bot.send_message(
-                        chat_id=user['telegram_id'],
-                        text=text
-                    )
-        except Exception as e:
-            logger.error(f"Failed to send new post notifications: {e}")
+        .scroll-to-top {
+            position: fixed;
+            bottom: 90px;
+            right: 16px;
+            width: 48px;
+            height: 32px;
+            background: #1d1c1b;
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 18px;
+            font-weight: bold;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+            z-index: 99;
+            transition: all 0.3s ease;
+        }
 
-class PostLimitService:
-    @staticmethod
-    async def check_user_limit(telegram_id: int) -> bool:
-        published_count = await DatabaseService.get_user_published_posts_count(telegram_id)
-        limit = await DatabaseService.get_user_limit(telegram_id)
-        return published_count < limit
+        .scroll-to-top:hover {
+            background: #333;
+            transform: translateY(-2px);
+        }
 
-class ModerationBot:
-    def __init__(self):
-        self.app = None
+        .language-selection {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #1d1c1b;
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 9998;
+        }
 
-    async def init_bot(self):
-        if not config.BOT_TOKEN:
-            logger.warning("BOT_TOKEN not set, bot will not be available")
-            return
-        
-        try:
-            self.app = Application.builder().token(config.BOT_TOKEN).build()
-            
-            # Команды доступны только в группе модерации
-            self.app.add_handler(CommandHandler("start", self.start_command, filters=lambda update: update.effective_chat.id == config.MODERATION_CHAT_ID))
-            self.app.add_handler(CommandHandler("delete", self.delete_command, filters=lambda update: update.effective_chat.id == config.MODERATION_CHAT_ID))
-            self.app.add_handler(CommandHandler("ban", self.ban_command, filters=lambda update: update.effective_chat.id == config.MODERATION_CHAT_ID))
-            self.app.add_handler(CommandHandler("hardban", self.hardban_command, filters=lambda update: update.effective_chat.id == config.MODERATION_CHAT_ID))
-            self.app.add_handler(CommandHandler("unban", self.unban_command, filters=lambda update: update.effective_chat.id == config.MODERATION_CHAT_ID))
-            self.app.add_handler(CommandHandler("setlimit", self.setlimit_command, filters=lambda update: update.effective_chat.id == config.MODERATION_CHAT_ID))
-            self.app.add_handler(CommandHandler("getlimit", self.getlimit_command, filters=lambda update: update.effective_chat.id == config.MODERATION_CHAT_ID))
-            self.app.add_handler(CallbackQueryHandler(self.handle_moderation_callback))
-            
-            await self.app.initialize()
-            await self.app.start()
-            
-            try:
-                await self.app.bot.delete_webhook(drop_pending_updates=True)
-            except Exception as e:
-                logger.warning(f"Could not clear webhook: {e}")
-            
-            global telegram_bot
-            telegram_bot = self.app.bot
-            
-        except Exception as e:
-            logger.error(f"Failed to initialize bot: {e}")
+        .language-title {
+            color: #fff;
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 40px;
+            text-align: center;
+        }
 
-    async def start_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
-        await update.message.reply_text(
-            "🤖 Бот модерации объявлений\n\n"
-            "Команды:\n"
-            "/delete <post_id> - Удалить объявление\n"
-            "/ban <telegram_id> - Забанить пользователя\n"
-            "/hardban <telegram_id> - Забанить + удалить все посты\n"
-            "/unban <telegram_id> - Разбанить пользователя\n"
-            "/setlimit <telegram_id> <limit> - Установить лимит постов\n"
-            "/getlimit <telegram_id> - Посмотреть лимит пользователя"
-        )
+        .language-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            width: 200px;
+        }
 
-    async def delete_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
-        if not context.args:
-            await update.message.reply_text("Использование: /delete <post_id>")
-            return
-        
-        try:
-            post_id = int(context.args[0])
-            post = await DatabaseService.get_post_by_id(post_id)
-            
-            if not post:
-                await update.message.reply_text("Объявление не найдено")
-                return
-            
-            success = await DatabaseService.delete_post(post_id)
-            if success:
-                await broadcast_message({
-                    'type': 'post_deleted',
-                    'post_id': post_id
-                })
-                
-                try:
-                    creator = json.loads(post['creator']) if isinstance(post['creator'], str) else post['creator']
-                    await NotificationService.send_account_notification(
-                        creator['telegram_id'], 'post_deleted', 'Нарушение правил'
-                    )
-                except Exception as e:
-                    logger.error(f"Failed to notify user: {e}")
-                
-                await update.message.reply_text(f"✅ Объявление {post_id} удалено")
-            else:
-                await update.message.reply_text("❌ Ошибка при удалении объявления")
-                
-        except ValueError:
-            await update.message.reply_text("❌ Неверный ID объявления")
-        except Exception as e:
-            logger.error(f"Delete command error: {e}")
-            await update.message.reply_text("❌ Произошла ошибка")
+        .language-btn {
+            padding: 16px 24px;
+            background: #fff;
+            color: #1d1c1b;
+            border: none;
+            border-radius: 12px;
+            font-family: 'Rubik', sans-serif;
+            font-size: 18px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
 
-    async def ban_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
-        if not context.args:
-            await update.message.reply_text("Использование: /ban <telegram_id>")
-            return
-        
-        try:
-            telegram_id = int(context.args[0])
-            await DatabaseService.ban_user(telegram_id, "Забанен модератором")
-            await update.message.reply_text(f"✅ Пользователь {telegram_id} забанен")
-        except ValueError:
-            await update.message.reply_text("❌ Неверный Telegram ID")
-        except Exception as e:
-            logger.error(f"Ban command error: {e}")
-            await update.message.reply_text("❌ Произошла ошибка")
+        .language-btn:hover {
+            background: #f0f0f0;
+            transform: translateY(-2px);
+        }
 
-    async def hardban_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
-        if not context.args:
-            await update.message.reply_text("Использование: /hardban <telegram_id>")
-            return
-        
-        try:
-            telegram_id = int(context.args[0])
-            deleted_post_ids = await DatabaseService.hard_ban_user(telegram_id, "Хард-бан модератором")
-            
-            for post_id in deleted_post_ids:
-                await broadcast_message({
-                    'type': 'post_deleted',
-                    'post_id': post_id
-                })
-            
-            await broadcast_message({
-                'type': 'user_banned',
-                'telegram_id': telegram_id
-            })
-            await update.message.reply_text(f"✅ Пользователь {telegram_id} забанен, все посты удалены")
-        except ValueError:
-            await update.message.reply_text("❌ Неверный Telegram ID")
-        except Exception as e:
-            logger.error(f"Hardban command error: {e}")
-            await update.message.reply_text("❌ Произошла ошибка")
+        .container {
+            max-width: 100%;
+            padding: 16px 16px 100px 16px;
+            box-sizing: border-box;
+            display: none;
+        }
 
-    async def unban_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
-        if not context.args:
-            await update.message.reply_text("Использование: /unban <telegram_id>")
-            return
-        
-        try:
-            telegram_id = int(context.args[0])
-            await DatabaseService.unban_user(telegram_id)
-            await update.message.reply_text(f"✅ Пользователь {telegram_id} разбанен")
-        except ValueError:
-            await update.message.reply_text("❌ Неверный Telegram ID")
-        except Exception as e:
-            logger.error(f"Unban command error: {e}")
-            await update.message.reply_text("❌ Произошла ошибка")
+        .container.visible {
+            display: block;
+        }
 
-    async def setlimit_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
-        if len(context.args) != 2:
-            await update.message.reply_text("Использование: /setlimit <telegram_id> <limit>")
-            return
-        
-        try:
-            telegram_id = int(context.args[0])
-            limit = int(context.args[1])
-            await DatabaseService.set_user_limit(telegram_id, limit)
-            await update.message.reply_text(f"✅ Лимит пользователя {telegram_id} установлен: {limit}")
-        except ValueError:
-            await update.message.reply_text("❌ Неверные параметры")
-        except Exception as e:
-            logger.error(f"Setlimit command error: {e}")
-            await update.message.reply_text("❌ Произошла ошибка")
+        .categories {
+            display: flex;
+            overflow-x: auto;
+            padding: 8px 0 16px 0;
+            scroll-snap-type: x mandatory;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+            border-bottom: 1px solid #f0f0f0;
+            margin-bottom: 16px;
+        }
 
-    async def getlimit_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
-        if not context.args:
-            await update.message.reply_text("Использование: /getlimit <telegram_id>")
-            return
-        
-        try:
-            telegram_id = int(context.args[0])
-            user_info = await DatabaseService.get_user_info(telegram_id)
-            if user_info:
-                published_count = await DatabaseService.get_user_published_posts_count(telegram_id)
-                await update.message.reply_text(
-                    f"👤 Пользователь: {user_info['first_name']} {user_info['last_name']}\n"
-                    f"🆔 ID: {telegram_id}\n"
-                    f"📊 Лимит: {user_info['post_limit']}\n"
-                    f"📝 Опубликовано постов: {published_count}\n"
-                    f"🚫 Забанен: {'Да' if user_info['is_banned'] else 'Нет'}"
-                )
-            else:
-                await update.message.reply_text("❌ Пользователь не найден")
-        except ValueError:
-            await update.message.reply_text("❌ Неверный Telegram ID")
-        except Exception as e:
-            logger.error(f"Getlimit command error: {e}")
-            await update.message.reply_text("❌ Произошла ошибка")
+        .categories::-webkit-scrollbar {
+            display: none;
+        }
 
-    async def handle_moderation_callback(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
-        query = update.callback_query
-        await query.answer()
-        
-        data = query.data.split("_")
-        action = data[0]
-        post_id = int(data[1])
-        
-        post = await DatabaseService.get_post_by_id(post_id)
-        if not post:
-            await query.edit_message_text("❌ Объявление не найдено")
-            return
-        
-        try:
-            creator = json.loads(post['creator']) if isinstance(post['creator'], str) else post['creator']
-            
-            if action == "delete":
-                success = await DatabaseService.delete_post(post_id)
-                if success:
-                    await broadcast_message({
-                        'type': 'post_deleted',
-                        'post_id': post_id
-                    })
-                    
-                    await NotificationService.send_account_notification(
-                        creator['telegram_id'], 'post_deleted', 'Нарушение правил'
-                    )
-                    
-                    new_text = query.message.text + f"\n\n🗑 Объявление удалено"
-                    await query.edit_message_text(new_text)
-                    
-            elif action == "ban":
-                await DatabaseService.ban_user(creator['telegram_id'], "Забанен модератором")
-                new_text = query.message.text + f"\n\n🚫 Пользователь забанен"
-                await query.edit_message_text(new_text)
-                
-            elif action == "hardban":
-                deleted_post_ids = await DatabaseService.hard_ban_user(creator['telegram_id'], "Хард-бан модератором")
-                for deleted_id in deleted_post_ids:
-                    await broadcast_message({
-                        'type': 'post_deleted',
-                        'post_id': deleted_id
-                    })
-                new_text = query.message.text + f"\n\n🚫 Пользователь забанен, все посты удалены"
-                await query.edit_message_text(new_text)
-                
-        except Exception as e:
-            logger.error(f"Moderation callback error: {e}")
-            await query.edit_message_text("❌ Произошла ошибка")
+        .category {
+            flex: 0 0 auto;
+            padding: 12px 20px;
+            margin: 0 8px;
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            scroll-snap-align: center;
+            transition: all 0.3s ease;
+            font-family: 'Rubik', sans-serif;
+            font-weight: 500;
+            font-size: 16px;
+            color: #666;
+            position: relative;
+            border-radius: 0;
+        }
 
-    async def send_for_moderation(self, post: Dict):
-        if not config.MODERATION_CHAT_ID:
-            return
-        
-        try:
-            creator = json.loads(post['creator']) if isinstance(post['creator'], str) else post['creator']
-            
-            text = (
-                f"📝 Новое объявление #{post['id']}\n\n"
-                f"👤 От: {creator['first_name']} {creator.get('last_name', '')}\n"
-                f"🆔 ID: {creator['telegram_id']}\n"
-                f"👤 Username: @{creator.get('username', 'нет')}\n"
-                f"📂 Категория: {post['category']}\n\n"
-                f"📄 Текст:\n{post['description']}\n\n"
-                f"🏷 Теги: {', '.join(json.loads(post['tags']) if post['tags'] else [])}"
-            )
-            
-            keyboard = InlineKeyboardMarkup([
-                [
-                    InlineKeyboardButton("🗑 Удалить", callback_data=f"delete_{post['id']}"),
-                    InlineKeyboardButton("🚫 Бан", callback_data=f"ban_{post['id']}"),
-                    InlineKeyboardButton("💥 Хард-бан", callback_data=f"hardban_{post['id']}")
-                ]
-            ])
-            
-            await telegram_bot.send_message(
-                chat_id=config.MODERATION_CHAT_ID,
-                text=text,
-                reply_markup=keyboard
-            )
-            
-        except Exception as e:
-            logger.error(f"Failed to send moderation message: {e}")
+        .category::after {
+            content: '';
+            position: absolute;
+            bottom: -8px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 0;
+            height: 3px;
+            background: #1d1c1b;
+            border-radius: 50px;
+            transition: width 0.3s ease;
+        }
 
-    async def send_report_for_moderation(self, post: Dict, reporter_data: Dict, reason: str = None):
-        if not config.MODERATION_CHAT_ID:
-            return
-        
-        try:
-            creator = json.loads(post['creator']) if isinstance(post['creator'], str) else post['creator']
-            
-            text = (
-                f"🚨 ЖАЛОБА НА ОБЪЯВЛЕНИЕ #{post['id']}\n\n"
-                f"👤 Автор объявления: {creator['first_name']} {creator.get('last_name', '')}\n"
-                f"🆔 ID автора: {creator['telegram_id']}\n"
-                f"👤 Username автора: @{creator.get('username', 'нет')}\n\n"
-                f"🚨 Жалобу подал: {reporter_data['first_name']} {reporter_data.get('last_name', '')}\n"
-                f"🆔 ID жалобщика: {reporter_data['telegram_id']}\n"
-                f"👤 Username жалобщика: @{reporter_data.get('username', 'нет')}\n\n"
-                f"📂 Категория: {post['category']}\n"
-                f"📄 Текст объявления:\n{post['description']}\n\n"
-                f"🏷 Теги: {', '.join(json.loads(post['tags']) if post['tags'] else [])}\n\n"
-                f"💬 Причина жалобы: {reason or 'Не указана'}"
-            )
-            
-            keyboard = InlineKeyboardMarkup([
-                [
-                    InlineKeyboardButton("🗑 Удалить объявление", callback_data=f"delete_{post['id']}"),
-                    InlineKeyboardButton("🚫 Бан автора", callback_data=f"ban_{post['id']}"),
-                    InlineKeyboardButton("💥 Хард-бан", callback_data=f"hardban_{post['id']}")
-                ]
-            ])
-            
-            # Отправляем в отдельную тему для жалоб
-            await telegram_bot.send_message(
-                chat_id=config.MODERATION_CHAT_ID,
-                message_thread_id=config.REPORTS_THREAD_ID,
-                text=text,
-                reply_markup=keyboard
-            )
-            
-        except Exception as e:
-            logger.error(f"Failed to send report message: {e}")
+        .category.active {
+            color: #1d1c1b;
+            font-weight: 700;
+        }
 
-async def broadcast_message(message: Dict, filter_data: Dict = None):
-    global connected_clients
-    if connected_clients:
-        message_str = json.dumps(message, default=str)
-        disconnected_clients = set()
-        
-        for ws in connected_clients.copy():
-            try:
-                await ws.send_str(message_str)
-            except Exception as e:
-                logger.error(f"Error broadcasting to client: {e}")
-                disconnected_clients.add(ws)
-        
-        connected_clients -= disconnected_clients
+        .category.active::after {
+            width: 100%;
+        }
 
-async def handle_websocket_message(ws, data: Dict):
-    action = data.get('type')
-    telegram_id = data.get('telegram_id')
-    
-    if not telegram_id:
-        await ws.send_str(json.dumps({
-            'type': 'error',
-            'message': 'telegram_id is required'
-        }, default=str))
-        return
-    
-    is_banned = await DatabaseService.is_user_banned(telegram_id)
-    banned_actions = ['create_post', 'like_post', 'report_post']
-    
-    if is_banned and action in banned_actions:
-        await ws.send_str(json.dumps({
-            'type': 'action_banned',
-            'message': 'Это действие недоступно для заблокированных пользователей'
-        }, default=str))
-        return
-    
-    try:
-        if action == 'sync_user':
-            user_data = {
-                'telegram_id': telegram_id,
-                'username': data.get('username') or '',
-                'first_name': data.get('first_name') or '',
-                'last_name': data.get('last_name') or '',
-                'photo_url': data.get('photo_url') or '',
-                'language': data.get('language', 'ru')
+        .filters-container {
+            margin-bottom: 16px;
+        }
+
+        .filters {
+            display: flex;
+            gap: 8px;
+            overflow-x: auto;
+            padding: 8px 0;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+            justify-content: space-between;
+        }
+
+        .filters::-webkit-scrollbar {
+            display: none;
+        }
+
+        .filters-left {
+            display: flex;
+            gap: 8px;
+        }
+
+        .filters-right {
+            display: flex;
+            gap: 8px;
+        }
+
+        .filter-btn {
+            flex: 0 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 38px;
+            height: 38px;
+            background: #f8f7f6;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .filter-btn:hover {
+            background: #ebebeb;
+        }
+
+        .filter-btn.active {
+            background: #1d1c1b;
+            border-color: #1d1c1b;
+        }
+
+        .filter-btn.active img {
+            filter: invert(100%);
+        }
+
+        .feed {
+            margin-top: 16px;
+        }
+
+        .post {
+            background: #fff;
+            border-radius: 16px;
+            padding: 16px;
+            margin-bottom: 16px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            border: 1px solid #f0f0f0;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .post:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+        }
+
+        .post-description {
+            margin-bottom: 12px;
+            font-size: 16px;
+            line-height: 1.5;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+        }
+
+        .post-creator {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-top: 1px solid #f5f5f5;
+        }
+
+        .post-creator-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex: 1;
+        }
+
+        .post-creator img {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+
+        .post-creator a {
+            color: #1d1c1b;
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.3s ease;
+        }
+
+        .post-creator a:hover {
+            color: #007aff;
+        }
+
+        .post-actions {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .post-actions .like {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            cursor: pointer;
+            padding: 6px 10px;
+            border-radius: 16px;
+            transition: all 0.3s ease;
+            font-size: 14px;
+        }
+
+        .post-actions .like:hover {
+            background: #f5f5f5;
+        }
+
+        .post-actions .like img {
+            width: 20px;
+            height: 20px;
+            vertical-align: middle;
+            filter: grayscale(100%);
+            transition: filter 0.3s ease;
+        }
+
+        .post-actions .like.liked {
+            color: #c19433;
+        }
+
+        .post-actions .like.liked img {
+            filter: none;
+        }
+
+        .post-actions .menu {
+            cursor: pointer;
+            padding: 6px;
+            border-radius: 50%;
+            transition: background 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .post-actions .menu img {
+            width: 16px;
+            height: 16px;
+            filter: grayscale(100%);
+            transition: filter 0.3s ease;
+        }
+
+        .post-actions .menu:hover img {
+            filter: none;
+        }
+
+        .bottom-menu {
+            position: fixed;
+            bottom: 10px;
+            left: 0;
+            right: 0;
+            background: #fcfcfc;
+            padding: 12px 16px;
+            border-top: 1px solid #e0e0e0;
+            box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.1);
+            z-index: 100;
+        }
+
+        .bottom-menu-content {
+            display: flex;
+            gap: 12px;
+            max-width: 100%;
+        }
+
+        .bottom-menu input {
+            flex: 1;
+            padding: 12px;
+            border: 1px solid #e0e0e0;
+            border-radius: 12px;
+            font-family: 'Rubik', sans-serif;
+            font-size: 16px;
+            outline: none;
+            transition: border-color 0.3s ease;
+        }
+
+        .bottom-menu input#search:focus {
+            border-color: #1d1c1b;
+        }
+
+        .bottom-menu button {
+            padding: 12px 20px;
+            background: #1d1c1b;
+            color: #fff;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            font-family: 'RubMS Sans', sans-serif;
+            font-weight: 500;
+            font-size: 16px;
+            transition: background 0.3s ease;
+            white-space: nowrap;
+        }
+
+        .bottom-menu button:hover {
+            background: #333;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background: #fff;
+            border-top-left-radius: 20px;
+            border-top-right-radius: 20px;
+            padding: 20px;
+            box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.2);
+            z-index: 1000;
+            overflow-y: auto;
+            transform: translateY(100%);
+            transition: transform 0.3s ease;
+        }
+
+        .modal.visible {
+            transform: translateY(0);
+        }
+
+        .modal-auto-height {
+            height: auto;
+            top: auto;
+            min-height: 200px;
+            max-height: 70vh;
+        }
+
+        .modal-fullscreen {
+            height: 100vh;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .modal-header h3 {
+            margin: 0;
+            font-size: 18px;
+            font-weight: 600;
+            flex: 1;
+        }
+
+        .modal-header button {
+            background: #f5f5f5;
+            border: 1px solid #e0e0e0;
+            font-size: 18px;
+            cursor: pointer;
+            color: #666;
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-left: 12px;
+            transition: all 0.3s ease;
+        }
+
+        .modal-header button:hover {
+            background: #e0e0e0;
+            color: #333;
+        }
+
+        .modal-content {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .modal button {
+            display: block;
+            width: 100%;
+            padding: 16px;
+            background: #f8f7f6;
+            border: none;
+            border-radius: 12px;
+            font-family: 'Rubik', sans-serif;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+            text-align: left;
+        }
+
+        .modal button:hover {
+            background: #ebebeb;
+        }
+
+        .modal button.active {
+            background: #1d1c1b;
+            color: #fff;
+        }
+
+        .city-search {
+            margin-bottom: 16px;
+        }
+
+        .city-search input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #e0e0e0;
+            border-radius: 12px;
+            font-family: 'Rubik', sans-serif;
+            font-size: 16px;
+            outline: none;
+        }
+
+        .city-search input:focus {
+            border-color: #1d1c1b;
+        }
+
+        .create-post-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #fcfcfc;
+            padding: 20px;
+            box-sizing: border-box;
+            overflow-y: auto;
+            z-index: 1001;
+        }
+
+        .create-post-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 20px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .create-post-header img {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+
+        .user-info {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .user-info .name {
+            font-weight: 600;
+            font-size: 18px;
+            color: #1d1c1b;
+        }
+
+        .user-info .post-limit {
+            font-size: 14px;
+            color: #666;
+            font-weight: 400;
+        }
+
+        .create-post-content {
+            flex: 1;
+            overflow-y: auto;
+            padding-bottom: 80px;
+        }
+
+        .create-post-content textarea {
+            width: 100%;
+            min-height: 120px;
+            padding: 16px;
+            border: 1px solid #e0e0e0;
+            border-radius: 12px;
+            font-family: 'Rubik', sans-serif;
+            font-size: 16px;
+            resize: vertical;
+            margin-bottom: 20px;
+            outline: none;
+            transition: border-color 0.3s ease;
+            box-sizing: border-box;
+        }
+
+        .create-post-content textarea:focus {
+            border-color: #1d1c1b;
+        }
+
+        .character-counter {
+            text-align: right;
+            font-size: 12px;
+            color: #666;
+            margin-top: -15px;
+            margin-bottom: 20px;
+        }
+
+        .create-categories,
+        .create-tags {
+            margin-bottom: 20px;
+        }
+
+        .section-label {
+            font-size: 16px;
+            font-weight: 600;
+            color: #1d1c1b;
+            margin-bottom: 12px;
+        }
+
+        .categories-scroll,
+        .tags-scroll {
+            display: flex;
+            overflow-x: auto;
+            padding: 8px 0;
+            scroll-snap-type: x mandatory;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+            gap: 8px;
+        }
+
+        .categories-scroll::-webkit-scrollbar,
+        .tags-scroll::-webkit-scrollbar {
+            display: none;
+        }
+
+        .category-item,
+        .tag-item {
+            flex: 0 0 auto;
+            padding: 8px 16px;
+            background: #f8f7f6;
+            border: 1px solid #e0e0e0;
+            border-radius: 20px;
+            cursor: pointer;
+            scroll-snap-align: center;
+            transition: all 0.3s ease;
+            font-family: 'Rubik', sans-serif;
+            font-weight: 500;
+            font-size: 14px;
+            color: #1d1c1b;
+            white-space: nowrap;
+        }
+
+        .category-item:hover,
+        .tag-item:hover {
+            background: #ebebeb;
+        }
+
+        .category-item.active,
+        .tag-item.active {
+            background: #1d1c1b;
+            color: #fff;
+            border-color: #1d1c1b;
+        }
+
+        .tag-groups {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+
+        .tag-group-btn {
+            flex: 0 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 36px;
+            height: 36px;
+            background: #f8f7f6;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .tag-group-btn:hover {
+            background: #ebebeb;
+        }
+
+        .tag-group-btn.active {
+            background: #1d1c1b;
+            border-color: #1d1c1b;
+        }
+
+        .tag-group-btn.active img {
+            filter: invert(100%);
+        }
+
+        .selected-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .selected-tags .tag {
+            padding: 6px 12px;
+            background: #e8f4fd;
+            border: 1px solid #b3d9ff;
+            border-radius: 16px;
+            font-size: 12px;
+            color: #1a73e8;
+        }
+
+        .create-post-footer {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: #fcfcfc;
+            padding: 16px 20px;
+            border-top: 1px solid #f0f0f0;
+            box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .create-post-button {
+            width: 100%;
+            padding: 16px;
+            background: #1d1c1b;
+            color: #fff;
+            border: none;
+            border-radius: 12px;
+            font-family: 'Rubik', sans-serif;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: background 0.3s ease;
+        }
+
+        .create-post-button:hover {
+            background: #333;
+        }
+
+        .create-post-button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        .no-posts {
+            text-align: center;
+            padding: 40px 20px;
+            color: #666;
+            font-size: 16px;
+        }
+
+        .notification-settings {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .notification-group {
+            border: 1px solid #e0e0e0;
+            border-radius: 12px;
+            padding: 16px;
+            background: #f8f7f6;
+        }
+
+        .notification-group h4 {
+            margin-bottom: 12px;
+            font-size: 16px;
+            color: #1d1c1b;
+        }
+
+        .notification-option {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 8px;
+        }
+
+        .notification-option input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            accent-color: #1d1c1b;
+        }
+
+        .notification-option label {
+            font-size: 14px;
+            color: #333;
+            cursor: pointer;
+        }
+
+        .notification-filters {
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px solid #e0e0e0;
+        }
+
+        .notification-filter-section {
+            margin-bottom: 16px;
+        }
+
+        .notification-filter-section h5 {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 8px;
+        }
+
+        .notification-filter-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+
+        .notification-filter-tags .tag-item {
+            padding: 4px 8px;
+            font-size: 12px;
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                padding: 12px 12px 100px 12px;
             }
-            
-            user_data_result = await DatabaseService.sync_user(user_data)
-            published_count = await DatabaseService.get_user_published_posts_count(telegram_id)
-            await ws.send_str(json.dumps({
-                'type': 'user_synced',
-                'telegram_id': user_data_result['telegram_id'],
-                'limits': {
-                    'used': published_count,
-                    'total': user_data_result.get('post_limit', config.DAILY_POST_LIMIT)
-                },
-                'is_banned': user_data_result.get('is_banned', False),
-                'language': user_data_result.get('language', 'ru'),
-                'favorites': user_data_result.get('favorites', []),
-                'hidden': user_data_result.get('hidden', []),
-                'liked': user_data_result.get('liked', []),
-                'notification_settings': user_data_result.get('notification_settings', {})
-            }, default=str))
-        
-        elif action == 'create_post':
-            if not await PostLimitService.check_user_limit(telegram_id):
-                await ws.send_str(json.dumps({
-                    'type': 'limit_exceeded',
-                    'message': f'Достигнут лимит объявлений'
-                }, default=str))
-                return
-            
-            post = await DatabaseService.create_post({
-                'telegram_id': telegram_id,
-                'description': data['description'],
-                'category': data['category'],
-                'tags': data['tags'],
-                'creator': data['creator_data'],
-                'is_edit': data.get('is_edit', False),
-                'original_post_id': data.get('original_post_id')
-            })
-            
-            # Отправляем в модерацию
-            if telegram_bot:
-                moderation_bot = ModerationBot()
-                await moderation_bot.send_for_moderation(post)
-            
-            # Обновляем лимиты
-            published_count = await DatabaseService.get_user_published_posts_count(telegram_id)
-            limit = await DatabaseService.get_user_limit(telegram_id)
-            
-            await ws.send_str(json.dumps({
-                'type': 'post_created',
-                'message': 'Объявление опубликовано'
-            }, default=str))
-            
-            # Отправляем обновление лимитов
-            await ws.send_str(json.dumps({
-                'type': 'user_limits_updated',
-                'telegram_id': telegram_id,
-                'limits': {
-                    'used': published_count,
-                    'total': limit
-                }
-            }, default=str))
-            
-            # Отправляем пост в ленту
-            await broadcast_message({'type': 'post_approved', 'post': post})
-        
-        elif action == 'get_posts':
-            posts = await DatabaseService.get_posts(
-                data, data['page'], data['limit'], data.get('search', ''), telegram_id
-            )
-            await ws.send_str(json.dumps({
-                'type': 'posts',
-                'posts': posts,
-                'append': data.get('append', False)
-            }, default=str))
-        
-        elif action == 'like_post':
-            post = await DatabaseService.like_post(data['post_id'], telegram_id)
-            if post:
-                await broadcast_message({'type': 'post_updated', 'post': post, 'action_user_id': telegram_id})
-        
-        elif action == 'delete_post':
-            success = await DatabaseService.delete_post(data['post_id'], telegram_id)
-            if success:
-                published_count = await DatabaseService.get_user_published_posts_count(telegram_id)
-                limit = await DatabaseService.get_user_limit(telegram_id)
+
+            .post {
+                padding: 12px;
+                margin-bottom: 12px;
+            }
+
+            .bottom-menu {
+                padding: 8px;
+            }
+
+            .bottom-menu-content {
+                gap: 8px;
+            }
+
+            .filters {
+                gap: 6px;
+            }
+
+            .filter-btn {
+                width: 34px;
+                height: 34px;
+            }
+
+            .create-post-header {
+                padding: 16px 16px 12px 16px;
+                margin-bottom: 16px;
+            }
+
+            .create-post-header img {
+                width: 36px;
+                height: 36px;
+            }
+
+            .user-info .name {
+                font-size: 16px;
+            }
+
+            .user-info .post-limit {
+                font-size: 12px;
+            }
+
+            .create-post-content {
+                padding: 0 16px;
+                padding-bottom: 90px;
+            }
+
+            .create-post-content textarea {
+                min-height: 100px;
+                padding: 12px;
+                font-size: 16px;
+            }
+
+            .category-item,
+            .tag-item {
+                padding: 6px 12px;
+                font-size: 13px;
+            }
+
+            .selected-tags .tag {
+                padding: 4px 8px;
+                font-size: 11px;
+            }
+
+            .create-post-footer {
+                padding: 12px 16px;
+            }
+
+            .create-post-button {
+                padding: 14px;
+                font-size: 15px;
+            }
+
+            .section-label {
+                font-size: 15px;
+                margin-bottom: 10px;
+            }
+        }
+
+        @supports (-webkit-touch-callout: none) {
+            .create-post-modal {
+                -webkit-overflow-scrolling: touch;
+            }
+
+            .create-post-content textarea {
+                -webkit-appearance: none;
+                border-radius: 12px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="loading-screen" id="loadingScreen">
+        <div class="spinner"></div>
+        <div class="loading-text" id="loadingText">ϡ</div>
+    </div>
+    <div class="language-selection" id="languageSelection">
+        <div class="language-title">Language</div>
+        <div class="language-buttons">
+            <button class="language-btn" onclick="selectLanguage('ru')">Русский</button>
+            <button class="language-btn" onclick="selectLanguage('en')">English</button>
+        </div>
+    </div>
+    <div class="container" id="mainContainer">
+        <div class="categories" id="categories"></div>
+        <div class="filters-container">
+            <div class="filters" id="filters">
+                <div class="filters-left">
+                    <button class="filter-btn" id="cityFilter" onclick="showFilterModal('city')">
+                        <img src="city.svg" alt="City" width="20" height="20">
+                    </button>
+                    <button class="filter-btn" id="genderFilter" onclick="showFilterModal('gender')">
+                        <img src="gender.svg" alt="Gender" width="20" height="20">
+                    </button>
+                    <button class="filter-btn" id="ageFilter" onclick="showFilterModal('age')">
+                        <img src="age.svg" alt="Age" width="20" height="20">
+                    </button>
+                    <button class="filter-btn" id="dateFilter" onclick="showFilterModal('date')">
+                        <img src="date.svg" alt="Date" width="20" height="20">
+                    </button>
+                </div>
+                <div class="filters-right">
+                    <button class="filter-btn" id="sortFilter" onclick="showFilterModal('sort')">
+                        <img src="sort.svg" alt="Sort" width="20" height="20">
+                    </button>
+                    <button class="filter-btn" id="notificationsFilter" onclick="showNotificationsModal()">
+                        <img src="notification.svg" alt="Notifications" width="20" height="20">
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div class="feed" id="feed"></div>
+    </div>
+    <div class="bottom-menu" id="bottomMenu" style="display: none;">
+        <div class="bottom-menu-content">
+            <input type="text" id="search" placeholder="Поиск объявлений...">
+            <button onclick="showCreatePostModal()" id="createButton">Создать</button>
+        </div>
+    </div>
+    <div class="modal modal-auto-height" id="postMenu"></div>
+    <div class="modal modal-fullscreen" id="filterModal">
+        <div class="modal-header">
+            <h3 id="filterTitle">Фильтр</h3>
+            <button onclick="hideModal('filterModal')">✕</button>
+        </div>
+        <div class="modal-content" id="filterOptions"></div>
+    </div>
+    <div class="modal modal-auto-height" id="notificationsModal">
+        <div class="modal-header">
+            <h3>Уведомления</h3>
+            <button onclick="hideModal('notificationsModal')">✕</button>
+        </div>
+        <div class="modal-content">
+            <div class="notification-settings">
+                <div class="notification-group">
+                    <h4>Основные уведомления</h4>
+                    <div class="notification-option">
+                        <input type="checkbox" id="likesNotif" checked onchange="toggleNotification('likes')">
+                        <label for="likesNotif">Лайки на мои объявления</label>
+                    </div>
+                    <div class="notification-option">
+                        <input type="checkbox" id="systemNotif" checked onchange="toggleNotification('system')">
+                        <label for="systemNotif">Системные уведомления</label>
+                    </div>
+                    <div class="notification-option">
+                        <input type="checkbox" id="accountNotif" checked onchange="toggleNotification('account')">
+                        <label for="accountNotif">Изменения аккаунта</label>
+                    </div>
+                </div>
                 
-                await broadcast_message({'type': 'post_deleted', 'post_id': data['post_id']})
-                
-                await ws.send_str(json.dumps({
-                    'type': 'user_limits_updated',
-                    'telegram_id': telegram_id,
-                    'limits': {
-                        'used': published_count,
-                        'total': limit
-                    }
-                }, default=str))
-        
-        elif action == 'get_post_for_edit':
-            post = await DatabaseService.get_post_by_id(data['post_id'])
-            if post and post['telegram_id'] == telegram_id:
-                await ws.send_str(json.dumps({
-                    'type': 'post_for_edit',
-                    'post': post
-                }, default=str))
-            else:
-                await ws.send_str(json.dumps({
-                    'type': 'error',
-                    'message': 'Пост не найден или не принадлежит вам'
-                }, default=str))
-        
-        elif action == 'report_post':
-            post = await DatabaseService.get_post_by_id(data['post_id'])
-            if post:
-                result = await DatabaseService.report_post(
-                    data['post_id'], 
-                    telegram_id, 
-                    data.get('reason')
-                )
-                
-                if result['success']:
-                    if result['message'] == 'already_reported':
-                        await ws.send_str(json.dumps({
-                            'type': 'error',
-                            'message': 'Вы уже отправляли жалобу на это объявление'
-                        }, default=str))
-                    else:
-                        if telegram_bot:
-                            moderation_bot = ModerationBot()
-                            reporter_data = {
-                                'telegram_id': telegram_id,
-                                'first_name': data.get('reporter_first_name', ''),
-                                'last_name': data.get('reporter_last_name', ''),
-                                'username': data.get('reporter_username', '')
-                            }
-                            await moderation_bot.send_report_for_moderation(post, reporter_data, data.get('reason'))
+                <div class="notification-group">
+                    <h4>Новые объявления</h4>
+                    <div class="notification-option">
+                        <input type="checkbox" id="newPostsNotif" onchange="toggleNewPostsNotifications()">
+                        <label for="newPostsNotif">Уведомления о новых объявлениях</label>
+                    </div>
+                    
+                    <div class="notification-filters" id="newPostsFilters" style="display: none;">
+                        <div class="notification-filter-section">
+                            <h5>Категории:</h5>
+                            <div class="notification-filter-tags" id="notificationCategories"></div>
+                        </div>
                         
-                        await ws.send_str(json.dumps({
-                            'type': 'report_sent',
-                            'message': 'Жалоба отправлена модераторам'
-                        }, default=str))
-        
-        elif action == 'get_user_limits':
-            published_count = await DatabaseService.get_user_published_posts_count(telegram_id)
-            limit = await DatabaseService.get_user_limit(telegram_id)
-            
-            await ws.send_str(json.dumps({
-                'type': 'user_limits_updated',
-                'telegram_id': telegram_id,
-                'limits': {
-                    'used': published_count,
-                    'total': limit
+                        <div class="notification-filter-section">
+                            <h5>Теги:</h5>
+                            <div class="tag-groups">
+                                <button class="tag-group-btn" onclick="showNotificationTagModal('city')">
+                                    <img src="city.svg" alt="City" width="20" height="20">
+                                </button>
+                                <button class="tag-group-btn" onclick="showNotificationTagModal('gender')">
+                                    <img src="gender.svg" alt="Gender" width="20" height="20">
+                                </button>
+                                <button class="tag-group-btn" onclick="showNotificationTagModal('age')">
+                                    <img src="age.svg" alt="Age" width="20" height="20">
+                                </button>
+                                <button class="tag-group-btn" onclick="showNotificationTagModal('date')">
+                                    <img src="date.svg" alt="Date" width="20" height="20">
+                                </button>
+                            </div>
+                            <div class="notification-filter-tags" id="notificationTags"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="create-post-modal" id="createPostModal">
+        <div class="create-post-header">
+            <img id="userAvatar" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40' viewBox='0 0 40 40'%3E%3Crect width='40' height='40' fill='%23f0f0f0'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='central' text-anchor='middle' fill='%23999' font-family='sans-serif' font-size='14'%3EUser%3C/text%3E%3C/svg%3E" alt="Avatar">
+            <div class="user-info">
+                <span class="name" id="userName"></span>
+                <span class="post-limit" id="postLimit">0/10 - объявлений</span>
+            </div>
+        </div>
+        <div class="create-post-content">
+            <textarea id="postDescription" placeholder="Введите текст объявления..." maxlength="450"></textarea>
+            <div class="character-counter">
+                <span id="characterCount">0</span>/450
+            </div>
+            <div class="create-categories">
+                <div class="section-label" id="categoryLabel">Категория:</div>
+                <div class="categories-scroll" id="createCategories"></div>
+            </div>
+            <div class="create-tags">
+                <div class="section-label" id="tagsLabel">Теги:</div>
+                <div class="tag-groups" id="tagGroups">
+                    <button class="tag-group-btn" onclick="showTagModal('city')">
+                        <img src="city.svg" alt="City" width="20" height="20">
+                    </button>
+                    <button class="tag-group-btn" onclick="showTagModal('gender')">
+                        <img src="gender.svg" alt="Gender" width="20" height="20">
+                    </button>
+                    <button class="tag-group-btn" onclick="showTagModal('age')">
+                        <img src="age.svg" alt="Age" width="20" height="20">
+                    </button>
+                    <button class="tag-group-btn" onclick="showTagModal('date')">
+                        <img src="date.svg" alt="Date" width="20" height="20">
+                    </button>
+                </div>
+                <div class="selected-tags" id="selectedTags"></div>
+            </div>
+        </div>
+        <div class="create-post-footer">
+            <button class="create-post-button" onclick="createPost()" id="createPostButton">Создать объявление</button>
+        </div>
+    </div>
+    <div class="modal modal-fullscreen" id="tagModal">
+        <div class="modal-header">
+            <h3 id="tagTitle">Теги</h3>
+            <button onclick="hideModal('tagModal')">✕</button>
+        </div>
+        <div class="modal-content" id="tagOptions"></div>
+    </div>
+    <div class="modal modal-auto-height" id="notificationTagModal">
+        <div class="modal-header">
+            <h3 id="notificationTagTitle">Теги для уведомлений</h3>
+            <button onclick="hideModal('notificationTagModal')">✕</button>
+        </div>
+        <div class="modal-content" id="notificationTagOptions"></div>
+    </div>
+    <script>
+        // Translations
+        const translations = {
+            ru: {
+                loading: '',
+                connectionLost: 'Соединение потеряно',
+                reconnecting: 'Переподключение...',
+                searchPlaceholder: 'Поиск объявлений...',
+                createButton: 'Создать',
+                cityFilter: 'Город',
+                genderFilter: 'Пол',
+                ageFilter: 'Возраст',
+                dateFilter: 'Дата',
+                sortFilter: 'Сортировка',
+                categoryLabel: 'Категория:',
+                tagsLabel: 'Теги:',
+                postPlaceholder: 'Введите текст объявления...',
+                createPostButton: 'Создать объявление',
+                editPostButton: 'Сохранить изменения',
+                postLimitText: ' - объявлений',
+                noPosts: 'Объявлений не найдено',
+                filters: {
+                    cityTitle: 'Выбрать город',
+                    genderTitle: 'Выбрать пол',
+                    ageTitle: 'Выбрать возраст',
+                    dateTitle: 'Выбрать дату',
+                    sortTitle: 'Сортировка',
+                    allCities: 'Все города',
+                    allGenders: 'Все',
+                    allAges: 'Все возрасты',
+                    allDates: 'Все даты',
+                    male: 'Мужской',
+                    female: 'Женский',
+                    age1: '18-25',
+                    age2: '26-35',
+                    age3: '36-45',
+                    age4: '46+',
+                    today: 'Сегодня',
+                    tomorrow: 'Завтра',
+                    thisWeek: 'На этой неделе',
+                    thisMonth: 'В этом месяце',
+                    sortNew: 'Новые',
+                    sortOld: 'Старые',
+                    sortRating: 'По рейтингу',
+                    sortMy: 'Мои',
+                    sortFavorites: 'Избранные',
+                    sortHidden: 'Скрытые'
+                },
+                menu: {
+                    myPost: 'Мое объявление',
+                    actions: 'Действия',
+                    edit: 'Изменить',
+                    delete: 'Удалить',
+                    addToFavorites: 'Добавить в избранные',
+                    removeFromFavorites: 'Убрать из избранных',
+                    hidePost: 'Скрыть пост',
+                    showPost: 'Показать пост',
+                    report: 'Пожаловаться'
+                },
+                messages: {
+                    limitExceeded: 'Достигнут лимит объявлений',
+                    banned: 'Ваш аккаунт заблокирован',
+                    actionBanned: 'Это действие недоступно для заблокированных пользователей',
+                    postCreated: 'Объявление опубликовано',
+                    editCreated: 'Изменения сохранены',
+                    alreadyReported: 'Вы уже отправляли жалобу на это объявление',
+                    reportSent: 'Жалоба отправлена модераторам',
+                    addedToFavorites: 'Добавлено в избранные',
+                    removedFromFavorites: 'Убрано из избранных',
+                    postHidden: 'Пост скрыт',
+                    postShown: 'Пост показан',
+                    enterText: 'Пожалуйста, введите текст объявления.',
+                    textTooShort: 'Текст объявления должен содержать минимум 10 символов.',
+                    textTooLong: 'Текст объявления слишком длинный (максимум 450 символов).',
+                    selectCategory: 'Пожалуйста, выберите категорию.',
+                    noConnection: 'Нет соединения с сервером. Попробуйте позже.',
+                    postNotFound: 'Пост не найден или не принадлежит вам',
+                    citySearchPlaceholder: 'Поиск города...'
                 }
-            }, default=str))
-        
-        elif action == 'add_to_favorites':
-            result = await DatabaseService.add_to_favorites(data['post_id'], telegram_id)
-            await ws.send_str(json.dumps({
-                'type': 'favorites_updated',
-                'action': result['action'],
-                'message': result['message']
-            }, default=str))
-            if result['success']:
-                await asyncio.sleep(0.1)
-                posts = await DatabaseService.get_posts(
-                    {'filters': {'sort': 'new'}}, 1, 20, '', telegram_id
-                )
-                await ws.send_str(json.dumps({
-                    'type': 'posts',
-                    'posts': posts,
-                    'append': False
-                }, default=str))
-
-        elif action == 'hide_post':
-            result = await DatabaseService.hide_post(data['post_id'], telegram_id)
-            await ws.send_str(json.dumps({
-                'type': 'hide_updated',
-                'action': result['action'],
-                'message': result['message']
-            }, default=str))
-            if result['success']:
-                await asyncio.sleep(0.1)
-                posts = await DatabaseService.get_posts(
-                    {'filters': {'sort': 'new'}}, 1, 20, '', telegram_id
-                )
-                await ws.send_str(json.dumps({
-                    'type': 'posts',
-                    'posts': posts,
-                    'append': False
-                }, default=str))
-        
-        elif action == 'update_notification_settings':
-            settings = data.get('settings', {})
-            await DatabaseService.update_notification_settings(telegram_id, settings)
-            await ws.send_str(json.dumps({
-                'type': 'notification_settings_updated',
-                'message': 'Настройки уведомлений обновлены'
-            }, default=str))
-            
-    except Exception as e:
-        logger.error(f"Error handling websocket message: {e}")
-        await ws.send_str(json.dumps({
-            'type': 'error',
-            'message': 'Внутренняя ошибка сервера'
-        }, default=str))
-
-async def create_app():
-    app = web.Application()
-    
-    cors = aiohttp_cors.setup(app, defaults={
-        "*": aiohttp_cors.ResourceOptions(
-            allow_credentials=True,
-            expose_headers="*",
-            allow_headers="*",
-            allow_methods="*"
-        )
-    })
-    
-    async def websocket_handler(request):
-        ws = web.WebSocketResponse()
-        await ws.prepare(request)
-        
-        connected_clients.add(ws)
-        
-        try:
-            async for msg in ws:
-                if msg.type == WSMsgType.TEXT:
-                    try:
-                        data = json.loads(msg.data)
-                        await handle_websocket_message(ws, data)
-                    except json.JSONDecodeError:
-                        await ws.send_str(json.dumps({'type': 'error', 'message': 'Invalid JSON'}))
-                    except Exception as e:
-                        logger.error(f"WebSocket message error: {e}")
-                        await ws.send_str(json.dumps({'type': 'error', 'message': str(e)}))
-                elif msg.type == WSMsgType.ERROR:
-                    logger.error(f'WebSocket error: {ws.exception()}')
-        except Exception as e:
-            logger.error(f"WebSocket handler error: {e}")
-        finally:
-            connected_clients.discard(ws)
-        
-        return ws
-    
-    async def health_handler(request):
-        return web.json_response({
-            'status': 'ok',
-            'clients': len(connected_clients),
-            'bot_active': telegram_bot is not None
-        })
-    
-    async def info_handler(request):
-        return web.json_response({
-            'app': 'Telegram Web App Server',
-            'version': '2.0',
-            'port': config.PORT,
-            'clients_connected': len(connected_clients),
-            'endpoints': {
-                'websocket': '/ws',
-                'health': '/health',
-                'info': '/info'
+            },
+            en: {
+                loading: 'Connecting...',
+                connectionLost: 'Connection lost',
+                reconnecting: 'Reconnecting...',
+                searchPlaceholder: 'Search ads...',
+                createButton: 'Create',
+                cityFilter: 'City',
+                genderFilter: 'Gender',
+                ageFilter: 'Age',
+                dateFilter: 'Date',
+                sortFilter: 'Sort',
+                categoryLabel: 'Category:',
+                tagsLabel: 'Tags:',
+                postPlaceholder: 'Enter ad text...',
+                createPostButton: 'Create ad',
+                editPostButton: 'Save changes',
+                postLimitText: ' - ads',
+                noPosts: 'No ads found',
+                filters: {
+                    cityTitle: 'Select city',
+                    genderTitle: 'Select gender',
+                    ageTitle: 'Select age',
+                    dateTitle: 'Select date',
+                    sortTitle: 'Sort',
+                    allCities: 'All cities',
+                    allGenders: 'All',
+                    allAges: 'All ages',
+                    allDates: 'All dates',
+                    male: 'Male',
+                    female: 'Female',
+                    age1: '18-25',
+                    age2: '26-35',
+                    age3: '36-45',
+                    age4: '46+',
+                    today: 'Today',
+                    tomorrow: 'Tomorrow',
+                    thisWeek: 'This week',
+                    thisMonth: 'This month',
+                    sortNew: 'New',
+                    sortOld: 'Old',
+                    sortRating: 'By rating',
+                    sortMy: 'My',
+                    sortFavorites: 'Favorites',
+                    sortHidden: 'Hidden'
+                },
+                menu: {
+                    myPost: 'My ad',
+                    actions: 'Actions',
+                    edit: 'Edit',
+                    delete: 'Delete',
+                    addToFavorites: 'Add to favorites',
+                    removeFromFavorites: 'Remove from favorites',
+                    hidePost: 'Hide post',
+                    showPost: 'Show post',
+                    report: 'Report'
+                },
+                messages: {
+                    limitExceeded: 'Ad limit reached',
+                    banned: 'Your account is blocked',
+                    actionBanned: 'This action is not available for blocked users',
+                    postCreated: 'Ad published',
+                    editCreated: 'Changes saved',
+                    alreadyReported: 'You already reported this ad',
+                    reportSent: 'Report sent to moderators',
+                    addedToFavorites: 'Added to favorites',
+                    removedFromFavorites: 'Removed from favorites',
+                    postHidden: 'Post hidden',
+                    postShown: 'Post shown',
+                    enterText: 'Please enter ad text.',
+                    textTooShort: 'Ad text must contain at least 10 characters.',
+                    textTooLong: 'Ad text is too long (maximum 450 characters).',
+                    selectCategory: 'Please select a category.',
+                    noConnection: 'No connection to server. Try later.',
+                    postNotFound: 'Post not found or does not belong to you',
+                    citySearchPlaceholder: 'Search city...'
+                }
             }
-        })
-    
-    app.router.add_get('/ws', websocket_handler)
-    app.router.add_get('/health', health_handler)
-    app.router.add_get('/info', info_handler)
-    app.router.add_get('/', info_handler)
-    
-    for route in list(app.router.routes()):
-        cors.add(route)
-    
-    return app
+        };
+        // Global variables
+        let ws = null;
+        let telegramId = null;
+        let currentLanguage = 'ru';
+        let currentCategory = null;
+        let createPostCategory = null;
+        let feedFilters = { city: [], gender: [], age: [], date: [], sort: 'new' };
+        let postTags = [];
+        let tagSelections = { city: [], gender: [], age: [], date: [] };
+        let currentPage = 1;
+        let isLoading = false;
+        let userData = null;
+        let currentPostId = null;
+        let connectionAttempts = 0;
+        let maxConnectionAttempts = 5;
+        let isConnectionActive = false;
+        let isUserSynced = false;
+        let isEditMode = false;
+        let editingPostId = null;
+        let cities = { ru: [], en: [] };
+        let categories = [];
+        let notificationSettings = { 
+            likes: true, 
+            system: true, 
+            account: true, 
+            new_posts: false,
+            new_posts_categories: [],
+            new_posts_tags: []
+        };
+        let notificationTagSelections = { city: [], gender: [], age: [], date: [] };
+        
+        // Utilities
+        function t(key) {
+            const keys = key.split('.');
+            let value = translations[currentLanguage];
+            for (const k of keys) {
+                value = value[k];
+                if (!value) break;
+            }
+            return value || key;
+        }
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+        function showModal(modalId) {
+            const modal = document.getElementById(modalId);
+            modal.style.display = 'block';
+            setTimeout(() => modal.classList.add('visible'), 10);
+        }
+        function hideModal(modalId) {
+            const modal = document.getElementById(modalId);
+            modal.classList.remove('visible');
+            setTimeout(() => {
+                modal.style.display = 'none';
+                if (modalId === 'tagModal') {
+                    modal.style.zIndex = '1000';
+                }
+            }, 300);
+        }
+        // Language and Interface
+        function selectLanguage(lang) {
+            console.log('Language selected:', lang);
+            currentLanguage = lang;
+            document.getElementById('languageSelection').style.display = 'none';
+            updateInterface();
+            
+            if (ws && ws.readyState === WebSocket.OPEN && telegramId) {
+                ws.send(JSON.stringify({
+                    type: 'update_language',
+                    telegram_id: telegramId,
+                    language: lang
+                }));
+            }
+            
+            loadCategories().then(() => {
+                console.log('Categories loaded after language selection');
+                // Устанавливаем категорию "Все" по умолчанию и загружаем посты
+                if (categories && categories.length > 0) {
+                    currentCategory = categories[0][currentLanguage];
+                    console.log('Setting current category to:', currentCategory);
+                    selectCategory(currentCategory);
+                }
+                hideLoadingScreen();
+            }).catch(error => {
+                console.error('Error loading categories after language selection:', error);
+                hideLoadingScreen();
+            });
+        }
+        function updateInterface() {
+            document.getElementById('loadingText').textContent = t('loading');
+            document.getElementById('search').placeholder = t('searchPlaceholder');
+            document.getElementById('createButton').textContent = t('createButton');
+            document.getElementById('postDescription').placeholder = t('postPlaceholder');
+            document.getElementById('categoryLabel').textContent = t('categoryLabel');
+            document.getElementById('tagsLabel').textContent = t('tagsLabel');
+            updatePostLimit();
+        }
+        function updatePostLimit() {
+            const limitElement = document.getElementById('postLimit');
+            if (limitElement && userData && userData.limits) {
+                limitElement.textContent = `${userData.limits.used}/${userData.limits.total}${t('postLimitText')}`;
+            }
+        }
+        function updateUserInterface() {
+            const avatar = document.getElementById('userAvatar');
+            const userName = document.getElementById('userName');
+            if (avatar && userData && userData.photo_url) {
+                avatar.src = userData.photo_url;
+            }
+            if (userName && userData) {
+                userName.textContent = `${userData.first_name || ''} ${userData.last_name || ''}`.trim();
+            }
+            updatePostLimit();
+        }
+        function showLoadingScreen(text = null) {
+            document.getElementById('loadingScreen').style.display = 'flex';
+            document.getElementById('languageSelection').style.display = 'none';
+            document.getElementById('mainContainer').classList.remove('visible');
+            document.getElementById('bottomMenu').style.display = 'none';
+            if (text) {
+                document.getElementById('loadingText').textContent = text;
+            }
+        }
+        function hideLoadingScreen() {
+            document.getElementById('loadingScreen').style.display = 'none';
+            document.getElementById('mainContainer').classList.add('visible');
+            document.getElementById('bottomMenu').style.display = 'block';
+        }
+        function showLanguageSelection() {
+            document.getElementById('loadingScreen').style.display = 'none';
+            document.getElementById('languageSelection').style.display = 'flex';
+        }
+        // WebSocket
+        function connectWebSocket() {
+            console.log('Attempting to connect to WebSocket...');
+            const SERVER_URL = 'six-063o.onrender.com';
+            const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+            const protocol = isLocalhost ? 'ws:' : 'wss:';
+            const wsUrl = isLocalhost ? 'ws://localhost:10000/ws' : `${protocol}//${SERVER_URL}/ws`;
+            
+            console.log('WebSocket URL:', wsUrl);
+            ws = new WebSocket(wsUrl);
+            
+            ws.onopen = () => {
+                console.log('WebSocket connected successfully');
+                isConnectionActive = true;
+                connectionAttempts = 0;
+                const user = Telegram.WebApp.initDataUnsafe.user;
+                if (user && user.id) {
+                    console.log('Syncing user:', user);
+                    syncUser(user);
+                } else {
+                    console.log('No telegram user found, showing loading screen');
+                    showLoadingScreen();
+                }
+            };
+            
+            ws.onmessage = handleMessage;
+            
+            ws.onerror = (error) => {
+                console.error('WebSocket error:', error);
+                isConnectionActive = false;
+                showLoadingScreen(t('connectionLost'));
+            };
+            
+            ws.onclose = (event) => {
+                console.log('WebSocket closed:', event.code, event.reason);
+                isConnectionActive = false;
+                if (connectionAttempts < maxConnectionAttempts) {
+                    connectionAttempts++;
+                    console.log(`Reconnection attempt ${connectionAttempts}/${maxConnectionAttempts}`);
+                    showLoadingScreen(t('reconnecting'));
+                    setTimeout(() => {
+                        if (!isConnectionActive) {
+                            connectWebSocket();
+                        }
+                    }, 3000);
+                } else {
+                    console.error('Max connection attempts reached');
+                    showLoadingScreen(t('connectionLost'));
+                }
+            };
+        }
+        function syncUser(telegramUser) {
+            if (!ws || ws.readyState !== WebSocket.OPEN) {
+                setTimeout(() => syncUser(telegramUser), 1000);
+                return;
+            }
+            try {
+                ws.send(JSON.stringify({
+                    type: 'sync_user',
+                    telegram_id: telegramUser.id,
+                    username: telegramUser.username || '',
+                    first_name: telegramUser.first_name || '',
+                    last_name: telegramUser.last_name || '',
+                    photo_url: telegramUser.photo_url || '',
+                    language: currentLanguage
+                }));
+            } catch (error) {
+                console.error('Error syncing user:', error);
+            }
+        }
+        function handleMessage(event) {
+            try {
+                const data = JSON.parse(event.data);
+                if (data.type === 'user_synced') {
+                    console.log('User synced:', data);
+                    telegramId = data.telegram_id;
+                    isUserSynced = true;
+                    userData = {
+                        telegram_id: data.telegram_id,
+                        limits: data.limits || { used: 0, total: 10 },
+                        is_banned: data.is_banned || false,
+                        language: data.language || 'ru',
+                        favorites: data.favorites || [],
+                        hidden: data.hidden || [],
+                        liked: data.liked || [],
+                        notification_settings: data.notification_settings || { 
+                            likes: true, system: true, account: true, 
+                            new_posts: false, new_posts_categories: [], new_posts_tags: []
+                        }
+                    };
+                    notificationSettings = userData.notification_settings;
+                    const telegramUser = Telegram.WebApp.initDataUnsafe.user;
+                    if (telegramUser) {
+                        userData.first_name = telegramUser.first_name;
+                        userData.last_name = telegramUser.last_name || '';
+                        userData.username = telegramUser.username || '';
+                        userData.photo_url = telegramUser.photo_url || '';
+                    }
+                    
+                    currentLanguage = data.language || 'ru';
+                    console.log('User language:', currentLanguage);
+                    updateInterface();
+                    updateUserInterface();
+                    updateNotificationSettings();
+                    
+                    // Если язык уже установлен (не первый запуск)
+                    if (data.language && data.language !== 'ru') {
+                        console.log('Language already set, loading app...');
+                        loadCategories().then(() => {
+                            if (categories && categories.length > 0) {
+                                currentCategory = categories[0][currentLanguage];
+                                selectCategory(currentCategory);
+                            }
+                            hideLoadingScreen();
+                        });
+                    } else if (data.language === 'ru') {
+                        // Если установлен русский язык
+                        console.log('Russian language set, loading app...');
+                        loadCategories().then(() => {
+                            if (categories && categories.length > 0) {
+                                currentCategory = categories[0][currentLanguage];
+                                selectCategory(currentCategory);
+                            }
+                            hideLoadingScreen();
+                        });
+                    } else {
+                        // Если язык не установлен - показываем выбор языка
+                        console.log('No language set, showing language selection');
+                        updateUserInterface();
+                        showLanguageSelection();
+                    }
+                } else if (data.type === 'posts') {
+                    renderPosts(data.posts, data.append);
+                } else if (data.type === 'post_updated') {
+                    const postEl = document.querySelector(`.post[data-id="${data.post.id}"]`);
+                    if (postEl) {
+                        const likeCountSpan = postEl.querySelector('.like-count');
+                        const likeDiv = postEl.querySelector('.like');
+                        if (likeCountSpan) likeCountSpan.textContent = data.post.likes || 0;
+                        if (data.post.user_liked !== undefined && likeDiv) {
+                            likeDiv.classList.toggle('liked', data.post.user_liked);
+                        }
+                    }
+                } else if (data.type === 'post_approved') {
+                    if (data.post.is_edit && data.post.original_post_id) {
+                        removePostFromFeed(data.post.original_post_id);
+                    }
+                    const creator = typeof data.post.creator === 'string' ? JSON.parse(data.post.creator) : data.post.creator;
+                    if (creator.telegram_id === telegramId) {
+                        if (ws && ws.readyState === WebSocket.OPEN) {
+                            ws.send(JSON.stringify({
+                                type: 'get_user_limits',
+                                telegram_id: telegramId
+                            }));
+                        }
+                    }
+                    if (currentCategory === categories[0][currentLanguage] || currentCategory === data.post.category) {
+                        const feed = document.getElementById('feed');
+                        const postHTML = createPostHTML(data.post);
+                        feed.insertAdjacentHTML('afterbegin', postHTML);
+                    }
+                } else if (data.type === 'post_deleted') {
+                    removePostFromFeed(data.post_id);
+                } else if (data.type === 'banned') {
+                    Telegram.WebApp.showAlert(t('messages.banned'));
+                    Telegram.WebApp.close();
+                } else if (data.type === 'action_banned') {
+                    Telegram.WebApp.showAlert(data.message);
+                } else if (data.type === 'limit_exceeded') {
+                    Telegram.WebApp.showAlert(t('messages.limitExceeded'));
+                } else if (data.type === 'post_created') {
+                    hideCreatePostModal();
+                    const message = isEditMode ? t('messages.editCreated') : t('messages.postCreated');
+                    Telegram.WebApp.showAlert(message);
+                } else if (data.type === 'user_limits_updated') {
+                    if (data.telegram_id === telegramId && data.limits) {
+                        userData.limits = data.limits;
+                        updatePostLimit();
+                    }
+                } else if (data.type === 'post_for_edit') {
+                    openEditPostModal(data.post);
+                } else if (data.type === 'favorites_updated') {
+                    if (userData) {
+                        if (data.action === 'added') {
+                            if (!userData.favorites.includes(currentPostId)) {
+                                userData.favorites.push(currentPostId);
+                            }
+                        } else {
+                            userData.favorites = userData.favorites.filter(id => id !== currentPostId);
+                        }
+                    }
+                    const message = data.action === 'added' ? t('messages.addedToFavorites') : t('messages.removedFromFavorites');
+                    Telegram.WebApp.showAlert(message);
+                    hideModal('postMenu');
+                } else if (data.type === 'hide_updated') {
+                    if (userData) {
+                        if (data.action === 'hidden') {
+                            if (!userData.hidden.includes(currentPostId)) {
+                                userData.hidden.push(currentPostId);
+                            }
+                        } else {
+                            userData.hidden = userData.hidden.filter(id => id !== currentPostId);
+                        }
+                    }
+                    const message = data.action === 'hidden' ? t('messages.postHidden') : t('messages.postShown');
+                    Telegram.WebApp.showAlert(message);
+                    if (data.action === 'hidden') {
+                        removePostFromFeed(currentPostId);
+                    }
+                    hideModal('postMenu');
+                    currentPage = 1;
+                    loadPosts();
+                } else if (data.type === 'report_sent') {
+                    Telegram.WebApp.showAlert(t('messages.reportSent'));
+                    hideModal('postMenu');
+                } else if (data.type === 'notification_settings_updated') {
+                    Telegram.WebApp.showAlert('Настройки уведомлений обновлены');
+                } else if (data.type === 'error') {
+                    if (data.message === 'Вы уже отправляли жалобу на это объявление') {
+                        Telegram.WebApp.showAlert(t('messages.alreadyReported'));
+                    } else if (data.message === 'Пост не найден или не принадлежит вам') {
+                        Telegram.WebApp.showAlert(t('messages.postNotFound'));
+                    } else {
+                        Telegram.WebApp.showAlert(data.message);
+                    }
+                }
+            } catch (error) {
+                console.error('Error parsing WebSocket message:', error, event.data);
+            }
+        }
+        // Categories
+        async function loadCategories() {
+            console.log('Loading categories...');
+            try {
+                const response = await fetch('categories.json');
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                categories = await response.json();
+                console.log('Categories loaded:', categories);
+                
+                const container = document.getElementById('categories');
+                container.innerHTML = categories.map((cat, index) => `
+            <div class="category ${index === 0 ? 'active' : ''}" onclick="selectCategory('${cat[currentLanguage]}')">${cat[currentLanguage]}</div>
+        `).join('');
+                currentCategory = categories[0][currentLanguage];
+                console.log('Current category set to:', currentCategory);
+                
+                // Загружаем категории для уведомлений
+                loadNotificationCategories();
+                
+                return Promise.resolve();
+                
+            } catch (error) {
+                console.error('Ошибка загрузки категорий:', error);
+                // Создаем базовые категории если не удалось загрузить файл
+                categories = [
+                    {"ru": "Все", "en": "All"},
+                    {"ru": "Дружба", "en": "Friendship"},
+                    {"ru": "События", "en": "Events"}
+                ];
+                const container = document.getElementById('categories');
+                container.innerHTML = categories.map((cat, index) => `
+            <div class="category ${index === 0 ? 'active' : ''}" onclick="selectCategory('${cat[currentLanguage]}')">${cat[currentLanguage]}</div>
+        `).join('');
+                currentCategory = categories[0][currentLanguage];
+                loadNotificationCategories();
+                console.log('Using fallback categories');
+                return Promise.resolve();
+            }
+        }
+        
+        function loadNotificationCategories() {
+            const container = document.getElementById('notificationCategories');
+            if (!container || !categories) return;
+            
+            container.innerHTML = categories.slice(1).map(cat => `
+                <div class="tag-item ${notificationSettings.new_posts_categories.includes(cat[currentLanguage]) ? 'active' : ''}" 
+                     onclick="toggleNotificationCategory('${cat[currentLanguage]}')">${cat[currentLanguage]}</div>
+            `).join('');
+        }
+        
+        function toggleNotificationCategory(category) {
+            const index = notificationSettings.new_posts_categories.indexOf(category);
+            if (index > -1) {
+                notificationSettings.new_posts_categories.splice(index, 1);
+            } else {
+                notificationSettings.new_posts_categories.push(category);
+            }
+            
+            loadNotificationCategories();
+            updateNotificationSettingsOnServer();
+        }
+        
+        function selectCategory(category) {
+            console.log('Selecting category:', category);
+            if (currentCategory === category) {
+                console.log('Category already selected, loading posts anyway');
+            }
+            
+            currentCategory = category;
+            document.querySelectorAll('.category').forEach(el => {
+                el.classList.toggle('active', el.textContent === category);
+                if (el.textContent === category) {
+                    el.scrollIntoView({ behavior: 'smooth', inline: 'center' });
+                }
+            });
+            currentPage = 1;
+            console.log('Loading posts for category:', category);
+            loadPosts();
+        }
+        
+        async function loadCreateCategories() {
+            const response = await fetch('categories.json');
+            const cats = await response.json();
+            const container = document.getElementById('createCategories');
+            container.innerHTML = cats.slice(1).map(cat => `
+                <div class="category-item ${cat[currentLanguage] === createPostCategory ? 'active' : ''}" onclick="selectCreateCategory('${cat[currentLanguage]}')">${cat[currentLanguage]}</div>
+            `).join('');
+        }
+        
+        function selectCreateCategory(category) {
+            createPostCategory = category;
+            document.querySelectorAll('#createCategories .category-item').forEach(el => {
+                el.classList.toggle('active', el.textContent === category);
+                if (el.textContent === category) {
+                    el.scrollIntoView({ behavior: 'smooth', inline: 'center' });
+                }
+            });
+        }
+        
+        // Filters
+        async function showFilterModal(filterType) {
+            const filterData = {
+                city: [t('filters.allCities'), ...(await getCities())],
+                gender: [t('filters.allGenders'), t('filters.male'), t('filters.female')],
+                age: [t('filters.allAges'), t('filters.age1'), t('filters.age2'), t('filters.age3'), t('filters.age4')],
+                date: [t('filters.allDates'), t('filters.today'), t('filters.tomorrow'), t('filters.thisWeek'), t('filters.thisMonth')],
+                sort: [t('filters.sortNew'), t('filters.sortOld'), t('filters.sortRating'), t('filters.sortMy'), t('filters.sortFavorites'), t('filters.sortHidden')]
+            };
+            const title = document.getElementById('filterTitle');
+            const options = document.getElementById('filterOptions');
+            title.textContent = t(`filters.${filterType}Title`);
+            let content = filterType === 'city' ? `
+                <div class="city-search">
+                    <input type="text" id="citySearchInput" placeholder="${t('messages.citySearchPlaceholder')}" oninput="filterCities()">
+                </div>
+            ` : '';
+            content += filterData[filterType].map(option => `
+                <button onclick="selectFilterOption('${filterType}', '${option}', event)"
+                        class="${isFilterActive(filterType, option) ? 'active' : ''}"
+                        data-filter-city="${option}">
+                    ${option}
+                </button>
+            `).join('');
+            options.innerHTML = content;
+            showModal('filterModal');
+        }
+        function isFilterActive(filterType, option) {
+            if (filterType === 'sort') {
+                const sortMap = {};
+                sortMap[t('filters.sortNew')] = 'new';
+                sortMap[t('filters.sortOld')] = 'old';
+                sortMap[t('filters.sortRating')] = 'rating';
+                sortMap[t('filters.sortMy')] = 'my';
+                sortMap[t('filters.sortFavorites')] = 'favorites';
+                sortMap[t('filters.sortHidden')] = 'hidden';
+                return feedFilters.sort === sortMap[option];
+            }
+            return feedFilters[filterType].includes(option);
+        }
+        function selectFilterOption(filterType, option, event) {
+            if (filterType === 'sort') {
+                const sortMap = {};
+                sortMap[t('filters.sortNew')] = 'new';
+                sortMap[t('filters.sortOld')] = 'old';
+                sortMap[t('filters.sortRating')] = 'rating';
+                sortMap[t('filters.sortMy')] = 'my';
+                sortMap[t('filters.sortFavorites')] = 'favorites';
+                sortMap[t('filters.sortHidden')] = 'hidden';
+                feedFilters.sort = sortMap[option];
+            } else {
+                if (option.includes(t('filters.allCities')) || option.includes(t('filters.allGenders')) ||
+                    option.includes(t('filters.allAges')) || option.includes(t('filters.allDates'))) {
+                    feedFilters[filterType] = [];
+                    hideModal('filterModal');
+                } else {
+                    const index = feedFilters[filterType].indexOf(option);
+                    if (index > -1) {
+                        feedFilters[filterType].splice(index, 1);
+                    } else {
+                        feedFilters[filterType].push(option);
+                    }
+                }
+            }
+            if (event) {
+                const clickedButton = event.target.closest('button');
+                if (clickedButton) {
+                    const isActive = isFilterActive(filterType, option);
+                    clickedButton.classList.toggle('active', isActive);
+                }
+            }
+            updateFilterButtons();
+            if (filterType === 'sort') {
+                hideModal('filterModal');
+            }
+            currentPage = 1;
+            loadPosts();
+        }
+        function updateFilterButtons() {
+            Object.keys(feedFilters).forEach(filterType => {
+                const button = document.getElementById(`${filterType}Filter`);
+                if (button) {
+                    const hasActiveFilters = filterType === 'sort' ?
+                        feedFilters.sort !== 'new' :
+                        feedFilters[filterType].length > 0;
+                    button.classList.toggle('active', hasActiveFilters);
+                }
+            });
+        }
+        function filterCities() {
+            const searchInput = document.getElementById('citySearchInput');
+            const searchValue = searchInput.value.toLowerCase();
+            const cityButtons = document.querySelectorAll('#filterOptions button[data-filter-city]');
+            cityButtons.forEach(button => {
+                const cityName = button.getAttribute('data-filter-city').toLowerCase();
+                if (cityName.includes(searchValue) || cityName === t('filters.allCities').toLowerCase()) {
+                    button.style.display = 'block';
+                } else {
+                    button.style.display = 'none';
+                }
+            });
+        }
+        // Tags
+        async function showTagModal(tagType) {
+            const tagData = {
+                city: await getCities(),
+                gender: [t('filters.male'), t('filters.female')],
+                age: [t('filters.age1'), t('filters.age2'), t('filters.age3'), t('filters.age4')],
+                date: [t('filters.today'), t('filters.tomorrow'), t('filters.thisWeek'), t('filters.thisMonth')]
+            };
+            const title = document.getElementById('tagTitle');
+            const options = document.getElementById('tagOptions');
+            const modal = document.getElementById('tagModal');
+            title.textContent = t(`filters.${tagType}Title`);
+            let content = tagType === 'city' ? `
+                <div class="city-search">
+                    <input type="text" id="tagCitySearchInput" placeholder="${t('messages.citySearchPlaceholder')}" oninput="filterTagCities()">
+                </div>
+            ` : '';
+            content += tagData[tagType].map(option => `
+                <button onclick="selectTagOption('${tagType}', '${option}', event)" 
+                        class="${tagSelections[tagType].includes(option) ? 'active' : ''}"
+                        data-tag-city="${option}">
+                    ${option}
+                </button>
+            `).join('');
+            options.innerHTML = content;
+            modal.style.zIndex = '1002';
+            showModal('tagModal');
+        }
+        function selectTagOption(tagType, option, event) {
+            const index = tagSelections[tagType].indexOf(option);
+            if (index > -1) {
+                tagSelections[tagType].splice(index, 1);
+            } else {
+                tagSelections[tagType].push(option);
+            }
+            const clickedButton = event.target.closest('button');
+            if (clickedButton) {
+                const isActive = tagSelections[tagType].includes(option);
+                clickedButton.classList.toggle('active', isActive);
+            }
+            postTags = [];
+            Object.entries(tagSelections).forEach(([type, values]) => {
+                values.forEach(value => {
+                    postTags.push(`${type}:${value}`);
+                });
+            });
+            updateSelectedTags();
+            updateTagButtons();
+        }
+        function updateSelectedTags() {
+            const container = document.getElementById('selectedTags');
+            if (postTags.length === 0) {
+                container.innerHTML = `<div style="color: #999; font-style: italic;">${currentLanguage === 'ru' ? 'Теги не выбраны' : 'No tags selected'}</div>`;
+                return;
+            }
+            container.innerHTML = postTags.map(tag => {
+                const [type, value] = tag.split(':');
+                return `<div class="tag">${value}</div>`;
+            }).join('');
+        }
+        function updateTagButtons() {
+            Object.keys(tagSelections).forEach(tagType => {
+                const button = document.querySelector(`[onclick="showTagModal('${tagType}')"]`);
+                if (button) {
+                    const hasActiveTags = tagSelections[tagType].length > 0;
+                    button.classList.toggle('active', hasActiveTags);
+                }
+            });
+        }
+        function filterTagCities() {
+            const searchInput = document.getElementById('tagCitySearchInput');
+            const searchValue = searchInput.value.toLowerCase();
+            const cityButtons = document.querySelectorAll('#tagOptions button[data-tag-city]');
+            cityButtons.forEach(button => {
+                const cityName = button.getAttribute('data-tag-city').toLowerCase();
+                if (cityName.includes(searchValue)) {
+                    button.style.display = 'block';
+                } else {
+                    button.style.display = 'none';
+                }
+            });
+        }
+        // Posts
+        function loadPosts(append = false) {
+            console.log('loadPosts called:', { isUserSynced, telegramId, currentCategory, wsReady: ws?.readyState === WebSocket.OPEN });
+            
+            if (!isUserSynced || !telegramId) {
+                console.log('User not synced or no telegramId, skipping posts load');
+                return;
+            }
+            
+            if (!ws || ws.readyState !== WebSocket.OPEN) {
+                console.log('WebSocket not ready, retrying in 1s...');
+                setTimeout(() => loadPosts(append), 1000);
+                return;
+            }
+            
+            if (!currentCategory) {
+                console.log('No current category, skipping posts load');
+                return;
+            }
+            
+            if (isLoading) {
+                console.log('Already loading posts, skipping...');
+                return;
+            }
+            
+            isLoading = true;
+            const searchValue = document.getElementById('search')?.value || '';
+            const categoryToSend = currentCategory === categories[0][currentLanguage] ? null : currentCategory;
+            
+            console.log('Sending get_posts request:', { categoryToSend, page: currentPage });
+            
+            try {
+                ws.send(JSON.stringify({
+                    type: 'get_posts',
+                    category: categoryToSend,
+                    filters: feedFilters,
+                    page: currentPage,
+                    limit: 20,
+                    telegram_id: telegramId,
+                    search: searchValue,
+                    append: append
+                }));
+            } catch (error) {
+                console.error('Error sending get_posts message:', error);
+                isLoading = false;
+            }
+        }
+        function renderPosts(posts, append = false) {
+            console.log('renderPosts called:', { postsCount: posts.length, append });
+            const feed = document.getElementById('feed');
+            if (!feed) return;
+            if (!append) feed.innerHTML = '';
+            if (posts.length === 0 && !append) {
+                feed.innerHTML = `<div class="no-posts">${t('noPosts')}</div>`;
+                isLoading = false;
+                return;
+            }
+            const postsHTML = posts.map(post => {
+                try {
+                    return createPostHTML(post);
+                } catch (error) {
+                    console.error('Error creating post HTML:', error, post);
+                    return '';
+                }
+            }).join('');
+            if (append) {
+                feed.insertAdjacentHTML('beforeend', postsHTML);
+            } else {
+                feed.innerHTML = postsHTML;
+            }
+            isLoading = false;
+            if (posts.length > 0) currentPage++;
+            console.log('Posts rendered successfully');
+        }
+        function createPostHTML(post) {
+            if (!post || !post.id) return '';
+            let creator;
+            try {
+                creator = typeof post.creator === 'string' ? JSON.parse(post.creator) : post.creator;
+            } catch (e) {
+                creator = {
+                    first_name: 'User',
+                    last_name: '',
+                    telegram_id: 0,
+                    photo_url: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%23f0f0f0'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='central' text-anchor='middle' fill='%23999' font-family='sans-serif' font-size='12'%3EUser%3C/text%3E%3C/svg%3E"
+                };
+            }
+            const creatorName = `${creator.first_name || ''} ${creator.last_name || ''}`.trim() || 'User';
+            const creatorPhoto = creator.photo_url || "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%23f0f0f0'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='central' text-anchor='middle' fill='%23999' font-family='sans-serif' font-size='12'%3EUser%3C/text%3E%3C/svg%3E";
+            const description = escapeHtml(post.description || '');
+            const likes = post.likes || 0;
+            const creatorId = creator.telegram_id;
+            const userLiked = post.user_liked === true;
+            const likeClass = userLiked ? 'like liked' : 'like';
+            const creatorLink = creator.username
+                ? `https://t.me/${creator.username}`
+                : `tg://user?id=${creatorId}`;
+            return `
+                <div class="post" data-id="${post.id}">
+                    <div class="post-description">${description}</div>
+                    <div class="post-creator">
+                        <div class="post-creator-info">
+                            <img src="${creatorPhoto}" alt="Avatar" onerror="this.src='https://via.placeholder.com/32'">
+                            <a href="${creatorLink}" onclick="openTelegramProfile(event, '${creatorLink}')">
+                                ${creatorName}
+                            </a>
+                        </div>
+                        <div class="post-actions">
+                            <div class="${likeClass}" onclick="likePost(${post.id})">
+                                <img src="lightning.svg" alt="Like" width="16" height="16">
+                                <span class="like-count">${likes}</span>
+                            </div>
+                            <div class="menu" onclick="showPostMenu(${post.id}, ${creatorId === telegramId})">
+                                <img src="menu.svg" alt="Menu" width="16" height="16">
+                            </div>
+                        </div>
+                                      </div>
+                </div>
+            `;
+        }
+        function removePostFromFeed(postId) {
+            const postEl = document.querySelector(`.post[data-id="${postId}"]`);
+            if (postEl) postEl.remove();
+        }
+        function likePost(postId) {
+            if (ws && ws.readyState === WebSocket.OPEN) {
+                ws.send(JSON.stringify({
+                    type: 'like_post',
+                    post_id: postId,
+                    telegram_id: telegramId
+                }));
+            }
+        }
+        function openTelegramProfile(event, link) {
+            event.preventDefault();
+            if (window.Telegram && window.Telegram.WebApp) {
+                window.Telegram.WebApp.openTelegramLink(link);
+            } else {
+                window.open(link, '_blank');
+            }
+        }
+        // Post Menu
+        function showPostMenu(postId, isOwnPost) {
+            currentPostId = postId;
+            const modal = document.getElementById('postMenu');
+            let favoriteText = t('menu.addToFavorites');
+            let hideText = t('menu.hidePost');
+            if (userData && userData.favorites && userData.favorites.includes(postId)) {
+                favoriteText = t('menu.removeFromFavorites');
+            }
+            if (userData && userData.hidden && userData.hidden.includes(postId)) {
+                hideText = t('menu.showPost');
+            }
+            modal.innerHTML = isOwnPost ? `
+                <div class="modal-header">
+                    <h3>${t('menu.myPost')}</h3>
+                    <button onclick="hideModal('postMenu')">✕</button>
+                </div>
+                <div class="modal-content">
+                    <button onclick="editPost(${postId})">${t('menu.edit')}</button>
+                    <button onclick="deletePost(${postId})">${t('menu.delete')}</button>
+                </div>
+            ` : `
+                <div class="modal-header">
+                        <h3>${t('menu.actions')}</h3>
+                        <button onclick="hideModal('postMenu')">✕</button>
+                    </div>
+                    <div class="modal-content">
+                        <button onclick="addToFavorites(${postId})">${favoriteText}</button>
+                        <button onclick="hidePost(${postId})">${hideText}</button>
+                        <button onclick="reportPost(${postId})">${t('menu.report')}</button>
+                    </div>
+                `;
+            showModal('postMenu');
+            setTimeout(() => hideModal('postMenu'), 10000);
+        }
+        function deletePost(postId) {
+            if (ws && ws.readyState === WebSocket.OPEN) {
+                ws.send(JSON.stringify({
+                    type: 'delete_post',
+                    post_id: postId,
+                    telegram_id: telegramId
+                }));
+            }
+            hideModal('postMenu');
+        }
+        function reportPost(postId) {
+            if (ws && ws.readyState === WebSocket.OPEN) {
+                const telegramUser = Telegram.WebApp.initDataUnsafe.user;
+                ws.send(JSON.stringify({
+                    type: 'report_post',
+                    post_id: postId,
+                    telegram_id: telegramId,
+                    reason: 'Нарушение правил',
+                    reporter_first_name: telegramUser.first_name || '',
+                    reporter_last_name: telegramUser.last_name || '',
+                    reporter_username: telegramUser.username || ''
+                }));
+            }
+            hideModal('postMenu');
+        }
+        function editPost(postId) {
+            if (ws && ws.readyState === WebSocket.OPEN) {
+                ws.send(JSON.stringify({
+                    type: 'get_post_for_edit',
+                    post_id: postId,
+                    telegram_id: telegramId
+                }));
+            }
+            hideModal('postMenu');
+        }
+        function addToFavorites(postId) {
+            if (ws && ws.readyState === WebSocket.OPEN) {
+                ws.send(JSON.stringify({
+                    type: 'add_to_favorites',
+                    post_id: postId,
+                    telegram_id: telegramId
+                }));
+            }
+        }
+        function hidePost(postId) {
+            if (ws && ws.readyState === WebSocket.OPEN) {
+                ws.send(JSON.stringify({
+                    type: 'hide_post',
+                    post_id: postId,
+                    telegram_id: telegramId
+                }));
+            }
+        }
+        // Notifications
+        function showNotificationsModal() {
+            showModal('notificationsModal');
+        }
+        
+        function toggleNotification(type) {
+            notificationSettings[type] = !notificationSettings[type];
+            updateNotificationSettingsOnServer();
+        }
+        
+        function toggleNewPostsNotifications() {
+            notificationSettings.new_posts = !notificationSettings.new_posts;
+            const filtersDiv = document.getElementById('newPostsFilters');
+            filtersDiv.style.display = notificationSettings.new_posts ? 'block' : 'none';
+            updateNotificationSettingsOnServer();
+        }
+        
+        function updateNotificationSettings() {
+            document.getElementById('likesNotif').checked = notificationSettings.likes;
+            document.getElementById('systemNotif').checked = notificationSettings.system;
+            document.getElementById('accountNotif').checked = notificationSettings.account;
+            document.getElementById('newPostsNotif').checked = notificationSettings.new_posts;
+            
+            const filtersDiv = document.getElementById('newPostsFilters');
+            filtersDiv.style.display = notificationSettings.new_posts ? 'block' : 'none';
+            
+            loadNotificationCategories();
+            updateNotificationTags();
+        }
+        
+        function updateNotificationSettingsOnServer() {
+            if (ws && ws.readyState === WebSocket.OPEN) {
+                ws.send(JSON.stringify({
+                    type: 'update_notification_settings',
+                    telegram_id: telegramId,
+                    settings: notificationSettings
+                }));
+            }
+        }
+        
+        async function showNotificationTagModal(tagType) {
+            const tagData = {
+                city: await getCities(),
+                gender: [t('filters.male'), t('filters.female')],
+                age: [t('filters.age1'), t('filters.age2'), t('filters.age3'), t('filters.age4')],
+                date: [t('filters.today'), t('filters.tomorrow'), t('filters.thisWeek'), t('filters.thisMonth')]
+            };
+            
+            const title = document.getElementById('notificationTagTitle');
+            const options = document.getElementById('notificationTagOptions');
+            title.textContent = t(`filters.${tagType}Title`);
+            
+            options.innerHTML = tagData[tagType].map(option => `
+                <button onclick="selectNotificationTagOption('${tagType}', '${option}', event)" 
+                        class="${notificationTagSelections[tagType].includes(option) ? 'active' : ''}"
+                        data-tag-city="${option}">
+                    ${option}
+                </button>
+            `).join('');
+            
+            showModal('notificationTagModal');
+        }
+        
+        function selectNotificationTagOption(tagType, option, event) {
+            const index = notificationTagSelections[tagType].indexOf(option);
+            if (index > -1) {
+                notificationTagSelections[tagType].splice(index, 1);
+            } else {
+                notificationTagSelections[tagType].push(option);
+            }
+            
+            const clickedButton = event.target.closest('button');
+            if (clickedButton) {
+                const isActive = notificationTagSelections[tagType].includes(option);
+                clickedButton.classList.toggle('active', isActive);
+            }
+            
+            // Обновляем настройки уведомлений
+            notificationSettings.new_posts_tags = [];
+            Object.entries(notificationTagSelections).forEach(([type, values]) => {
+                values.forEach(value => {
+                    notificationSettings.new_posts_tags.push(`${type}:${value}`);
+                });
+            });
+            
+            updateNotificationTags();
+            updateNotificationSettingsOnServer();
+        }
+        
+        function updateNotificationTags() {
+            const container = document.getElementById('notificationTags');
+            if (!container) return;
+            
+            if (notificationSettings.new_posts_tags.length === 0) {
+                container.innerHTML = `<div style="color: #999; font-style: italic;">Теги не выбраны</div>`;
+                return;
+            }
+            
+            container.innerHTML = notificationSettings.new_posts_tags.map(tag => {
+                const [type, value] = tag.split(':');
+                return `<div class="tag-item">${value}</div>`;
+            }).join('');
+        }
+        
+        // Create/Edit Posts
+        function showCreatePostModal() {
+            isEditMode = false;
+            editingPostId = null;
+            document.getElementById('createPostModal').style.display = 'block';
+            postTags = [];
+            tagSelections = { city: [], gender: [], age: [], date: [] };
+            createPostCategory = currentCategory === categories[0][currentLanguage] ? categories[1][currentLanguage] : currentCategory;
+            updateSelectedTags();
+            loadCreateCategories();
+            updateTagButtons();
+            document.getElementById('postDescription').value = '';
+            const createButton = document.getElementById('createPostButton');
+            if (createButton) {
+                createButton.textContent = t('createPostButton');
+            }
+            updatePostLimit();
+            Telegram.WebApp.MainButton.hide();
+            Telegram.WebApp.BackButton.show();
+            Telegram.WebApp.BackButton.onClick(hideCreatePostModal);
+            document.body.style.overflow = 'hidden';
+            updateCharacterCount();
+            const textArea = document.getElementById('postDescription');
+            textArea.addEventListener('input', updateCharacterCount);
+        }
+        function openEditPostModal(post) {
+            isEditMode = true;
+            editingPostId = post.id;
+            document.getElementById('createPostModal').style.display = 'block';
+            document.getElementById('postDescription').value = post.description;
+            createPostCategory = post.category;
+            postTags = JSON.parse(post.tags || '[]');
+            tagSelections = { city: [], gender: [], age: [], date: [] };
+            postTags.forEach(tag => {
+                const [type, value] = tag.split(':');
+                if (tagSelections[type]) {
+                    tagSelections[type].push(value);
+                }
+            });
+            updateSelectedTags();
+            loadCreateCategories();
+            updateTagButtons();
+            const createButton = document.getElementById('createPostButton');
+            if (createButton) {
+                createButton.textContent = t('editPostButton');
+            }
+            Telegram.WebApp.MainButton.hide();
+            Telegram.WebApp.BackButton.show();
+            Telegram.WebApp.BackButton.onClick(hideCreatePostModal);
+            document.body.style.overflow = 'hidden';
+        }
+        function hideCreatePostModal() {
+            document.getElementById('createPostModal').style.display = 'none';
+            Telegram.WebApp.BackButton.hide();
+            isEditMode = false;
+            editingPostId = null;
+            document.body.style.overflow = 'auto';
+        }
+        function updateCharacterCount() {
+            const textArea = document.getElementById('postDescription');
+            const counter = document.getElementById('characterCount');
+            if (textArea && counter) {
+                counter.textContent = textArea.value.length;
+                if (textArea.value.length > 400) {
+                    counter.style.color = '#ff4757';
+                } else if (textArea.value.length > 350) {
+                    counter.style.color = '#ffa726';
+                } else {
+                    counter.style.color = '#666';
+                }
+            }
+        }
+        function createPost() {
+            const description = document.getElementById('postDescription').value.trim();
+            if (!description) {
+                Telegram.WebApp.showAlert(t('messages.enterText'));
+                return;
+            }
+            if (description.length < 10) {
+                Telegram.WebApp.showAlert(t('messages.textTooShort'));
+                return;
+            }
+            if (description.length > 450) {
+                Telegram.WebApp.showAlert(t('messages.textTooLong'));
+                return;
+            }
+            if (!createPostCategory) {
+                Telegram.WebApp.showAlert(t('messages.selectCategory'));
+                return;
+            }
+            if (!ws || ws.readyState !== WebSocket.OPEN) {
+                Telegram.WebApp.showAlert(t('messages.noConnection'));
+                return;
+            }
+            const telegramUser = Telegram.WebApp.initDataUnsafe.user;
+            if (!telegramUser) return;
+            try {
+                const message = {
+                    type: 'create_post',
+                    telegram_id: telegramId,
+                    description: description,
+                    category: createPostCategory,
+                    tags: postTags,
+                    creator_data: {
+                        telegram_id: telegramUser.id,
+                        username: telegramUser.username || '',
+                        first_name: telegramUser.first_name || '',
+                        last_name: telegramUser.last_name || '',
+                        photo_url: telegramUser.photo_url || ''
+                    },
+                    is_edit: isEditMode
+                };
+                if (isEditMode) {
+                    message.original_post_id = editingPostId;
+                }
+                ws.send(JSON.stringify(message));
+            } catch (error) {
+                console.error('Error creating/updating post:', error);
+            }
+        }
+        async function getCities() {
+            try {
+                console.log(`Loading cities for language: ${currentLanguage}`);
+                const response = await fetch(`cities_${currentLanguage}.json`);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const cities = await response.json();
+                console.log('Cities loaded:', cities.length);
+                return cities;
+            } catch (error) {
+                console.error('Error loading cities:', error);
+                // Fallback cities
+                const fallbackCities = currentLanguage === 'ru' 
+                    ? ["Москва", "Санкт-Петербург", "Новосибирск", "Екатеринбург", "Казань"]
+                    : ["Moscow", "Saint Petersburg", "Novosibirsk", "Yekaterinburg", "Kazan"];
+                console.log('Using fallback cities');
+                return fallbackCities;
+            }
+        }
+        // Initialization
+        Telegram.WebApp.ready();
+        Telegram.WebApp.expand();
+        
+        // Добавляем таймаут для подключения
+        setTimeout(() => {
+            if (!isConnectionActive && !isUserSynced) {
+                console.error('Connection timeout, showing language selection');
+                showLanguageSelection();
+            }
+        }, 10000); // 10 секунд таймаут
+        window.addEventListener('scroll', () => {
+            if (window.innerHeight + window.scrollY >= document.body.offsetHeight - 300) {
+                loadPosts(true);
+            }
+        });
+        let searchTimeout;
+        document.addEventListener('DOMContentLoaded', () => {
+            connectWebSocket();
+            window.addEventListener('click', (e) => {
+                const createModal = document.getElementById('createPostModal');
+                if (e.target === createModal) hideCreatePostModal();
+                const filterModal = document.getElementById('filterModal');
+                if (e.target === filterModal) hideModal('filterModal');
+                const tagModal = document.getElementById('tagModal');
+                if (e.target === tagModal) hideModal('tagModal');
+                const postMenu = document.getElementById('postMenu');
+                if (e.target === postMenu) hideModal('postMenu');
+                const notificationsModal = document.getElementById('notificationsModal');
+                if (e.target === notificationsModal) hideModal('notificationsModal');
+                const notificationTagModal = document.getElementById('notificationTagModal');
+                if (e.target === notificationTagModal) hideModal('notificationTagModal');
+            });
+        });
+        window.addEventListener('scroll', () => {
+            const scrollButton = document.getElementById('scrollToTop');
+            if (window.scrollY > 300) {
+                scrollButton.style.display = 'block';
+            } else {
+                scrollButton.style.display = 'none';
+            }
+        });
+        function scrollToTop() {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+    </script>
+    <button class="scroll-to-top" id="scrollToTop" onclick="scrollToTop()" style="display: none;">
+        ▲
+    </button>
+</body>
 
-async def main():
-    await DatabaseService.init_database()
-    
-    moderation_bot = ModerationBot()
-    await moderation_bot.init_bot()
-    
-    app = await create_app()
-    runner = web.AppRunner(app)
-    await runner.setup()
-    
-    site = web.TCPSite(runner, '0.0.0.0', config.PORT)
-    await site.start()
-    
-    if moderation_bot.app:
-        try:
-            await moderation_bot.app.updater.start_polling(
-                drop_pending_updates=True,
-                error_callback=lambda exc: logger.error(f"Bot polling error: {exc}")
-            )
-        except Exception as e:
-            logger.error(f"Bot polling failed: {e}")
-    
-    try:
-        await asyncio.Future()
-    except KeyboardInterrupt:
-        pass
-    finally:
-        try:
-            if moderation_bot.app:
-                await moderation_bot.app.stop()
-        except:
-            pass
-        await runner.cleanup()
-
-if __name__ == '__main__':
-    asyncio.run(main())
+</html>Loaded', () => {
+            const searchInput = document.getElementById('search');
+            if (searchInput) {
+                searchInput.addEventListener('input', () => {
+                    clearTimeout(searchTimeout);
+                    searchTimeout = setTimeout(() => {
+                        currentPage = 1;
+                        loadPosts();
+                    }, 500);
+                });
+                document.addEventListener('click', (e) => {
+                    if (e.target !== searchInput && !searchInput.contains(e.target)) {
+                        searchInput.blur();
+                    }
+                });
+            }
+        });
+        document.addEventListener('DOMContent
