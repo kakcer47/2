@@ -1491,7 +1491,7 @@
             document.querySelectorAll('#createCategories .category-item').forEach(el => {
                 el.classList.toggle('active', el.textContent === category);
                 if (el.textContent === category) {
-                    el.scrollIntoView({ behavior preponderance: 'smooth', inline: 'center' });
+                    el.scrollIntoView({ behavior: 'smooth', inline: 'center' });
                 }
             });
         }
@@ -1815,7 +1815,7 @@
                             </div>
                             <div class="menu" onclick="showPostMenu(${post.id}, ${creatorId === telegramId})">⋮</div>
                         </div>
-                   ,                    </div>
+                                      </div>
                 </div>
             `;
         }
