@@ -448,7 +448,6 @@
             padding: 20px;
             box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.2);
             z-index: 1000;
-
             transform: translate(-50%, 100%);
             opacity: 0;
             transition: transform 0.3s ease, opacity 0.3s ease;
@@ -457,6 +456,13 @@
         .modal.visible {
             transform: translate(-50%, 0);
             opacity: 1;
+        }
+
+        .modal-bottom-full {
+            left: 0;
+            width: 100%;
+            max-width: none;
+            border-radius: 20px 20px 0 0;
         }
 
         .modal-fullscreen {
@@ -987,7 +993,7 @@
         </div>
     </div>
     <div class="modal modal-auto-height" id="postMenu"></div>
-    <div class="modal modal-fullscreen" id="filterModal">
+    <div class="modal modal-bottom-full" id="filterModal">
         <div class="modal-header">
             <h3 id="filterTitle">Фильтр</h3>
             <button onclick="hideModal('filterModal')">✕</button>
