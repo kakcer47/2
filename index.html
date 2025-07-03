@@ -580,10 +580,16 @@
             cursor: pointer;
             transition: background 0.3s ease;
             text-align: left;
+            margin-bottom: 8px;
         }
 
         .modal button:hover {
             background: #ebebeb;
+        }
+
+        .modal button.active {
+            background: #1d1c1b;
+            color: #fff;
         }
 
         .modal button.active {
@@ -904,6 +910,13 @@
         }
 
         @media (max-width: 480px) {
+
+            .modal button {
+                padding: 12px;
+                font-size: 15px;
+                min-height: 44px;
+            }
+
             .modal-header {
                 padding: 0 8px;
                 margin-bottom: 20px;
