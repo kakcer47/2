@@ -424,7 +424,7 @@
         .modal {
             display: none;
             position: fixed;
-            top: 0;
+            bottom: 0;
             left: 0;
             width: 100%;
             height: auto;
@@ -439,9 +439,12 @@
             transition: transform 0.3s ease;
         }
 
+        .modal.visible {
+            transform: translateY(0);
+        }
+
         .modal-fullscreen {
             height: 100vh;
-            /* Полноэкранная высота */
         }
 
         .modal.visible {
