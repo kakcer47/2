@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html lang="ru">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -59,13 +58,8 @@
         }
 
         @keyframes spin {
-            0% {
-                transform: rotate(0deg);
-            }
-
-            100% {
-                transform: rotate(360deg);
-            }
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
         }
 
         .loading-text {
@@ -230,15 +224,13 @@
             flex: 0 0 auto;
             display: flex;
             align-items: center;
-            gap: 4px;
-            padding: 8px 12px;
+            justify-content: center;
+            width: 36px;
+            height: 36px;
             background: #f8f7f6;
             border: 1px solid #e0e0e0;
-            border-radius: 20px;
+            border-radius: 8px;
             cursor: pointer;
-            font-family: 'Rubik', sans-serif;
-            font-size: 14px;
-            color: #1d1c1b;
             transition: all 0.3s ease;
         }
 
@@ -248,17 +240,11 @@
 
         .filter-btn.active {
             background: #1d1c1b;
-            color: #fff;
             border-color: #1d1c1b;
         }
 
-        .filter-icon {
-            font-size: 10px;
-            transition: transform 0.3s ease;
-        }
-
-        .filter-btn.active .filter-icon {
-            transform: rotate(180deg);
+        .filter-btn.active svg {
+            filter: invert(100%);
         }
 
         .feed {
@@ -342,9 +328,16 @@
             background: #f5f5f5;
         }
 
-        .post-actions .like.liked {
-            background: #ffe8e8;
-            color: #ff4757;
+        .post-actions .like.liked svg {
+            filter: none;
+        }
+
+        .post-actions .like svg {
+            filter: grayscale(100%);
+        }
+
+        .post-actions .like.liked svg {
+            filter: none;
         }
 
         .post-actions .menu {
@@ -388,7 +381,7 @@
             transition: border-color 0.3s ease;
         }
 
-        .bottom-menu input:focus {
+        .bottom-menu input#search:focus {
             border-color: #1d1c1b;
         }
 
@@ -399,7 +392,7 @@
             border: none;
             border-radius: 12px;
             cursor: pointer;
-            font-family: 'Rubik', sans-serif;
+            font-family: 'RubMS Sans', sans-serif;
             font-weight: 500;
             font-size: 16px;
             transition: background 0.3s ease;
@@ -413,16 +406,16 @@
         .modal {
             display: none;
             position: fixed;
-            bottom: 0;
+            top: 0;
             left: 0;
             width: 100%;
+            height: 100vh;
             background: #fff;
             border-top-left-radius: 20px;
             border-top-right-radius: 20px;
             padding: 20px;
             box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.2);
             z-index: 1000;
-            max-height: 80vh;
             overflow-y: auto;
             transform: translateY(100%);
             transition: transform 0.3s ease;
@@ -453,7 +446,7 @@
             font-size: 24px;
             cursor: pointer;
             color: #666;
-            width: 20px;
+            width: 30px;
             text-align: center;
         }
 
@@ -654,15 +647,13 @@
             flex: 0 0 auto;
             display: flex;
             align-items: center;
-            gap: 4px;
-            padding: 8px 12px;
+            justify-content: center;
+            width: 36px;
+            height: 36px;
             background: #f8f7f6;
             border: 1px solid #e0e0e0;
-            border-radius: 20px;
+            border-radius: 8px;
             cursor: pointer;
-            font-family: 'Rubik', sans-serif;
-            font-size: 14px;
-            color: #1d1c1b;
             transition: all 0.3s ease;
         }
 
@@ -672,8 +663,11 @@
 
         .tag-group-btn.active {
             background: #1d1c1b;
-            color: #fff;
             border-color: #1d1c1b;
+        }
+
+        .tag-group-btn.active svg {
+            filter: invert(100%);
         }
 
         .selected-tags {
@@ -755,8 +749,8 @@
             }
 
             .filter-btn {
-                padding: 6px 10px;
-                font-size: 13px;
+                width: 32px;
+                height: 32px;
             }
 
             .create-post-header {
@@ -826,7 +820,6 @@
         }
     </style>
 </head>
-
 <body>
     <div class="loading-screen" id="loadingScreen">
         <div class="spinner"></div>
@@ -847,24 +840,22 @@
         <div class="filters-container">
             <div class="filters" id="filters">
                 <button class="filter-btn" id="cityFilter" onclick="showFilterModal('city')">
-                    <span id="cityFilterText">Город</span>
-                    <span class="filter-icon">▼</span>
+                    <img src="city.svg" alt="City" width="20" height="20">
                 </button>
                 <button class="filter-btn" id="genderFilter" onclick="showFilterModal('gender')">
-                    <span id="genderFilterText">Пол</span>
-                    <span class="filter-icon">▼</span>
+                    <img src="gender.svg" alt="Gender" width="20" height="20">
                 </button>
                 <button class="filter-btn" id="ageFilter" onclick="showFilterModal('age')">
-                    <span id="ageFilterText">Возраст</span>
-                    <span class="filter-icon">▼</span>
+                    <img src="age.svg" alt="Age" width="20" height="20">
                 </button>
                 <button class="filter-btn" id="dateFilter" onclick="showFilterModal('date')">
-                    <span id="dateFilterText">Дата</span>
-                    <span class="filter-icon">▼</span>
+                    <img src="date.svg" alt="Date" width="20" height="20">
                 </button>
                 <button class="filter-btn" id="sortFilter" onclick="showFilterModal('sort')">
-                    <span id="sortFilterText">Сортировка</span>
-                    <span class="filter-icon">▼</span>
+                    <img src="sort.svg" alt="Sort" width="20" height="20">
+                </button>
+                <button class="filter-btn" id="notificationsFilter" onclick="showNotificationsModal()">
+                    <img src="notification.svg" alt="Notifications" width="20" height="20">
                 </button>
             </div>
         </div>
@@ -887,6 +878,18 @@
             <button onclick="hideModal('filterModal')">✕</button>
         </div>
         <div class="modal-content" id="filterOptions"></div>
+    </div>
+
+    <div class="modal" id="notificationsModal">
+        <div class="modal-header">
+            <h3>Notifications</h3>
+            <button onclick="hideModal('notificationsModal')">✕</button>
+        </div>
+        <div class="modal-content" id="notificationOptions">
+            <label><input type="checkbox" checked onchange="toggleNotification('likes')"> Likes</label>
+            <label><input type="checkbox" checked onchange="toggleNotification('system')"> System</label>
+            <label><input type="checkbox" checked onchange="toggleNotification('account')"> Account Status</label>
+        </div>
     </div>
 
     <div class="create-post-modal" id="createPostModal">
@@ -912,20 +915,16 @@
                 <div class="section-label" id="tagsLabel">Теги:</div>
                 <div class="tag-groups" id="tagGroups">
                     <button class="tag-group-btn" onclick="showTagModal('city')">
-                        <span id="cityTagText">Город</span>
-                        <span class="filter-icon">▼</span>
+                        <img src="city.svg" alt="City" width="20" height="20">
                     </button>
                     <button class="tag-group-btn" onclick="showTagModal('gender')">
-                        <span id="genderTagText">Пол</span>
-                        <span class="filter-icon">▼</span>
+                        <img src="gender.svg" alt="Gender" width="20" height="20">
                     </button>
                     <button class="tag-group-btn" onclick="showTagModal('age')">
-                        <span id="ageTagText">Возраст</span>
-                        <span class="filter-icon">▼</span>
+                        <img src="age.svg" alt="Age" width="20" height="20">
                     </button>
                     <button class="tag-group-btn" onclick="showTagModal('date')">
-                        <span id="dateTagText">Дата</span>
-                        <span class="filter-icon">▼</span>
+                        <img src="date.svg" alt="Date" width="20" height="20">
                     </button>
                 </div>
                 <div class="selected-tags" id="selectedTags"></div>
@@ -946,7 +945,7 @@
     </div>
 
     <script>
-        // Переводы
+        // Translations
         const translations = {
             ru: {
                 loading: '',
@@ -966,15 +965,6 @@
                 editPostButton: 'Сохранить изменения',
                 postLimitText: ' - объявлений',
                 noPosts: 'Объявлений не найдено',
-                categories: {
-                    all: 'Все',
-                    work: 'Работа',
-                    hobbies: 'Хобби',
-                    leisure: 'Отдых',
-                    events: 'Мероприятия',
-                    friendship: 'Дружба',
-                    health: 'Здоровье'
-                },
                 filters: {
                     cityTitle: 'Выбрать город',
                     genderTitle: 'Выбрать пол',
@@ -1052,15 +1042,6 @@
                 editPostButton: 'Save changes',
                 postLimitText: ' - ads',
                 noPosts: 'No ads found',
-                categories: {
-                    all: 'All',
-                    work: 'Work',
-                    hobbies: 'Hobbies',
-                    leisure: 'Leisure',
-                    events: 'Events',
-                    friendship: 'Friendship',
-                    health: 'Health'
-                },
                 filters: {
                     cityTitle: 'Select city',
                     genderTitle: 'Select gender',
@@ -1122,13 +1103,7 @@
             }
         };
 
-        // Данные
-        const cities = {
-            ru: ['Москва', 'Санкт-Петербург', 'Новосибирск', 'Екатеринбург', 'Казань', 'Нижний Новгород', 'Челябинск', 'Самара', 'Омск', 'Ростов-на-Дону', 'Уфа', 'Красноярск', 'Воронеж', 'Пермь', 'Волгоград'],
-            en: ['Moscow', 'Saint Petersburg', 'Novosibirsk', 'Yekaterinburg', 'Kazan', 'Nizhny Novgorod', 'Chelyabinsk', 'Samara', 'Omsk', 'Rostov-on-Don', 'Ufa', 'Krasnoyarsk', 'Voronezh', 'Perm', 'Volgograd']
-        };
-
-        // Глобальные переменные
+        // Global variables
         let ws = null;
         let telegramId = null;
         let currentLanguage = 'ru';
@@ -1147,8 +1122,11 @@
         let isUserSynced = false;
         let isEditMode = false;
         let editingPostId = null;
+        let cities = { ru: [], en: [] };
+        let categories = [];
+        let notificationSettings = { likes: true, system: true, account: true };
 
-        // Утилиты
+        // Utilities
         function t(key) {
             const keys = key.split('.');
             let value = translations[currentLanguage];
@@ -1176,14 +1154,13 @@
             modal.classList.remove('visible');
             setTimeout(() => {
                 modal.style.display = 'none';
-                // Сбрасываем z-index для модального окна тегов
                 if (modalId === 'tagModal') {
                     modal.style.zIndex = '1000';
                 }
             }, 300);
         }
 
-        // Языки и интерфейс
+        // Language and Interface
         function selectLanguage(lang) {
             currentLanguage = lang;
             document.getElementById('languageSelection').style.display = 'none';
@@ -1207,19 +1184,9 @@
             document.getElementById('loadingText').textContent = t('loading');
             document.getElementById('search').placeholder = t('searchPlaceholder');
             document.getElementById('createButton').textContent = t('createButton');
-            document.getElementById('cityFilterText').textContent = t('cityFilter');
-            document.getElementById('genderFilterText').textContent = t('genderFilter');
-            document.getElementById('ageFilterText').textContent = t('ageFilter');
-            document.getElementById('dateFilterText').textContent = t('dateFilter');
-            document.getElementById('sortFilterText').textContent = t('sortFilter');
             document.getElementById('postDescription').placeholder = t('postPlaceholder');
             document.getElementById('categoryLabel').textContent = t('categoryLabel');
             document.getElementById('tagsLabel').textContent = t('tagsLabel');
-            document.getElementById('cityTagText').textContent = t('cityFilter');
-            document.getElementById('genderTagText').textContent = t('genderFilter');
-            document.getElementById('ageTagText').textContent = t('ageFilter');
-            document.getElementById('dateTagText').textContent = t('dateFilter');
-
             updatePostLimit();
         }
 
@@ -1346,8 +1313,10 @@
                         language: data.language || 'ru',
                         favorites: data.favorites || [],
                         hidden: data.hidden || [],
-                        liked: data.liked || []
+                        liked: data.liked || [],
+                        notification_settings: data.notification_settings || { likes: true, system: true, account: true }
                     };
+                    notificationSettings = userData.notification_settings;
 
                     const telegramUser = Telegram.WebApp.initDataUnsafe.user;
                     if (telegramUser) {
@@ -1374,41 +1343,21 @@
                     renderPosts(data.posts, data.append);
 
                 } else if (data.type === 'post_updated') {
-                    // Если это обновление лайка от текущего пользователя
-                    if (data.post.like_action && data.post.telegram_id !== undefined) {
-                        // Обновляем визуальное состояние только для собственных действий
-                        const postEl = document.querySelector(`.post[data-id="${data.post.id}"]`);
-                        if (postEl) {
-                            const likeCountSpan = postEl.querySelector('.like-count');
-                            const likeDiv = postEl.querySelector('.like');
-                            const likeIcon = postEl.querySelector('.like-icon');
-
-                            // Обновляем счетчик
-                            if (likeCountSpan) likeCountSpan.textContent = data.post.likes || 0;
-
-                            // Обновляем визуал только если это действие текущего пользователя
-                            if (likeDiv && likeIcon && data.post.like_action) {
-                                if (data.post.user_liked === true) {
-                                    likeDiv.classList.add('liked');
-                                    likeIcon.textContent = '❤️';
-                                } else {
-                                    likeDiv.classList.remove('liked');
-                                    likeIcon.textContent = '🤍';
-                                }
-                            }
+                    const postEl = document.querySelector(`.post[data-id="${data.post.id}"]`);
+                    if (postEl) {
+                        const likeCountSpan = postEl.querySelector('.like-count');
+                        const likeDiv = postEl.querySelector('.like');
+                        if (likeCountSpan) likeCountSpan.textContent = data.post.likes || 0;
+                        if (data.post.user_liked !== undefined && likeDiv) {
+                            likeDiv.classList.toggle('liked', data.post.user_liked);
                         }
-                    } else {
-                        // Для остальных обновлений используем стандартную функцию (только счетчик)
-                        updatePost(data.post);
                     }
 
                 } else if (data.type === 'post_approved') {
-                    // Если это редактирование, удаляем оригинальный пост из ленты
                     if (data.post.is_edit && data.post.original_post_id) {
                         removePostFromFeed(data.post.original_post_id);
                     }
 
-                    // Обновляем лимиты если это пост текущего пользователя
                     const creator = typeof data.post.creator === 'string' ? JSON.parse(data.post.creator) : data.post.creator;
                     if (creator.telegram_id === telegramId) {
                         if (ws && ws.readyState === WebSocket.OPEN) {
@@ -1419,8 +1368,7 @@
                         }
                     }
 
-                    // Добавляем обновленный пост в ленту (если это редактирование, он заменит старый)
-                    if (currentCategory === t('categories.all') || currentCategory === data.post.category) {
+                    if (currentCategory === categories[0][currentLanguage] || currentCategory === data.post.category) {
                         const feed = document.getElementById('feed');
                         const postHTML = createPostHTML(data.post);
                         feed.insertAdjacentHTML('afterbegin', postHTML);
@@ -1440,17 +1388,9 @@
                     Telegram.WebApp.showAlert(t('messages.limitExceeded'));
 
                 } else if (data.type === 'post_created') {
-                    // При создании поста НЕ обновляем лимиты, только показываем сообщение
                     hideCreatePostModal();
-
                     const message = isEditMode ? t('messages.editCreated') : t('messages.postCreated');
                     Telegram.WebApp.showAlert(message);
-
-                } else if (data.type === 'user_limits_updated') {
-                    if (data.telegram_id === telegramId && data.limits) {
-                        userData.limits = data.limits;
-                        updatePostLimit();
-                    }
 
                 } else if (data.type === 'user_limits_updated') {
                     if (data.telegram_id === telegramId && data.limits) {
@@ -1471,7 +1411,6 @@
                             userData.favorites = userData.favorites.filter(id => id !== currentPostId);
                         }
                     }
-
                     const message = data.action === 'added' ? t('messages.addedToFavorites') : t('messages.removedFromFavorites');
                     Telegram.WebApp.showAlert(message);
                     hideModal('postMenu');
@@ -1486,15 +1425,12 @@
                             userData.hidden = userData.hidden.filter(id => id !== currentPostId);
                         }
                     }
-
                     const message = data.action === 'hidden' ? t('messages.postHidden') : t('messages.postShown');
                     Telegram.WebApp.showAlert(message);
-
                     if (data.action === 'hidden') {
                         removePostFromFeed(currentPostId);
                     }
                     hideModal('postMenu');
-
                     currentPage = 1;
                     loadPosts();
 
@@ -1517,28 +1453,19 @@
             }
         }
 
-        // Категории
-        function loadCategories() {
-            const categoriesData = [
-                t('categories.all'),
-                t('categories.work'),
-                t('categories.hobbies'),
-                t('categories.leisure'),
-                t('categories.events'),
-                t('categories.friendship'),
-                t('categories.health')
-            ];
-
+        // Categories
+        async function loadCategories() {
+            const response = await fetch('categories.json');
+            categories = await response.json();
             const container = document.getElementById('categories');
-            container.innerHTML = categoriesData.map((cat, index) => `
-                <div class="category ${index === 0 ? 'active' : ''}" onclick="selectCategory('${cat}')">${cat}</div>
+            container.innerHTML = categories.map((cat, index) => `
+                <div class="category ${index === 0 ? 'active' : ''}" onclick="selectCategory('${cat[currentLanguage]}')">${cat[currentLanguage]}</div>
             `).join('');
-            currentCategory = categoriesData[0];
+            currentCategory = categories[0][currentLanguage];
         }
 
         function selectCategory(category) {
             if (currentCategory === category) return;
-
             currentCategory = category;
             document.querySelectorAll('.category').forEach(el => {
                 el.classList.toggle('active', el.textContent === category);
@@ -1546,42 +1473,33 @@
                     el.scrollIntoView({ behavior: 'smooth', inline: 'center' });
                 }
             });
-
             currentPage = 1;
             loadPosts();
         }
 
-        function loadCreateCategories() {
-            const categoriesData = [
-                t('categories.work'),
-                t('categories.hobbies'),
-                t('categories.leisure'),
-                t('categories.events'),
-                t('categories.friendship'),
-                t('categories.health')
-            ];
-
+        async function loadCreateCategories() {
+            const response = await fetch('categories.json');
+            const cats = await response.json();
             const container = document.getElementById('createCategories');
-            container.innerHTML = categoriesData.map(cat => `
-                <div class="category-item ${cat === createPostCategory ? 'active' : ''}" onclick="selectCreateCategory('${cat}')">${cat}</div>
+            container.innerHTML = cats.slice(1).map(cat => `
+                <div class="category-item ${cat[currentLanguage] === createPostCategory ? 'active' : ''}" onclick="selectCreateCategory('${cat[currentLanguage]}')">${cat[currentLanguage]}</div>
             `).join('');
         }
 
         function selectCreateCategory(category) {
             createPostCategory = category;
-
             document.querySelectorAll('#createCategories .category-item').forEach(el => {
                 el.classList.toggle('active', el.textContent === category);
                 if (el.textContent === category) {
-                    el.scrollIntoView({ behavior: 'smooth', inline: 'center' });
+                    el.scrollIntoView({ behavior preponderance: 'smooth', inline: 'center' });
                 }
             });
         }
 
-        // Фильтры (для главной ленты)
-        function showFilterModal(filterType) {
+        // Filters
+        async function showFilterModal(filterType) {
             const filterData = {
-                city: [t('filters.allCities'), ...cities[currentLanguage]],
+                city: [t('filters.allCities'), ...(await getCities())],
                 gender: [t('filters.allGenders'), t('filters.male'), t('filters.female')],
                 age: [t('filters.allAges'), t('filters.age1'), t('filters.age2'), t('filters.age3'), t('filters.age4')],
                 date: [t('filters.allDates'), t('filters.today'), t('filters.tomorrow'), t('filters.thisWeek'), t('filters.thisMonth')],
@@ -1593,15 +1511,11 @@
 
             title.textContent = t(`filters.${filterType}Title`);
 
-            let content = '';
-
-            if (filterType === 'city') {
-                content += `
-                    <div class="city-search">
-                        <input type="text" id="citySearchInput" placeholder="${t('messages.citySearchPlaceholder')}" oninput="filterCities()">
-                    </div>
-                `;
-            }
+            let content = filterType === 'city' ? `
+                <div class="city-search">
+                    <input type="text" id="citySearchInput" placeholder="${t('messages.citySearchPlaceholder')}" oninput="filterCities()">
+                </div>
+            ` : '';
 
             content += filterData[filterType].map(option => `
                 <button onclick="selectFilterOption('${filterType}', '${option}', event)"
@@ -1643,7 +1557,6 @@
                 if (option.includes(t('filters.allCities')) || option.includes(t('filters.allGenders')) ||
                     option.includes(t('filters.allAges')) || option.includes(t('filters.allDates'))) {
                     feedFilters[filterType] = [];
-                    // Закрываем модальное окно при выборе "все"
                     hideModal('filterModal');
                 } else {
                     const index = feedFilters[filterType].indexOf(option);
@@ -1655,7 +1568,6 @@
                 }
             }
 
-            // Обновляем визуальное состояние кнопки в модальном окне
             if (event) {
                 const clickedButton = event.target.closest('button');
                 if (clickedButton) {
@@ -1679,7 +1591,6 @@
                     const hasActiveFilters = filterType === 'sort' ?
                         feedFilters.sort !== 'new' :
                         feedFilters[filterType].length > 0;
-
                     button.classList.toggle('active', hasActiveFilters);
                 }
             });
@@ -1700,10 +1611,10 @@
             });
         }
 
-        // Теги (для создания поста)
-        function showTagModal(tagType) {
+        // Tags
+        async function showTagModal(tagType) {
             const tagData = {
-                city: cities[currentLanguage],
+                city: await getCities(),
                 gender: [t('filters.male'), t('filters.female')],
                 age: [t('filters.age1'), t('filters.age2'), t('filters.age3'), t('filters.age4')],
                 date: [t('filters.today'), t('filters.tomorrow'), t('filters.thisWeek'), t('filters.thisMonth')]
@@ -1715,15 +1626,11 @@
 
             title.textContent = t(`filters.${tagType}Title`);
 
-            let content = '';
-
-            if (tagType === 'city') {
-                content += `
-                    <div class="city-search">
-                        <input type="text" id="tagCitySearchInput" placeholder="${t('messages.citySearchPlaceholder')}" oninput="filterTagCities()">
-                    </div>
-                `;
-            }
+            let content = tagType === 'city' ? `
+                <div class="city-search">
+                    <input type="text" id="tagCitySearchInput" placeholder="${t('messages.citySearchPlaceholder')}" oninput="filterTagCities()">
+                </div>
+            ` : '';
 
             content += tagData[tagType].map(option => `
                 <button onclick="selectTagOption('${tagType}', '${option}', event)" 
@@ -1734,8 +1641,6 @@
             `).join('');
 
             options.innerHTML = content;
-
-            // Устанавливаем более высокий z-index для модального окна тегов
             modal.style.zIndex = '1002';
             showModal('tagModal');
         }
@@ -1748,14 +1653,12 @@
                 tagSelections[tagType].push(option);
             }
 
-            // Обновляем визуальное состояние кнопки
             const clickedButton = event.target.closest('button');
             if (clickedButton) {
                 const isActive = tagSelections[tagType].includes(option);
                 clickedButton.classList.toggle('active', isActive);
             }
 
-            // Обновляем массив тегов
             postTags = [];
             Object.entries(tagSelections).forEach(([type, values]) => {
                 values.forEach(value => {
@@ -1805,25 +1708,19 @@
             });
         }
 
-        // Посты
+        // Posts
         function loadPosts(append = false) {
-            if (!isUserSynced || !telegramId) {
-                return;
-            }
-
+            if (!isUserSynced || !telegramId) return;
             if (!ws || ws.readyState !== WebSocket.OPEN) {
                 setTimeout(() => loadPosts(append), 1000);
                 return;
             }
-
-            if (!currentCategory) {
-                return;
-            }
+            if (!currentCategory) return;
 
             isLoading = true;
 
             const searchValue = document.getElementById('search')?.value || '';
-            const categoryToSend = currentCategory === t('categories.all') ? null : currentCategory;
+            const categoryToSend = currentCategory === categories[0][currentLanguage] ? null : currentCategory;
 
             try {
                 ws.send(JSON.stringify({
@@ -1844,13 +1741,9 @@
 
         function renderPosts(posts, append = false) {
             const feed = document.getElementById('feed');
-            if (!feed) {
-                return;
-            }
+            if (!feed) return;
 
-            if (!append) {
-                feed.innerHTML = '';
-            }
+            if (!append) feed.innerHTML = '';
 
             if (posts.length === 0 && !append) {
                 feed.innerHTML = `<div class="no-posts">${t('noPosts')}</div>`;
@@ -1874,15 +1767,11 @@
             }
 
             isLoading = false;
-            if (posts.length > 0) {
-                currentPage++;
-            }
+            if (posts.length > 0) currentPage++;
         }
 
         function createPostHTML(post) {
-            if (!post || !post.id) {
-                return '';
-            }
+            if (!post || !post.id) return '';
 
             let creator;
             try {
@@ -1904,7 +1793,6 @@
 
             const userLiked = post.user_liked === true;
             const likeClass = userLiked ? 'like liked' : 'like';
-            const likeIcon = userLiked ? '❤️' : '🤍';
 
             const creatorLink = creator.username
                 ? `https://t.me/${creator.username}`
@@ -1922,11 +1810,12 @@
                         </div>
                         <div class="post-actions">
                             <div class="${likeClass}" onclick="likePost(${post.id})">
-                                <span class="like-icon">${likeIcon}</span> <span class="like-count">${likes}</span>
+                                <img src="lightning.svg" alt="Like" width="16" height="16">
+                                <span class="like-count">${likes}</span>
                             </div>
                             <div class="menu" onclick="showPostMenu(${post.id}, ${creatorId === telegramId})">⋮</div>
                         </div>
-                    </div>
+                   ,                    </div>
                 </div>
             `;
         }
@@ -1948,7 +1837,6 @@
 
         function openTelegramProfile(event, link) {
             event.preventDefault();
-
             if (window.Telegram && window.Telegram.WebApp) {
                 window.Telegram.WebApp.openTelegramLink(link);
             } else {
@@ -1956,7 +1844,7 @@
             }
         }
 
-        // Меню постов
+        // Post Menu
         function showPostMenu(postId, isOwnPost) {
             currentPostId = postId;
             const modal = document.getElementById('postMenu');
@@ -1986,6 +1874,9 @@
                     <button onclick="hideModal('postMenu')">✕</button>
                 </div>
                 <div class="modal-content">
+                    <label><input type="checkbox" ${notificationSettings.likes ? 'checked' : ''} onchange="toggleNotification('likes')"> Likes</label>
+                    <label><input type="checkbox" ${notificationSettings.system ? 'checked' : ''} onchange="toggleNotification('system')"> System</label>
+                    <label><input type="checkbox" ${notificationSettings.account ? 'checked' : ''} onchange="toggleNotification('account')"> Account Status</label>
                     <button onclick="addToFavorites(${postId})">${favoriteText}</button>
                     <button onclick="hidePost(${postId})">${hideText}</button>
                     <button onclick="reportPost(${postId})">${t('menu.report')}</button>
@@ -2054,7 +1945,23 @@
             }
         }
 
-        // Создание/редактирование постов
+        // Notifications
+        function showNotificationsModal() {
+            showModal('notificationsModal');
+        }
+
+        function toggleNotification(type) {
+            notificationSettings[type] = !notificationSettings[type];
+            if (ws && ws.readyState === WebSocket.OPEN) {
+                ws.send(JSON.stringify({
+                    type: 'update_notification_settings',
+                    telegram_id: telegramId,
+                    settings: notificationSettings
+                }));
+            }
+        }
+
+        // Create/Edit Posts
         function showCreatePostModal() {
             isEditMode = false;
             editingPostId = null;
@@ -2062,7 +1969,7 @@
             document.getElementById('createPostModal').style.display = 'block';
             postTags = [];
             tagSelections = { city: [], gender: [], age: [], date: [] };
-            createPostCategory = currentCategory === t('categories.all') ? t('categories.work') : currentCategory;
+            createPostCategory = currentCategory === categories[0][currentLanguage] ? categories[1][currentLanguage] : currentCategory;
             updateSelectedTags();
             loadCreateCategories();
             updateTagButtons();
@@ -2097,7 +2004,6 @@
             postTags = JSON.parse(post.tags || '[]');
 
             tagSelections = { city: [], gender: [], age: [], date: [] };
-
             postTags.forEach(tag => {
                 const [type, value] = tag.split(':');
                 if (tagSelections[type]) {
@@ -2136,7 +2042,6 @@
             const counter = document.getElementById('characterCount');
             if (textArea && counter) {
                 counter.textContent = textArea.value.length;
-
                 if (textArea.value.length > 400) {
                     counter.style.color = '#ff4757';
                 } else if (textArea.value.length > 350) {
@@ -2176,9 +2081,7 @@
             }
 
             const telegramUser = Telegram.WebApp.initDataUnsafe.user;
-            if (!telegramUser) {
-                return;
-            }
+            if (!telegramUser) return;
 
             try {
                 const message = {
@@ -2207,7 +2110,12 @@
             }
         }
 
-        // Инициализация
+        async function getCities() {
+            const response = await fetch(`cities_${currentLanguage}.json`);
+            return await response.json();
+        }
+
+        // Initialization
         Telegram.WebApp.ready();
         Telegram.WebApp.expand();
 
@@ -2242,28 +2150,22 @@
 
             window.addEventListener('click', (e) => {
                 const createModal = document.getElementById('createPostModal');
-                if (e.target === createModal) {
-                    hideCreatePostModal();
-                }
+                if (e.target === createModal) hideCreatePostModal();
 
                 const filterModal = document.getElementById('filterModal');
-                if (e.target === filterModal) {
-                    hideModal('filterModal');
-                }
+                if (e.target === filterModal) hideModal('filterModal');
 
                 const tagModal = document.getElementById('tagModal');
-                if (e.target === tagModal) {
-                    hideModal('tagModal');
-                }
+                if (e.target === tagModal) hideModal('tagModal');
 
                 const postMenu = document.getElementById('postMenu');
-                if (e.target === postMenu) {
-                    hideModal('postMenu');
-                }
+                if (e.target === postMenu) hideModal('postMenu');
+
+                const notificationsModal = document.getElementById('notificationsModal');
+                if (e.target === notificationsModal) hideModal('notificationsModal');
             });
         });
 
-        // Показать/скрыть кнопку при скролле
         window.addEventListener('scroll', () => {
             const scrollButton = document.getElementById('scrollToTop');
             if (window.scrollY > 300) {
@@ -2273,7 +2175,6 @@
             }
         });
 
-        // Функция возврата наверх
         function scrollToTop() {
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
@@ -2283,5 +2184,4 @@
         ▲
     </button>
 </body>
-
 </html>
