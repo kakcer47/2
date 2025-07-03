@@ -450,7 +450,7 @@
             z-index: 1000;
             transform: translate(-50%, 100%);
             opacity: 0;
-            transition: transform 0.5s ease, opacity 0.5s ease;
+            transition: transform 0.3s ease, opacity 0.3s ease;
         }
 
         .modal.visible {
@@ -482,11 +482,12 @@
 
         .modal-header {
             display: flex;
-            justify-content: space-between;
             align-items: center;
             margin-bottom: 16px;
             border-bottom: 1px solid #f0f0f0;
             padding: 0 10px;
+            width: 100%;
+            position: relative;
         }
 
         .modal-header h3 {
@@ -494,6 +495,8 @@
             font-size: 18px;
             font-weight: 600;
             flex: 0 1 auto;
+            padding-right: 10px;
+            white-space: nowrap;
         }
 
         .modal-header button {
@@ -501,16 +504,21 @@
             width: 36px;
             height: 36px;
             padding: 0;
+            border: none;
             border-radius: 8px;
             font-size: 20px;
             display: flex;
             align-items: center;
             justify-content: center;
             background: transparent;
-            border: none;
             cursor: pointer;
             transition: background 0.3s ease, color 0.3s ease;
             flex-shrink: 0;
+            min-width: 0;
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
         }
 
         .modal-header button:hover {
@@ -860,6 +868,23 @@
         }
 
         @media (max-width: 480px) {
+            .modal-header {
+                padding: 0 8px;
+            }
+
+            .modal-header h3 {
+                font-size: 16px;
+                padding-right: 8px;
+            }
+
+            .modal-header button {
+                width: 32px;
+                height: 32px;
+                font-size: 18px;
+                border-radius: 6px;
+
+            }
+
             .container {
                 padding: 12px 12px 100px 12px;
             }
@@ -1005,7 +1030,7 @@
     <div class="modal modal-auto-height" id="postMenu"></div>
     <div class="modal modal-bottom-full" id="filterModal">
         <div class="modal-header">
-            <h3 id="filterTitle">Фильтр</h3>
+            <h3 id="filterTitle">Выбрать город</h3>
             <button onclick="hideModal('filterModal')">✕</button>
         </div>
         <div class="modal-content" id="filterOptions"></div>
@@ -1343,9 +1368,6 @@
             modal.classList.remove('visible');
             setTimeout(() => {
                 modal.style.display = 'none';
-                if (modalId === 'tagModal') {
-                    modal.style.zIndex = '1000';
-                }
             }, 300);
         }
 
