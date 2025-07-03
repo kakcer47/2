@@ -1018,20 +1018,20 @@
                         <label for="accountNotif">Изменения аккаунта</label>
                     </div>
                 </div>
-                
+
                 <div class="notification-group">
                     <h4>Новые объявления</h4>
                     <div class="notification-option">
                         <input type="checkbox" id="newPostsNotif" onchange="toggleNewPostsNotifications()">
                         <label for="newPostsNotif">Уведомления о новых объявлениях</label>
                     </div>
-                    
+
                     <div class="notification-filters" id="newPostsFilters" style="display: none;">
                         <div class="notification-filter-section">
                             <h5>Категории:</h5>
                             <div class="notification-filter-tags" id="notificationCategories"></div>
                         </div>
-                        
+
                         <div class="notification-filter-section">
                             <h5>Теги:</h5>
                             <div class="tag-groups">
@@ -1057,7 +1057,9 @@
     </div>
     <div class="create-post-modal" id="createPostModal">
         <div class="create-post-header">
-            <img id="userAvatar" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40' viewBox='0 0 40 40'%3E%3Crect width='40' height='40' fill='%23f0f0f0'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='central' text-anchor='middle' fill='%23999' font-family='sans-serif' font-size='14'%3EUser%3C/text%3E%3C/svg%3E" alt="Avatar">
+            <img id="userAvatar"
+                src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40' viewBox='0 0 40 40'%3E%3Crect width='40' height='40' fill='%23f0f0f0'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='central' text-anchor='middle' fill='%23999' font-family='sans-serif' font-size='14'%3EUser%3C/text%3E%3C/svg%3E"
+                alt="Avatar">
             <div class="user-info">
                 <span class="name" id="userName"></span>
                 <span class="post-limit" id="postLimit">0/10 - объявлений</span>
@@ -1288,16 +1290,16 @@
         let editingPostId = null;
         let cities = { ru: [], en: [] };
         let categories = [];
-        let notificationSettings = { 
-            likes: true, 
-            system: true, 
-            account: true, 
+        let notificationSettings = {
+            likes: true,
+            system: true,
+            account: true,
             new_posts: false,
             new_posts_categories: [],
             new_posts_tags: []
         };
         let notificationTagSelections = { city: [], gender: [], age: [], date: [] };
-        
+
         // Utilities
         function t(key) {
             const keys = key.split('.');
@@ -1334,7 +1336,7 @@
             currentLanguage = lang;
             document.getElementById('languageSelection').style.display = 'none';
             updateInterface();
-            
+
             if (ws && ws.readyState === WebSocket.OPEN && telegramId) {
                 ws.send(JSON.stringify({
                     type: 'update_language',
@@ -1342,7 +1344,7 @@
                     language: lang
                 }));
             }
-            
+
             loadCategories().then(() => {
                 console.log('Categories loaded after language selection');
                 // Устанавливаем категорию "Все" по умолчанию и загружаем посты
@@ -1403,37 +1405,76 @@
         }
         // WebSocket
         function connectWebSocket() {
+            if (!window.Telegram || !window.Telegram.WebApp) {
+                console.log('Creating mock Telegram WebApp for testing');
+                window.Telegram = {
+                    WebApp: {
+                        initDataUnsafe: {
+                            user: {
+                                id: 123456789,
+                                first_name: 'Test',
+                                last_name: 'User',
+                                username: 'testuser'
+                            }
+                        },
+                        ready: () => { },
+                        expand: () => { },
+                        showAlert: (msg) => alert(msg),
+                        MainButton: { hide: () => { }, show: () => { } },
+                        BackButton: { hide: () => { }, show: () => { }, onClick: () => { } }
+                    }
+                };
+            }
             console.log('Attempting to connect to WebSocket...');
             const SERVER_URL = 'six-063o.onrender.com';
             const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
             const protocol = isLocalhost ? 'ws:' : 'wss:';
             const wsUrl = isLocalhost ? 'ws://localhost:10000/ws' : `${protocol}//${SERVER_URL}/ws`;
-            
+
             console.log('WebSocket URL:', wsUrl);
             ws = new WebSocket(wsUrl);
-            
+
             ws.onopen = () => {
                 console.log('WebSocket connected successfully');
                 isConnectionActive = true;
                 connectionAttempts = 0;
+
+                // Добавляем проверку и логирование
+                console.log('Telegram WebApp data:', Telegram.WebApp.initDataUnsafe);
+                console.log('Telegram WebApp user:', Telegram.WebApp.initDataUnsafe.user);
+
                 const user = Telegram.WebApp.initDataUnsafe.user;
                 if (user && user.id) {
                     console.log('Syncing user:', user);
                     syncUser(user);
                 } else {
-                    console.log('No telegram user found, showing loading screen');
-                    showLoadingScreen();
+                    console.log('No telegram user found');
+                    // Для тестирования - создаем тестового пользователя
+                    if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+                        console.log('Development mode - creating test user');
+                        const testUser = {
+                            id: 123456789,
+                            first_name: 'Test',
+                            last_name: 'User',
+                            username: 'testuser',
+                            photo_url: ''
+                        };
+                        syncUser(testUser);
+                    } else {
+                        // В продакшене показываем ошибку
+                        showLoadingScreen('Ошибка: приложение должно быть запущено через Telegram');
+                    }
                 }
             };
-            
+
             ws.onmessage = handleMessage;
-            
+
             ws.onerror = (error) => {
                 console.error('WebSocket error:', error);
                 isConnectionActive = false;
                 showLoadingScreen(t('connectionLost'));
             };
-            
+
             ws.onclose = (event) => {
                 console.log('WebSocket closed:', event.code, event.reason);
                 isConnectionActive = false;
@@ -1454,11 +1495,15 @@
         }
         function syncUser(telegramUser) {
             if (!ws || ws.readyState !== WebSocket.OPEN) {
+                console.log('WebSocket not ready, retrying sync in 1s...');
                 setTimeout(() => syncUser(telegramUser), 1000);
                 return;
             }
+
+            console.log('Sending sync_user message:', telegramUser);
+
             try {
-                ws.send(JSON.stringify({
+                const message = {
                     type: 'sync_user',
                     telegram_id: telegramUser.id,
                     username: telegramUser.username || '',
@@ -1466,9 +1511,22 @@
                     last_name: telegramUser.last_name || '',
                     photo_url: telegramUser.photo_url || '',
                     language: currentLanguage
-                }));
+                };
+
+                console.log('Sync message:', message);
+                ws.send(JSON.stringify(message));
+
+                // Таймаут на случай если сервер не ответит
+                setTimeout(() => {
+                    if (!isUserSynced) {
+                        console.error('User sync timeout');
+                        showLanguageSelection(); // Показываем выбор языка как fallback
+                    }
+                }, 5000);
+
             } catch (error) {
                 console.error('Error syncing user:', error);
+                showLanguageSelection(); // Показываем выбор языка как fallback
             }
         }
         function handleMessage(event) {
@@ -1486,8 +1544,8 @@
                         favorites: data.favorites || [],
                         hidden: data.hidden || [],
                         liked: data.liked || [],
-                        notification_settings: data.notification_settings || { 
-                            likes: true, system: true, account: true, 
+                        notification_settings: data.notification_settings || {
+                            likes: true, system: true, account: true,
                             new_posts: false, new_posts_categories: [], new_posts_tags: []
                         }
                     };
@@ -1499,13 +1557,13 @@
                         userData.username = telegramUser.username || '';
                         userData.photo_url = telegramUser.photo_url || '';
                     }
-                    
+
                     currentLanguage = data.language || 'ru';
                     console.log('User language:', currentLanguage);
                     updateInterface();
                     updateUserInterface();
                     updateNotificationSettings();
-                    
+
                     // Если язык уже установлен (не первый запуск)
                     if (data.language && data.language !== 'ru') {
                         console.log('Language already set, loading app...');
@@ -1641,26 +1699,26 @@
                 }
                 categories = await response.json();
                 console.log('Categories loaded:', categories);
-                
+
                 const container = document.getElementById('categories');
                 container.innerHTML = categories.map((cat, index) => `
             <div class="category ${index === 0 ? 'active' : ''}" onclick="selectCategory('${cat[currentLanguage]}')">${cat[currentLanguage]}</div>
         `).join('');
                 currentCategory = categories[0][currentLanguage];
                 console.log('Current category set to:', currentCategory);
-                
+
                 // Загружаем категории для уведомлений
                 loadNotificationCategories();
-                
+
                 return Promise.resolve();
-                
+
             } catch (error) {
                 console.error('Ошибка загрузки категорий:', error);
                 // Создаем базовые категории если не удалось загрузить файл
                 categories = [
-                    {"ru": "Все", "en": "All"},
-                    {"ru": "Дружба", "en": "Friendship"},
-                    {"ru": "События", "en": "Events"}
+                    { "ru": "Все", "en": "All" },
+                    { "ru": "Дружба", "en": "Friendship" },
+                    { "ru": "События", "en": "Events" }
                 ];
                 const container = document.getElementById('categories');
                 container.innerHTML = categories.map((cat, index) => `
@@ -1672,17 +1730,17 @@
                 return Promise.resolve();
             }
         }
-        
+
         function loadNotificationCategories() {
             const container = document.getElementById('notificationCategories');
             if (!container || !categories) return;
-            
+
             container.innerHTML = categories.slice(1).map(cat => `
                 <div class="tag-item ${notificationSettings.new_posts_categories.includes(cat[currentLanguage]) ? 'active' : ''}" 
                      onclick="toggleNotificationCategory('${cat[currentLanguage]}')">${cat[currentLanguage]}</div>
             `).join('');
         }
-        
+
         function toggleNotificationCategory(category) {
             const index = notificationSettings.new_posts_categories.indexOf(category);
             if (index > -1) {
@@ -1690,17 +1748,17 @@
             } else {
                 notificationSettings.new_posts_categories.push(category);
             }
-            
+
             loadNotificationCategories();
             updateNotificationSettingsOnServer();
         }
-        
+
         function selectCategory(category) {
             console.log('Selecting category:', category);
             if (currentCategory === category) {
                 console.log('Category already selected, loading posts anyway');
             }
-            
+
             currentCategory = category;
             document.querySelectorAll('.category').forEach(el => {
                 el.classList.toggle('active', el.textContent === category);
@@ -1712,7 +1770,7 @@
             console.log('Loading posts for category:', category);
             loadPosts();
         }
-        
+
         async function loadCreateCategories() {
             const response = await fetch('categories.json');
             const cats = await response.json();
@@ -1721,7 +1779,7 @@
                 <div class="category-item ${cat[currentLanguage] === createPostCategory ? 'active' : ''}" onclick="selectCreateCategory('${cat[currentLanguage]}')">${cat[currentLanguage]}</div>
             `).join('');
         }
-        
+
         function selectCreateCategory(category) {
             createPostCategory = category;
             document.querySelectorAll('#createCategories .category-item').forEach(el => {
@@ -1731,7 +1789,7 @@
                 }
             });
         }
-        
+
         // Filters
         async function showFilterModal(filterType) {
             const filterData = {
@@ -1919,34 +1977,34 @@
         // Posts
         function loadPosts(append = false) {
             console.log('loadPosts called:', { isUserSynced, telegramId, currentCategory, wsReady: ws?.readyState === WebSocket.OPEN });
-            
+
             if (!isUserSynced || !telegramId) {
                 console.log('User not synced or no telegramId, skipping posts load');
                 return;
             }
-            
+
             if (!ws || ws.readyState !== WebSocket.OPEN) {
                 console.log('WebSocket not ready, retrying in 1s...');
                 setTimeout(() => loadPosts(append), 1000);
                 return;
             }
-            
+
             if (!currentCategory) {
                 console.log('No current category, skipping posts load');
                 return;
             }
-            
+
             if (isLoading) {
                 console.log('Already loading posts, skipping...');
                 return;
             }
-            
+
             isLoading = true;
             const searchValue = document.getElementById('search')?.value || '';
             const categoryToSend = currentCategory === categories[0][currentLanguage] ? null : currentCategory;
-            
+
             console.log('Sending get_posts request:', { categoryToSend, page: currentPage });
-            
+
             try {
                 ws.send(JSON.stringify({
                     type: 'get_posts',
@@ -2149,32 +2207,32 @@
         function showNotificationsModal() {
             showModal('notificationsModal');
         }
-        
+
         function toggleNotification(type) {
             notificationSettings[type] = !notificationSettings[type];
             updateNotificationSettingsOnServer();
         }
-        
+
         function toggleNewPostsNotifications() {
             notificationSettings.new_posts = !notificationSettings.new_posts;
             const filtersDiv = document.getElementById('newPostsFilters');
             filtersDiv.style.display = notificationSettings.new_posts ? 'block' : 'none';
             updateNotificationSettingsOnServer();
         }
-        
+
         function updateNotificationSettings() {
             document.getElementById('likesNotif').checked = notificationSettings.likes;
             document.getElementById('systemNotif').checked = notificationSettings.system;
             document.getElementById('accountNotif').checked = notificationSettings.account;
             document.getElementById('newPostsNotif').checked = notificationSettings.new_posts;
-            
+
             const filtersDiv = document.getElementById('newPostsFilters');
             filtersDiv.style.display = notificationSettings.new_posts ? 'block' : 'none';
-            
+
             loadNotificationCategories();
             updateNotificationTags();
         }
-        
+
         function updateNotificationSettingsOnServer() {
             if (ws && ws.readyState === WebSocket.OPEN) {
                 ws.send(JSON.stringify({
@@ -2184,7 +2242,7 @@
                 }));
             }
         }
-        
+
         async function showNotificationTagModal(tagType) {
             const tagData = {
                 city: await getCities(),
@@ -2192,11 +2250,11 @@
                 age: [t('filters.age1'), t('filters.age2'), t('filters.age3'), t('filters.age4')],
                 date: [t('filters.today'), t('filters.tomorrow'), t('filters.thisWeek'), t('filters.thisMonth')]
             };
-            
+
             const title = document.getElementById('notificationTagTitle');
             const options = document.getElementById('notificationTagOptions');
             title.textContent = t(`filters.${tagType}Title`);
-            
+
             options.innerHTML = tagData[tagType].map(option => `
                 <button onclick="selectNotificationTagOption('${tagType}', '${option}', event)" 
                         class="${notificationTagSelections[tagType].includes(option) ? 'active' : ''}"
@@ -2204,10 +2262,10 @@
                     ${option}
                 </button>
             `).join('');
-            
+
             showModal('notificationTagModal');
         }
-        
+
         function selectNotificationTagOption(tagType, option, event) {
             const index = notificationTagSelections[tagType].indexOf(option);
             if (index > -1) {
@@ -2215,13 +2273,13 @@
             } else {
                 notificationTagSelections[tagType].push(option);
             }
-            
+
             const clickedButton = event.target.closest('button');
             if (clickedButton) {
                 const isActive = notificationTagSelections[tagType].includes(option);
                 clickedButton.classList.toggle('active', isActive);
             }
-            
+
             // Обновляем настройки уведомлений
             notificationSettings.new_posts_tags = [];
             Object.entries(notificationTagSelections).forEach(([type, values]) => {
@@ -2229,26 +2287,26 @@
                     notificationSettings.new_posts_tags.push(`${type}:${value}`);
                 });
             });
-            
+
             updateNotificationTags();
             updateNotificationSettingsOnServer();
         }
-        
+
         function updateNotificationTags() {
             const container = document.getElementById('notificationTags');
             if (!container) return;
-            
+
             if (notificationSettings.new_posts_tags.length === 0) {
                 container.innerHTML = `<div style="color: #999; font-style: italic;">Теги не выбраны</div>`;
                 return;
             }
-            
+
             container.innerHTML = notificationSettings.new_posts_tags.map(tag => {
                 const [type, value] = tag.split(':');
                 return `<div class="tag-item">${value}</div>`;
             }).join('');
         }
-        
+
         // Create/Edit Posts
         function showCreatePostModal() {
             isEditMode = false;
@@ -2382,7 +2440,7 @@
             } catch (error) {
                 console.error('Error loading cities:', error);
                 // Fallback cities
-                const fallbackCities = currentLanguage === 'ru' 
+                const fallbackCities = currentLanguage === 'ru'
                     ? ["Москва", "Санкт-Петербург", "Новосибирск", "Екатеринбург", "Казань"]
                     : ["Moscow", "Saint Petersburg", "Novosibirsk", "Yekaterinburg", "Kazan"];
                 console.log('Using fallback cities');
@@ -2392,7 +2450,7 @@
         // Initialization
         Telegram.WebApp.ready();
         Telegram.WebApp.expand();
-        
+
         // Добавляем таймаут для подключения
         setTimeout(() => {
             if (!isConnectionActive && !isUserSynced) {
@@ -2441,20 +2499,20 @@
 </body>
 
 </html>Loaded', () => {
-            const searchInput = document.getElementById('search');
-            if (searchInput) {
-                searchInput.addEventListener('input', () => {
-                    clearTimeout(searchTimeout);
-                    searchTimeout = setTimeout(() => {
-                        currentPage = 1;
-                        loadPosts();
-                    }, 500);
-                });
-                document.addEventListener('click', (e) => {
-                    if (e.target !== searchInput && !searchInput.contains(e.target)) {
-                        searchInput.blur();
-                    }
-                });
-            }
-        });
-        document.addEventListener('DOMContent
+const searchInput = document.getElementById('search');
+if (searchInput) {
+searchInput.addEventListener('input', () => {
+clearTimeout(searchTimeout);
+searchTimeout = setTimeout(() => {
+currentPage = 1;
+loadPosts();
+}, 500);
+});
+document.addEventListener('click', (e) => {
+if (e.target !== searchInput && !searchInput.contains(e.target)) {
+searchInput.blur();
+}
+});
+}
+});
+document.addEventListener('DOMContent
