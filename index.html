@@ -434,6 +434,30 @@
             background: #333;
         }
 
+        #tagModal {
+            display: none;
+            position: fixed;
+            left: 50%;
+            bottom: 0;
+            width: 100%;
+            max-width: none;
+            max-height: 80vh;
+            overflow-y: auto;
+            background: #fff;
+            border-radius: 20px 20px 0 0;
+            padding: 20px;
+            box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.2);
+            z-index: 1000;
+            transform: translate(-50%, 100%);
+            opacity: 0;
+            transition: transform 0.3s ease, opacity 0.3s ease;
+        }
+
+        #tagModal.visible {
+            transform: translate(-50%, 0);
+            opacity: 1;
+        }
+
         .modal {
             display: none;
             position: fixed;
@@ -1154,7 +1178,7 @@
             <button class="create-post-button" onclick="createPost()" id="createPostButton">Создать объявление</button>
         </div>
     </div>
-    <div class="modal modal-fullscreen" id="tagModal">
+    <div id="tagModal">
         <div class="modal-header">
             <h3 id="tagTitle">Теги</h3>
             <button onclick="hideModal('tagModal')">✕</button>
