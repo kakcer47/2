@@ -437,34 +437,34 @@
         .modal {
             display: none;
             position: fixed;
-            top: 0;
-            bottom: 0;
-            left: 0;
-            width: 100%;
-            background: #fff;
-            border-top-left-radius: 20px;
-            border-top-right-radius: 20px;
-            padding: 20px;
-            box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.2);
-            z-index: 1000;
+            left: 50%;
+            width: 90%;
+            max-width: 400px;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            max-height: 80vh;
+            height: auto;
             overflow-y: auto;
-            transform: translateY(100%);
-            transition: transform 0.3s ease;
+            background: #fff;
+            border-radius: 20px;
+            padding: 20px;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+            z-index: 1000;
+            transition: transform 0.3s ease, opacity 0.3s ease;
+            opacity: 0;
         }
 
         .modal.visible {
-            transform: translateY(0);
-        }
-
-        .modal-auto-height {
-            height: auto;
-            top: auto;
-            min-height: 200px;
-            max-height: 70vh;
+            opacity: 1;
+            transform: translate(-50%, -50%) scale(1);
         }
 
         .modal-fullscreen {
+            width: 100%;
             height: 100vh;
+            left: 0;
+            top: 0;
+            transform: none;
         }
 
         .modal-header {
@@ -472,7 +472,6 @@
             justify-content: space-between;
             align-items: center;
             margin-bottom: 16px;
-            padding-bottom: 12px;
             border-bottom: 1px solid #f0f0f0;
         }
 
@@ -484,20 +483,16 @@
         }
 
         .modal-header button {
-            background: #f5f5f5;
-            border: none;
-            font-size: 18px;
-            cursor: pointer;
-            color: #666;
-            width: 40px;
-            height: 40px;
-            border-radius: 12px;
+            margin: 0;
+            width: 36px;
+            height: 36px;
+            padding: 0;
+            border-radius: 8px;
+            font-size: 20px;
             display: flex;
             align-items: center;
             justify-content: center;
-            margin-left: 12px;
-            transition: all 0.3s ease;
-            font-weight: bold;
+            transition: background 0.3s ease, color 0.3s ease;
         }
 
         .modal-header button:hover {
@@ -1450,7 +1445,7 @@
                         return;
                     }
                 }
-                
+
                 if (!user) {
                     showLanguageSelection();
                 }
@@ -2555,10 +2550,19 @@
                 alert('WebSocket not connected');
             }
         }
+        document.addEventListener('click', function (e) {
+            const input = document.getElementById('search');
+            if (!input) return;
+            // если клик не внутри input
+            if (e.target !== input && !input.contains(e.target)) {
+                input.blur();
+            }
+        });
     </script>
     <button class="scroll-to-top" id="scrollToTop" onclick="scrollToTop()" style="display: none;">
         ▲
     </button>
+
 </body>
 
 </html>
