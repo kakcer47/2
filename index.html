@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html lang="ru">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport"
@@ -14,7 +13,6 @@
             padding: 0;
             box-sizing: border-box;
         }
-
         body {
             font-family: 'Rubik', sans-serif;
             background: #fcfcfc;
@@ -22,7 +20,6 @@
             position: relative;
             overflow-x: hidden;
         }
-
         body::before {
             content: '';
             position: fixed;
@@ -35,7 +32,6 @@
             opacity: 0.2;
             z-index: -1;
         }
-
         .loading-screen {
             position: fixed;
             top: 0;
@@ -49,7 +45,6 @@
             align-items: center;
             z-index: 9999;
         }
-
         .spinner {
             width: 50px;
             height: 50px;
@@ -58,23 +53,19 @@
             border-radius: 50%;
             animation: spin 1s linear infinite;
         }
-
         @keyframes spin {
             0% {
                 transform: rotate(0deg);
             }
-
             100% {
                 transform: rotate(360deg);
             }
         }
-
         .loading-text {
             color: #fff;
             margin-top: 20px;
             font-size: 16px;
         }
-
         .scroll-to-top {
             position: fixed;
             bottom: 90px;
@@ -92,12 +83,10 @@
             z-index: 99;
             transition: all 0.3s ease;
         }
-
         .scroll-to-top:hover {
             background: #333;
             transform: translateY(-2px);
         }
-
         .language-selection {
             position: fixed;
             top: 0;
@@ -111,7 +100,6 @@
             align-items: center;
             z-index: 9998;
         }
-
         .language-title {
             color: #fff;
             font-size: 24px;
@@ -119,14 +107,12 @@
             margin-bottom: 40px;
             text-align: center;
         }
-
         .language-buttons {
             display: flex;
             flex-direction: column;
             gap: 16px;
             width: 200px;
         }
-
         .language-btn {
             padding: 16px 24px;
             background: #fff;
@@ -139,23 +125,19 @@
             cursor: pointer;
             transition: all 0.3s ease;
         }
-
         .language-btn:hover {
             background: #f0f0f0;
             transform: translateY(-2px);
         }
-
         .container {
             max-width: 100%;
             padding: 16px 16px 100px 16px;
             box-sizing: border-box;
             display: none;
         }
-
         .container.visible {
             display: block;
         }
-
         .categories {
             display: flex;
             overflow-x: auto;
@@ -166,11 +148,9 @@
             border-bottom: 1px solid #f0f0f0;
             margin-bottom: 16px;
         }
-
         .categories::-webkit-scrollbar {
             display: none;
         }
-
         .category {
             flex: 0 0 auto;
             padding: 12px 20px;
@@ -187,7 +167,6 @@
             position: relative;
             border-radius: 0;
         }
-
         .category::after {
             content: '';
             position: absolute;
@@ -200,20 +179,16 @@
             border-radius: 50px;
             transition: width 0.3s ease;
         }
-
         .category.active {
             color: #1d1c1b;
             font-weight: 700;
         }
-
         .category.active::after {
             width: 100%;
         }
-
         .filters-container {
             margin-bottom: 16px;
         }
-
         .filters {
             display: flex;
             gap: 8px;
@@ -222,11 +197,9 @@
             scrollbar-width: none;
             -ms-overflow-style: none;
         }
-
         .filters::-webkit-scrollbar {
             display: none;
         }
-
         .filter-btn {
             flex: 0 0 auto;
             display: flex;
@@ -240,24 +213,19 @@
             cursor: pointer;
             transition: all 0.3s ease;
         }
-
         .filter-btn:hover {
             background: #ebebeb;
         }
-
         .filter-btn.active {
             background: #1d1c1b;
             border-color: #1d1c1b;
         }
-
         .filter-btn.active img {
             filter: invert(100%);
         }
-
         .feed {
             margin-top: 16px;
         }
-
         .post {
             background: #fff;
             border-radius: 16px;
@@ -267,12 +235,10 @@
             border: 1px solid #f0f0f0;
             transition: transform 0.2s ease, box-shadow 0.2s ease;
         }
-
         .post:hover {
             transform: translateY(-2px);
             box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
         }
-
         .post-description {
             margin-bottom: 12px;
             font-size: 16px;
@@ -280,7 +246,6 @@
             word-wrap: break-word;
             overflow-wrap: break-word;
         }
-
         .post-creator {
             display: flex;
             align-items: center;
@@ -288,38 +253,32 @@
             padding: 8px 0;
             border-top: 1px solid #f5f5f5;
         }
-
         .post-creator-info {
             display: flex;
             align-items: center;
             gap: 12px;
             flex: 1;
         }
-
         .post-creator img {
             width: 36px;
             height: 36px;
             border-radius: 50%;
             object-fit: cover;
         }
-
         .post-creator a {
             color: #1d1c1b;
             text-decoration: none;
             font-weight: 500;
             transition: color 0.3s ease;
         }
-
         .post-creator a:hover {
             color: #007aff;
         }
-
         .post-actions {
             display: flex;
             align-items: center;
             gap: 8px;
         }
-
         .post-actions .like {
             display: flex;
             align-items: center;
@@ -330,25 +289,20 @@
             transition: all 0.3s ease;
             font-size: 14px;
         }
-
         .post-actions .like:hover {
             background: #f5f5f5;
         }
-
         .post-actions .like.liked svg {
             filter: none;
         }
-
         .post-actions .like img {
             width: 20px;
             height: 20px;
             vertical-align: middle;
         }
-
         .post-actions .like.liked svg {
             filter: none;
         }
-
         .post-actions .menu {
             cursor: pointer;
             padding: 6px;
@@ -358,18 +312,15 @@
             align-items: center;
             justify-content: center;
         }
-
         .post-actions .menu img {
             width: 16px;
             height: 16px;
             filter: grayscale(100%);
             transition: filter 0.3s ease;
         }
-
         .post-actions .menu:hover img {
             filter: none;
         }
-
         .bottom-menu {
             position: fixed;
             bottom: 10px;
@@ -381,13 +332,11 @@
             box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.1);
             z-index: 100;
         }
-
         .bottom-menu-content {
             display: flex;
             gap: 12px;
             max-width: 100%;
         }
-
         .bottom-menu input {
             flex: 1;
             padding: 12px;
@@ -398,11 +347,9 @@
             outline: none;
             transition: border-color 0.3s ease;
         }
-
         .bottom-menu input#search:focus {
             border-color: #1d1c1b;
         }
-
         .bottom-menu button {
             padding: 12px 20px;
             background: #1d1c1b;
@@ -416,14 +363,13 @@
             transition: background 0.3s ease;
             white-space: nowrap;
         }
-
         .bottom-menu button:hover {
             background: #333;
         }
-
         .modal {
             display: none;
             position: fixed;
+            top: 0;
             bottom: 0;
             left: 0;
             width: 100%;
@@ -445,12 +391,12 @@
 
         .modal-fullscreen {
             height: 100vh;
+            /* Полноэкранная высота */
         }
 
         .modal.visible {
             transform: translateY(0);
         }
-
         .modal-header {
             display: flex;
             justify-content: space-between;
@@ -459,36 +405,25 @@
             padding-bottom: 12px;
             border-bottom: 1px solid #f0f0f0;
         }
-
         .modal-header h3 {
             margin: 0;
             font-size: 18px;
             font-weight: 600;
-            flex-grow: 1;
-            max-width: calc(100% - 40px);
         }
-
         .modal-header button {
             background: none;
             border: none;
-            font-size: 20px;
+            font-size: 24px;
             cursor: pointer;
             color: #666;
-            width: 24px;
-            height: 30px;
-            line-height: 30px;
+            width: 30px;
             text-align: center;
-            padding: 0;
-            flex-shrink: 0;
-            border-radius: 4px;
         }
-
         .modal-content {
             display: flex;
             flex-direction: column;
             gap: 8px;
         }
-
         .modal button {
             display: block;
             width: 100%;
@@ -502,20 +437,16 @@
             transition: background 0.3s ease;
             text-align: left;
         }
-
         .modal button:hover {
             background: #ebebeb;
         }
-
         .modal button.active {
             background: #1d1c1b;
             color: #fff;
         }
-
         .city-search {
             margin-bottom: 16px;
         }
-
         .city-search input {
             width: 100%;
             padding: 12px;
@@ -525,11 +456,9 @@
             font-size: 16px;
             outline: none;
         }
-
         .city-search input:focus {
             border-color: #1d1c1b;
         }
-
         .create-post-modal {
             display: none;
             position: fixed;
@@ -543,7 +472,6 @@
             overflow-y: auto;
             z-index: 1001;
         }
-
         .create-post-header {
             display: flex;
             align-items: center;
@@ -552,39 +480,33 @@
             padding-bottom: 16px;
             border-bottom: 1px solid #f0f0f0;
         }
-
         .create-post-header img {
             width: 44px;
             height: 44px;
             border-radius: 50%;
             object-fit: cover;
         }
-
         .user-info {
             flex: 1;
             display: flex;
             flex-direction: column;
             gap: 2px;
         }
-
         .user-info .name {
             font-weight: 600;
             font-size: 18px;
             color: #1d1c1b;
         }
-
         .user-info .post-limit {
             font-size: 14px;
             color: #666;
             font-weight: 400;
         }
-
         .create-post-content {
             flex: 1;
             overflow-y: auto;
             padding-bottom: 80px;
         }
-
         .create-post-content textarea {
             width: 100%;
             min-height: 120px;
@@ -599,11 +521,9 @@
             transition: border-color 0.3s ease;
             box-sizing: border-box;
         }
-
         .create-post-content textarea:focus {
             border-color: #1d1c1b;
         }
-
         .character-counter {
             text-align: right;
             font-size: 12px;
@@ -611,19 +531,16 @@
             margin-top: -15px;
             margin-bottom: 20px;
         }
-
         .create-categories,
         .create-tags {
             margin-bottom: 20px;
         }
-
         .section-label {
             font-size: 16px;
             font-weight: 600;
             color: #1d1c1b;
             margin-bottom: 12px;
         }
-
         .categories-scroll,
         .tags-scroll {
             display: flex;
@@ -634,12 +551,10 @@
             -ms-overflow-style: none;
             gap: 8px;
         }
-
         .categories-scroll::-webkit-scrollbar,
         .tags-scroll::-webkit-scrollbar {
             display: none;
         }
-
         .category-item,
         .tag-item {
             flex: 0 0 auto;
@@ -656,26 +571,22 @@
             color: #1d1c1b;
             white-space: nowrap;
         }
-
         .category-item:hover,
         .tag-item:hover {
             background: #ebebeb;
         }
-
         .category-item.active,
         .tag-item.active {
             background: #1d1c1b;
             color: #fff;
             border-color: #1d1c1b;
         }
-
         .tag-groups {
             display: flex;
             flex-wrap: wrap;
             gap: 8px;
             margin-bottom: 16px;
         }
-
         .tag-group-btn {
             flex: 0 0 auto;
             display: flex;
@@ -689,26 +600,21 @@
             cursor: pointer;
             transition: all 0.3s ease;
         }
-
         .tag-group-btn:hover {
             background: #ebebeb;
         }
-
         .tag-group-btn.active {
             background: #1d1c1b;
             border-color: #1d1c1b;
         }
-
         .tag-group-btn.active img {
             filter: invert(100%);
         }
-
         .selected-tags {
             display: flex;
             flex-wrap: wrap;
             gap: 8px;
         }
-
         .selected-tags .tag {
             padding: 6px 12px;
             background: #e8f4fd;
@@ -717,7 +623,6 @@
             font-size: 12px;
             color: #1a73e8;
         }
-
         .create-post-footer {
             position: fixed;
             bottom: 0;
@@ -728,7 +633,6 @@
             border-top: 1px solid #f0f0f0;
             box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.1);
         }
-
         .create-post-button {
             width: 100%;
             padding: 16px;
@@ -742,110 +646,88 @@
             font-weight: 600;
             transition: background 0.3s ease;
         }
-
         .create-post-button:hover {
             background: #333;
         }
-
         .create-post-button:disabled {
             background: #ccc;
             cursor: not-allowed;
         }
-
         .no-posts {
             text-align: center;
             padding: 40px 20px;
             color: #666;
             font-size: 16px;
         }
-
         @media (max-width: 480px) {
             .container {
                 padding: 12px 12px 100px 12px;
             }
-
             .post {
                 padding: 12px;
                 margin-bottom: 12px;
             }
-
             .bottom-menu {
                 padding: 8px;
             }
-
             .bottom-menu-content {
                 gap: 8px;
             }
-
             .filters {
                 gap: 6px;
             }
-
             .filter-btn {
                 width: 32px;
                 height: 32px;
             }
-
             .create-post-header {
                 padding: 16px 16px 12px 16px;
                 margin-bottom: 16px;
             }
-
             .create-post-header img {
                 width: 36px;
                 height: 36px;
             }
-
             .user-info .name {
                 font-size: 16px;
             }
-
             .user-info .post-limit {
                 font-size: 12px;
             }
-
             .create-post-content {
                 padding: 0 16px;
                 padding-bottom: 90px;
             }
-
             .create-post-content textarea {
                 min-height: 100px;
                 padding: 12px;
                 font-size: 16px;
             }
-
             .category-item,
             .tag-item {
                 padding: 6px 12px;
                 font-size: 13px;
             }
-
             .selected-tags .tag {
                 padding: 4px 8px;
                 font-size: 11px;
             }
-
             .create-post-footer {
                 padding: 12px 16px;
             }
-
             .create-post-button {
                 padding: 14px;
                 font-size: 15px;
             }
-
             .section-label {
                 font-size: 15px;
                 margin-bottom: 10px;
             }
         }
-
         @supports (-webkit-touch-callout: none) {
             .create-post-modal {
                 -webkit-overflow-scrolling: touch;
             }
-
             .create-post-content textarea {
                 -webkit-appearance: none;
                 border-radius: 12px;
@@ -853,13 +735,11 @@
         }
     </style>
 </head>
-
 <body>
     <div class="loading-screen" id="loadingScreen">
         <div class="spinner"></div>
         <div class="loading-text" id="loadingText">ϡ</div>
     </div>
-
     <div class="language-selection" id="languageSelection">
         <div class="language-title">Language</div>
         <div class="language-buttons">
@@ -867,10 +747,8 @@
             <button class="language-btn" onclick="selectLanguage('en')">English</button>
         </div>
     </div>
-
     <div class="container" id="mainContainer">
         <div class="categories" id="categories"></div>
-
         <div class="filters-container">
             <div class="filters" id="filters">
                 <button class="filter-btn" id="cityFilter" onclick="showFilterModal('city')">
@@ -893,28 +771,22 @@
                 </button>
             </div>
         </div>
-
         <div class="feed" id="feed"></div>
     </div>
-
     <div class="bottom-menu" id="bottomMenu" style="display: none;">
         <div class="bottom-menu-content">
             <input type="text" id="search" placeholder="Поиск объявлений...">
             <button onclick="showCreatePostModal()" id="createButton">Создать</button>
         </div>
     </div>
-
     <div class="modal" id="postMenu"></div>
-
+    <div class="modal modal-fullscreen" id="filterModal">
         <div class="modal-header">
-            <div class="modal-header-title">
-                <h3 id="filterTitle">Фильтр</h3>
-            </div>
+            <h3 id="filterTitle">Фильтр</h3>
             <button onclick="hideModal('filterModal')">✕</button>
         </div>
         <div class="modal-content" id="filterOptions"></div>
     </div>
-
     <div class="modal" id="notificationsModal">
         <div class="modal-header">
             <h3>Notifications</h3>
@@ -926,7 +798,6 @@
             <label><input type="checkbox" checked onchange="toggleNotification('account')"> Account Status</label>
         </div>
     </div>
-
     <div class="create-post-modal" id="createPostModal">
         <div class="create-post-header">
             <img id="userAvatar" src="https://via.placeholder.com/40" alt="Avatar">
@@ -940,12 +811,10 @@
             <div class="character-counter">
                 <span id="characterCount">0</span>/450
             </div>
-
             <div class="create-categories">
                 <div class="section-label" id="categoryLabel">Категория:</div>
                 <div class="categories-scroll" id="createCategories"></div>
             </div>
-
             <div class="create-tags">
                 <div class="section-label" id="tagsLabel">Теги:</div>
                 <div class="tag-groups" id="tagGroups">
@@ -965,12 +834,10 @@
                 <div class="selected-tags" id="selectedTags"></div>
             </div>
         </div>
-
         <div class="create-post-footer">
             <button class="create-post-button" onclick="createPost()" id="createPostButton">Создать объявление</button>
         </div>
     </div>
-
     <div class="modal modal-fullscreen" id="tagModal">
         <div class="modal-header">
             <h3 id="tagTitle">Теги</h3>
@@ -978,7 +845,6 @@
         </div>
         <div class="modal-content" id="tagOptions"></div>
     </div>
-
     <script>
         // Translations
         const translations = {
@@ -1137,7 +1003,6 @@
                 }
             }
         };
-
         // Global variables
         let ws = null;
         let telegramId = null;
@@ -1160,7 +1025,6 @@
         let cities = { ru: [], en: [] };
         let categories = [];
         let notificationSettings = { likes: true, system: true, account: true };
-
         // Utilities
         function t(key) {
             const keys = key.split('.');
@@ -1171,19 +1035,16 @@
             }
             return value || key;
         }
-
         function escapeHtml(text) {
             const div = document.createElement('div');
             div.textContent = text;
             return div.innerHTML;
         }
-
         function showModal(modalId) {
             const modal = document.getElementById(modalId);
             modal.style.display = 'block';
             setTimeout(() => modal.classList.add('visible'), 10);
         }
-
         function hideModal(modalId) {
             const modal = document.getElementById(modalId);
             modal.classList.remove('visible');
@@ -1194,13 +1055,11 @@
                 }
             }, 300);
         }
-
         // Language and Interface
         function selectLanguage(lang) {
             currentLanguage = lang;
             document.getElementById('languageSelection').style.display = 'none';
             updateInterface();
-
             if (ws && ws.readyState === WebSocket.OPEN && telegramId) {
                 ws.send(JSON.stringify({
                     type: 'update_language',
@@ -1208,13 +1067,11 @@
                     language: lang
                 }));
             }
-
             loadCategories();
             hideLoadingScreen();
             currentPage = 1;
             loadPosts();
         }
-
         function updateInterface() {
             document.getElementById('loadingText').textContent = t('loading');
             document.getElementById('search').placeholder = t('searchPlaceholder');
@@ -1224,63 +1081,51 @@
             document.getElementById('tagsLabel').textContent = t('tagsLabel');
             updatePostLimit();
         }
-
         function updatePostLimit() {
             const limitElement = document.getElementById('postLimit');
             if (limitElement && userData && userData.limits) {
                 limitElement.textContent = `${userData.limits.used}/${userData.limits.total}${t('postLimitText')}`;
             }
         }
-
         function updateUserInterface() {
             const avatar = document.getElementById('userAvatar');
             const userName = document.getElementById('userName');
-
             if (avatar && userData && userData.photo_url) {
                 avatar.src = userData.photo_url;
             }
             if (userName && userData) {
                 userName.textContent = `${userData.first_name || ''} ${userData.last_name || ''}`.trim();
             }
-
             updatePostLimit();
         }
-
         function showLoadingScreen(text = null) {
             document.getElementById('loadingScreen').style.display = 'flex';
             document.getElementById('languageSelection').style.display = 'none';
             document.getElementById('mainContainer').classList.remove('visible');
             document.getElementById('bottomMenu').style.display = 'none';
-
             if (text) {
                 document.getElementById('loadingText').textContent = text;
             }
         }
-
         function hideLoadingScreen() {
             document.getElementById('loadingScreen').style.display = 'none';
             document.getElementById('mainContainer').classList.add('visible');
             document.getElementById('bottomMenu').style.display = 'block';
         }
-
         function showLanguageSelection() {
             document.getElementById('loadingScreen').style.display = 'none';
             document.getElementById('languageSelection').style.display = 'flex';
         }
-
         // WebSocket
         function connectWebSocket() {
             const SERVER_URL = 'six-yevf.onrender.com';
             const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
             const protocol = isLocalhost ? 'ws:' : 'wss:';
             const wsUrl = isLocalhost ? 'ws://localhost:10000/ws' : `${protocol}//${SERVER_URL}/ws`;
-
             ws = new WebSocket(wsUrl);
-
             ws.onopen = () => {
                 isConnectionActive = true;
                 connectionAttempts = 0;
-
                 const user = Telegram.WebApp.initDataUnsafe.user;
                 if (user && user.id) {
                     syncUser(user);
@@ -1288,17 +1133,13 @@
                     showLoadingScreen();
                 }
             };
-
             ws.onmessage = handleMessage;
-
             ws.onerror = (error) => {
                 isConnectionActive = false;
                 showLoadingScreen(t('connectionLost'));
             };
-
             ws.onclose = (event) => {
                 isConnectionActive = false;
-
                 if (connectionAttempts < maxConnectionAttempts) {
                     connectionAttempts++;
                     showLoadingScreen(t('reconnecting'));
@@ -1312,13 +1153,11 @@
                 }
             };
         }
-
         function syncUser(telegramUser) {
             if (!ws || ws.readyState !== WebSocket.OPEN) {
                 setTimeout(() => syncUser(telegramUser), 1000);
                 return;
             }
-
             try {
                 ws.send(JSON.stringify({
                     type: 'sync_user',
@@ -1333,11 +1172,9 @@
                 console.error('Error syncing user:', error);
             }
         }
-
         function handleMessage(event) {
             try {
                 const data = JSON.parse(event.data);
-
                 if (data.type === 'user_synced') {
                     telegramId = data.telegram_id;
                     isUserSynced = true;
@@ -1352,7 +1189,6 @@
                         notification_settings: data.notification_settings || { likes: true, system: true, account: true }
                     };
                     notificationSettings = userData.notification_settings;
-
                     const telegramUser = Telegram.WebApp.initDataUnsafe.user;
                     if (telegramUser) {
                         userData.first_name = telegramUser.first_name;
@@ -1360,7 +1196,6 @@
                         userData.username = telegramUser.username || '';
                         userData.photo_url = telegramUser.photo_url || '';
                     }
-
                     if (data.language && data.language !== 'ru') {
                         currentLanguage = data.language;
                         updateInterface();
@@ -1373,10 +1208,8 @@
                         updateUserInterface();
                         showLanguageSelection();
                     }
-
                 } else if (data.type === 'posts') {
                     renderPosts(data.posts, data.append);
-
                 } else if (data.type === 'post_updated') {
                     const postEl = document.querySelector(`.post[data-id="${data.post.id}"]`);
                     if (postEl) {
@@ -1387,12 +1220,10 @@
                             likeDiv.classList.toggle('liked', data.post.user_liked);
                         }
                     }
-
                 } else if (data.type === 'post_approved') {
                     if (data.post.is_edit && data.post.original_post_id) {
                         removePostFromFeed(data.post.original_post_id);
                     }
-
                     const creator = typeof data.post.creator === 'string' ? JSON.parse(data.post.creator) : data.post.creator;
                     if (creator.telegram_id === telegramId) {
                         if (ws && ws.readyState === WebSocket.OPEN) {
@@ -1402,40 +1233,31 @@
                             }));
                         }
                     }
-
                     if (currentCategory === categories[0][currentLanguage] || currentCategory === data.post.category) {
                         const feed = document.getElementById('feed');
                         const postHTML = createPostHTML(data.post);
                         feed.insertAdjacentHTML('afterbegin', postHTML);
                     }
-
                 } else if (data.type === 'post_deleted') {
                     removePostFromFeed(data.post_id);
-
                 } else if (data.type === 'banned') {
                     Telegram.WebApp.showAlert(t('messages.banned'));
                     Telegram.WebApp.close();
-
                 } else if (data.type === 'action_banned') {
                     Telegram.WebApp.showAlert(data.message);
-
                 } else if (data.type === 'limit_exceeded') {
                     Telegram.WebApp.showAlert(t('messages.limitExceeded'));
-
                 } else if (data.type === 'post_created') {
                     hideCreatePostModal();
                     const message = isEditMode ? t('messages.editCreated') : t('messages.postCreated');
                     Telegram.WebApp.showAlert(message);
-
                 } else if (data.type === 'user_limits_updated') {
                     if (data.telegram_id === telegramId && data.limits) {
                         userData.limits = data.limits;
                         updatePostLimit();
                     }
-
                 } else if (data.type === 'post_for_edit') {
                     openEditPostModal(data.post);
-
                 } else if (data.type === 'favorites_updated') {
                     if (userData) {
                         if (data.action === 'added') {
@@ -1449,7 +1271,6 @@
                     const message = data.action === 'added' ? t('messages.addedToFavorites') : t('messages.removedFromFavorites');
                     Telegram.WebApp.showAlert(message);
                     hideModal('postMenu');
-
                 } else if (data.type === 'hide_updated') {
                     if (userData) {
                         if (data.action === 'hidden') {
@@ -1468,11 +1289,9 @@
                     hideModal('postMenu');
                     currentPage = 1;
                     loadPosts();
-
                 } else if (data.type === 'report_sent') {
                     Telegram.WebApp.showAlert(t('messages.reportSent'));
                     hideModal('postMenu');
-
                 } else if (data.type === 'error') {
                     if (data.message === 'Вы уже отправляли жалобу на это объявление') {
                         Telegram.WebApp.showAlert(t('messages.alreadyReported'));
@@ -1482,12 +1301,10 @@
                         Telegram.WebApp.showAlert(data.message);
                     }
                 }
-
             } catch (error) {
                 console.error('Error parsing WebSocket message:', error, event.data);
             }
         }
-
         // Categories
         async function loadCategories() {
             const response = await fetch('categories.json');
@@ -1498,7 +1315,6 @@
             `).join('');
             currentCategory = categories[0][currentLanguage];
         }
-
         function selectCategory(category) {
             if (currentCategory === category) return;
             currentCategory = category;
@@ -1511,7 +1327,6 @@
             currentPage = 1;
             loadPosts();
         }
-
         async function loadCreateCategories() {
             const response = await fetch('categories.json');
             const cats = await response.json();
@@ -1520,7 +1335,6 @@
                 <div class="category-item ${cat[currentLanguage] === createPostCategory ? 'active' : ''}" onclick="selectCreateCategory('${cat[currentLanguage]}')">${cat[currentLanguage]}</div>
             `).join('');
         }
-
         function selectCreateCategory(category) {
             createPostCategory = category;
             document.querySelectorAll('#createCategories .category-item').forEach(el => {
@@ -1530,7 +1344,6 @@
                 }
             });
         }
-
         // Filters
         async function showFilterModal(filterType) {
             const filterData = {
@@ -1540,18 +1353,14 @@
                 date: [t('filters.allDates'), t('filters.today'), t('filters.tomorrow'), t('filters.thisWeek'), t('filters.thisMonth')],
                 sort: [t('filters.sortNew'), t('filters.sortOld'), t('filters.sortRating'), t('filters.sortMy'), t('filters.sortFavorites'), t('filters.sortHidden')]
             };
-
             const title = document.getElementById('filterTitle');
             const options = document.getElementById('filterOptions');
-
             title.textContent = t(`filters.${filterType}Title`);
-
             let content = filterType === 'city' ? `
                 <div class="city-search">
                     <input type="text" id="citySearchInput" placeholder="${t('messages.citySearchPlaceholder')}" oninput="filterCities()">
                 </div>
             ` : '';
-
             content += filterData[filterType].map(option => `
                 <button onclick="selectFilterOption('${filterType}', '${option}', event)"
                         class="${isFilterActive(filterType, option) ? 'active' : ''}"
@@ -1559,11 +1368,9 @@
                     ${option}
                 </button>
             `).join('');
-
             options.innerHTML = content;
             showModal('filterModal');
         }
-
         function isFilterActive(filterType, option) {
             if (filterType === 'sort') {
                 const sortMap = {};
@@ -1577,7 +1384,6 @@
             }
             return feedFilters[filterType].includes(option);
         }
-
         function selectFilterOption(filterType, option, event) {
             if (filterType === 'sort') {
                 const sortMap = {};
@@ -1602,7 +1408,6 @@
                     }
                 }
             }
-
             if (event) {
                 const clickedButton = event.target.closest('button');
                 if (clickedButton) {
@@ -1610,7 +1415,6 @@
                     clickedButton.classList.toggle('active', isActive);
                 }
             }
-
             updateFilterButtons();
             if (filterType === 'sort') {
                 hideModal('filterModal');
@@ -1618,7 +1422,6 @@
             currentPage = 1;
             loadPosts();
         }
-
         function updateFilterButtons() {
             Object.keys(feedFilters).forEach(filterType => {
                 const button = document.getElementById(`${filterType}Filter`);
@@ -1630,12 +1433,10 @@
                 }
             });
         }
-
         function filterCities() {
             const searchInput = document.getElementById('citySearchInput');
             const searchValue = searchInput.value.toLowerCase();
             const cityButtons = document.querySelectorAll('#filterOptions button[data-filter-city]');
-
             cityButtons.forEach(button => {
                 const cityName = button.getAttribute('data-filter-city').toLowerCase();
                 if (cityName.includes(searchValue) || cityName === t('filters.allCities').toLowerCase()) {
@@ -1645,7 +1446,6 @@
                 }
             });
         }
-
         // Tags
         async function showTagModal(tagType) {
             const tagData = {
@@ -1654,19 +1454,15 @@
                 age: [t('filters.age1'), t('filters.age2'), t('filters.age3'), t('filters.age4')],
                 date: [t('filters.today'), t('filters.tomorrow'), t('filters.thisWeek'), t('filters.thisMonth')]
             };
-
             const title = document.getElementById('tagTitle');
             const options = document.getElementById('tagOptions');
             const modal = document.getElementById('tagModal');
-
             title.textContent = t(`filters.${tagType}Title`);
-
             let content = tagType === 'city' ? `
                 <div class="city-search">
                     <input type="text" id="tagCitySearchInput" placeholder="${t('messages.citySearchPlaceholder')}" oninput="filterTagCities()">
                 </div>
             ` : '';
-
             content += tagData[tagType].map(option => `
                 <button onclick="selectTagOption('${tagType}', '${option}', event)" 
                         class="${tagSelections[tagType].includes(option) ? 'active' : ''}"
@@ -1674,12 +1470,10 @@
                     ${option}
                 </button>
             `).join('');
-
             options.innerHTML = content;
             modal.style.zIndex = '1002';
             showModal('tagModal');
         }
-
         function selectTagOption(tagType, option, event) {
             const index = tagSelections[tagType].indexOf(option);
             if (index > -1) {
@@ -1687,37 +1481,31 @@
             } else {
                 tagSelections[tagType].push(option);
             }
-
             const clickedButton = event.target.closest('button');
             if (clickedButton) {
                 const isActive = tagSelections[tagType].includes(option);
                 clickedButton.classList.toggle('active', isActive);
             }
-
             postTags = [];
             Object.entries(tagSelections).forEach(([type, values]) => {
                 values.forEach(value => {
                     postTags.push(`${type}:${value}`);
                 });
             });
-
             updateSelectedTags();
             updateTagButtons();
         }
-
         function updateSelectedTags() {
             const container = document.getElementById('selectedTags');
             if (postTags.length === 0) {
                 container.innerHTML = `<div style="color: #999; font-style: italic;">${currentLanguage === 'ru' ? 'Теги не выбраны' : 'No tags selected'}</div>`;
                 return;
             }
-
             container.innerHTML = postTags.map(tag => {
                 const [type, value] = tag.split(':');
                 return `<div class="tag">${value}</div>`;
             }).join('');
         }
-
         function updateTagButtons() {
             Object.keys(tagSelections).forEach(tagType => {
                 const button = document.querySelector(`[onclick="showTagModal('${tagType}')"]`);
@@ -1727,12 +1515,10 @@
                 }
             });
         }
-
         function filterTagCities() {
             const searchInput = document.getElementById('tagCitySearchInput');
             const searchValue = searchInput.value.toLowerCase();
             const cityButtons = document.querySelectorAll('#tagOptions button[data-tag-city]');
-
             cityButtons.forEach(button => {
                 const cityName = button.getAttribute('data-tag-city').toLowerCase();
                 if (cityName.includes(searchValue)) {
@@ -1742,7 +1528,6 @@
                 }
             });
         }
-
         // Posts
         function loadPosts(append = false) {
             if (!isUserSynced || !telegramId) return;
@@ -1751,12 +1536,9 @@
                 return;
             }
             if (!currentCategory) return;
-
             isLoading = true;
-
             const searchValue = document.getElementById('search')?.value || '';
             const categoryToSend = currentCategory === categories[0][currentLanguage] ? null : currentCategory;
-
             try {
                 ws.send(JSON.stringify({
                     type: 'get_posts',
@@ -1773,19 +1555,15 @@
                 isLoading = false;
             }
         }
-
         function renderPosts(posts, append = false) {
             const feed = document.getElementById('feed');
             if (!feed) return;
-
             if (!append) feed.innerHTML = '';
-
             if (posts.length === 0 && !append) {
                 feed.innerHTML = `<div class="no-posts">${t('noPosts')}</div>`;
                 isLoading = false;
                 return;
             }
-
             const postsHTML = posts.map(post => {
                 try {
                     return createPostHTML(post);
@@ -1794,20 +1572,16 @@
                     return '';
                 }
             }).join('');
-
             if (append) {
                 feed.insertAdjacentHTML('beforeend', postsHTML);
             } else {
                 feed.innerHTML = postsHTML;
             }
-
             isLoading = false;
             if (posts.length > 0) currentPage++;
         }
-
         function createPostHTML(post) {
             if (!post || !post.id) return '';
-
             let creator;
             try {
                 creator = typeof post.creator === 'string' ? JSON.parse(post.creator) : post.creator;
@@ -1819,20 +1593,16 @@
                     photo_url: 'https://via.placeholder.com/32'
                 };
             }
-
             const creatorName = `${creator.first_name || ''} ${creator.last_name || ''}`.trim() || 'User';
             const creatorPhoto = creator.photo_url || 'https://via.placeholder.com/32';
             const description = escapeHtml(post.description || '');
             const likes = post.likes || 0;
             const creatorId = creator.telegram_id;
-
             const userLiked = post.user_liked === true;
             const likeClass = userLiked ? 'like liked' : 'like';
-
             const creatorLink = creator.username
                 ? `https://t.me/${creator.username}`
                 : `tg://user?id=${creatorId}`;
-
             return `
                 <div class="post" data-id="${post.id}">
                     <div class="post-description">${description}</div>
@@ -1856,12 +1626,10 @@
                 </div>
             `;
         }
-
         function removePostFromFeed(postId) {
             const postEl = document.querySelector(`.post[data-id="${postId}"]`);
             if (postEl) postEl.remove();
         }
-
         function likePost(postId) {
             if (ws && ws.readyState === WebSocket.OPEN) {
                 ws.send(JSON.stringify({
@@ -1871,7 +1639,6 @@
                 }));
             }
         }
-
         function openTelegramProfile(event, link) {
             event.preventDefault();
             if (window.Telegram && window.Telegram.WebApp) {
@@ -1880,22 +1647,18 @@
                 window.open(link, '_blank');
             }
         }
-
         // Post Menu
         function showPostMenu(postId, isOwnPost) {
             currentPostId = postId;
             const modal = document.getElementById('postMenu');
-
             let favoriteText = t('menu.addToFavorites');
             let hideText = t('menu.hidePost');
-
             if (userData && userData.favorites && userData.favorites.includes(postId)) {
                 favoriteText = t('menu.removeFromFavorites');
             }
             if (userData && userData.hidden && userData.hidden.includes(postId)) {
                 hideText = t('menu.showPost');
             }
-
             modal.innerHTML = isOwnPost ? `
                 <div class="modal-header">
                     <h3>${t('menu.myPost')}</h3>
@@ -1916,11 +1679,9 @@
                         <button onclick="reportPost(${postId})">${t('menu.report')}</button>
                     </div>
                 `;
-
             showModal('postMenu');
             setTimeout(() => hideModal('postMenu'), 10000);
         }
-
         function deletePost(postId) {
             if (ws && ws.readyState === WebSocket.OPEN) {
                 ws.send(JSON.stringify({
@@ -1931,7 +1692,6 @@
             }
             hideModal('postMenu');
         }
-
         function reportPost(postId) {
             if (ws && ws.readyState === WebSocket.OPEN) {
                 const telegramUser = Telegram.WebApp.initDataUnsafe.user;
@@ -1947,7 +1707,6 @@
             }
             hideModal('postMenu');
         }
-
         function editPost(postId) {
             if (ws && ws.readyState === WebSocket.OPEN) {
                 ws.send(JSON.stringify({
@@ -1958,7 +1717,6 @@
             }
             hideModal('postMenu');
         }
-
         function addToFavorites(postId) {
             if (ws && ws.readyState === WebSocket.OPEN) {
                 ws.send(JSON.stringify({
@@ -1968,7 +1726,6 @@
                 }));
             }
         }
-
         function hidePost(postId) {
             if (ws && ws.readyState === WebSocket.OPEN) {
                 ws.send(JSON.stringify({
@@ -1978,12 +1735,10 @@
                 }));
             }
         }
-
         // Notifications
         function showNotificationsModal() {
             showModal('notificationsModal');
         }
-
         function toggleNotification(type) {
             notificationSettings[type] = !notificationSettings[type];
             if (ws && ws.readyState === WebSocket.OPEN) {
@@ -1994,12 +1749,10 @@
                 }));
             }
         }
-
         // Create/Edit Posts
         function showCreatePostModal() {
             isEditMode = false;
             editingPostId = null;
-
             document.getElementById('createPostModal').style.display = 'block';
             postTags = [];
             tagSelections = { city: [], gender: [], age: [], date: [] };
@@ -2008,35 +1761,26 @@
             loadCreateCategories();
             updateTagButtons();
             document.getElementById('postDescription').value = '';
-
             const createButton = document.getElementById('createPostButton');
             if (createButton) {
                 createButton.textContent = t('createPostButton');
             }
-
             updatePostLimit();
-
             Telegram.WebApp.MainButton.hide();
             Telegram.WebApp.BackButton.show();
             Telegram.WebApp.BackButton.onClick(hideCreatePostModal);
-
             document.body.style.overflow = 'hidden';
-
             updateCharacterCount();
             const textArea = document.getElementById('postDescription');
             textArea.addEventListener('input', updateCharacterCount);
         }
-
         function openEditPostModal(post) {
             isEditMode = true;
             editingPostId = post.id;
-
             document.getElementById('createPostModal').style.display = 'block';
-
             document.getElementById('postDescription').value = post.description;
             createPostCategory = post.category;
             postTags = JSON.parse(post.tags || '[]');
-
             tagSelections = { city: [], gender: [], age: [], date: [] };
             postTags.forEach(tag => {
                 const [type, value] = tag.split(':');
@@ -2044,33 +1788,25 @@
                     tagSelections[type].push(value);
                 }
             });
-
             updateSelectedTags();
             loadCreateCategories();
             updateTagButtons();
-
             const createButton = document.getElementById('createPostButton');
             if (createButton) {
                 createButton.textContent = t('editPostButton');
             }
-
             Telegram.WebApp.MainButton.hide();
             Telegram.WebApp.BackButton.show();
             Telegram.WebApp.BackButton.onClick(hideCreatePostModal);
-
             document.body.style.overflow = 'hidden';
         }
-
         function hideCreatePostModal() {
             document.getElementById('createPostModal').style.display = 'none';
             Telegram.WebApp.BackButton.hide();
-
             isEditMode = false;
             editingPostId = null;
-
             document.body.style.overflow = 'auto';
         }
-
         function updateCharacterCount() {
             const textArea = document.getElementById('postDescription');
             const counter = document.getElementById('characterCount');
@@ -2085,38 +1821,30 @@
                 }
             }
         }
-
         function createPost() {
             const description = document.getElementById('postDescription').value.trim();
-
             if (!description) {
                 Telegram.WebApp.showAlert(t('messages.enterText'));
                 return;
             }
-
             if (description.length < 10) {
                 Telegram.WebApp.showAlert(t('messages.textTooShort'));
                 return;
             }
-
             if (description.length > 450) {
                 Telegram.WebApp.showAlert(t('messages.textTooLong'));
                 return;
             }
-
             if (!createPostCategory) {
                 Telegram.WebApp.showAlert(t('messages.selectCategory'));
                 return;
             }
-
             if (!ws || ws.readyState !== WebSocket.OPEN) {
                 Telegram.WebApp.showAlert(t('messages.noConnection'));
                 return;
             }
-
             const telegramUser = Telegram.WebApp.initDataUnsafe.user;
             if (!telegramUser) return;
-
             try {
                 const message = {
                     type: 'create_post',
@@ -2133,32 +1861,26 @@
                     },
                     is_edit: isEditMode
                 };
-
                 if (isEditMode) {
                     message.original_post_id = editingPostId;
                 }
-
                 ws.send(JSON.stringify(message));
             } catch (error) {
                 console.error('Error creating/updating post:', error);
             }
         }
-
         async function getCities() {
             const response = await fetch(`cities_${currentLanguage}.json`);
             return await response.json();
         }
-
         // Initialization
         Telegram.WebApp.ready();
         Telegram.WebApp.expand();
-
         window.addEventListener('scroll', () => {
             if (window.innerHeight + window.scrollY >= document.body.offsetHeight - 300) {
                 loadPosts(true);
             }
         });
-
         let searchTimeout;
         document.addEventListener('DOMContentLoaded', () => {
             const searchInput = document.getElementById('search');
@@ -2170,7 +1892,6 @@
                         loadPosts();
                     }, 500);
                 });
-
                 document.addEventListener('click', (e) => {
                     if (e.target !== searchInput && !searchInput.contains(e.target)) {
                         searchInput.blur();
@@ -2178,28 +1899,21 @@
                 });
             }
         });
-
         document.addEventListener('DOMContentLoaded', () => {
             connectWebSocket();
-
             window.addEventListener('click', (e) => {
                 const createModal = document.getElementById('createPostModal');
                 if (e.target === createModal) hideCreatePostModal();
-
                 const filterModal = document.getElementById('filterModal');
                 if (e.target === filterModal) hideModal('filterModal');
-
                 const tagModal = document.getElementById('tagModal');
                 if (e.target === tagModal) hideModal('tagModal');
-
                 const postMenu = document.getElementById('postMenu');
                 if (e.target === postMenu) hideModal('postMenu');
-
                 const notificationsModal = document.getElementById('notificationsModal');
                 if (e.target === notificationsModal) hideModal('notificationsModal');
             });
         });
-
         window.addEventListener('scroll', () => {
             const scrollButton = document.getElementById('scrollToTop');
             if (window.scrollY > 300) {
@@ -2208,15 +1922,12 @@
                 scrollButton.style.display = 'none';
             }
         });
-
         function scrollToTop() {
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
     </script>
-
     <button class="scroll-to-top" id="scrollToTop" onclick="scrollToTop()" style="display: none;">
         ▲
     </button>
 </body>
-
 </html>
