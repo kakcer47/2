@@ -1405,6 +1405,8 @@
         }
         // WebSocket
         function connectWebSocket() {
+            console.log('Telegram WebApp available:', !!window.Telegram?.WebApp);
+            console.log('Telegram WebApp initData:', window.Telegram?.WebApp?.initData);
             if (!window.Telegram || !window.Telegram.WebApp) {
                 console.log('Creating mock Telegram WebApp for testing');
                 window.Telegram = {
@@ -1477,6 +1479,11 @@
 
             ws.onclose = (event) => {
                 console.log('WebSocket closed:', event.code, event.reason);
+                console.log('Close event details:', {
+                    code: event.code,
+                    reason: event.reason,
+                    wasClean: event.wasClean
+                });
                 isConnectionActive = false;
                 if (connectionAttempts < maxConnectionAttempts) {
                     connectionAttempts++;
@@ -1530,9 +1537,14 @@
             }
         }
         function handleMessage(event) {
+            console.log('Received WebSocket message:', event.data);
+
             try {
                 const data = JSON.parse(event.data);
+                console.log('Parsed message type:', data.type);
+
                 if (data.type === 'user_synced') {
+                    console.log('User synced response:', data);
                     console.log('User synced:', data);
                     telegramId = data.telegram_id;
                     isUserSynced = true;
