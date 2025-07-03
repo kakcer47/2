@@ -221,10 +221,21 @@
             padding: 8px 0;
             scrollbar-width: none;
             -ms-overflow-style: none;
+            justify-content: space-between;
         }
 
         .filters::-webkit-scrollbar {
             display: none;
+        }
+
+        .filters-left {
+            display: flex;
+            gap: 8px;
+        }
+
+        .filters-right {
+            display: flex;
+            gap: 8px;
         }
 
         .filter-btn {
@@ -232,8 +243,8 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            width: 36px;
-            height: 36px;
+            width: 38px;
+            height: 38px;
             background: #f8f7f6;
             border: 1px solid #e0e0e0;
             border-radius: 8px;
@@ -335,17 +346,19 @@
             background: #f5f5f5;
         }
 
-        .post-actions .like.liked svg {
-            filter: none;
-        }
-
         .post-actions .like img {
             width: 20px;
             height: 20px;
             vertical-align: middle;
+            filter: grayscale(100%);
+            transition: filter 0.3s ease;
         }
 
-        .post-actions .like.liked svg {
+        .post-actions .like.liked {
+            color: #c19433;
+        }
+
+        .post-actions .like.liked img {
             filter: none;
         }
 
@@ -428,7 +441,6 @@
             bottom: 0;
             left: 0;
             width: 100%;
-            height: auto;
             background: #fff;
             border-top-left-radius: 20px;
             border-top-right-radius: 20px;
@@ -444,13 +456,15 @@
             transform: translateY(0);
         }
 
-        .modal-fullscreen {
-            height: 100vh;
-            /* Полноэкранная высота */
+        .modal-auto-height {
+            height: auto;
+            top: auto;
+            min-height: 200px;
+            max-height: 70vh;
         }
 
-        .modal.visible {
-            transform: translateY(0);
+        .modal-fullscreen {
+            height: 100vh;
         }
 
         .modal-header {
@@ -466,16 +480,28 @@
             margin: 0;
             font-size: 18px;
             font-weight: 600;
+            flex: 1;
         }
 
         .modal-header button {
-            background: none;
-            border: none;
-            font-size: 24px;
+            background: #f5f5f5;
+            border: 1px solid #e0e0e0;
+            font-size: 18px;
             cursor: pointer;
             color: #666;
-            width: 30px;
-            text-align: center;
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-left: 12px;
+            transition: all 0.3s ease;
+        }
+
+        .modal-header button:hover {
+            background: #e0e0e0;
+            color: #333;
         }
 
         .modal-content {
@@ -754,6 +780,71 @@
             font-size: 16px;
         }
 
+        .notification-settings {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .notification-group {
+            border: 1px solid #e0e0e0;
+            border-radius: 12px;
+            padding: 16px;
+            background: #f8f7f6;
+        }
+
+        .notification-group h4 {
+            margin-bottom: 12px;
+            font-size: 16px;
+            color: #1d1c1b;
+        }
+
+        .notification-option {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 8px;
+        }
+
+        .notification-option input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            accent-color: #1d1c1b;
+        }
+
+        .notification-option label {
+            font-size: 14px;
+            color: #333;
+            cursor: pointer;
+        }
+
+        .notification-filters {
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px solid #e0e0e0;
+        }
+
+        .notification-filter-section {
+            margin-bottom: 16px;
+        }
+
+        .notification-filter-section h5 {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 8px;
+        }
+
+        .notification-filter-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+
+        .notification-filter-tags .tag-item {
+            padding: 4px 8px;
+            font-size: 12px;
+        }
+
         @media (max-width: 480px) {
             .container {
                 padding: 12px 12px 100px 12px;
@@ -777,8 +868,8 @@
             }
 
             .filter-btn {
-                width: 32px;
-                height: 32px;
+                width: 34px;
+                height: 34px;
             }
 
             .create-post-header {
@@ -865,24 +956,28 @@
         <div class="categories" id="categories"></div>
         <div class="filters-container">
             <div class="filters" id="filters">
-                <button class="filter-btn" id="cityFilter" onclick="showFilterModal('city')">
-                    <img src="city.svg" alt="City" width="20" height="20">
-                </button>
-                <button class="filter-btn" id="genderFilter" onclick="showFilterModal('gender')">
-                    <img src="gender.svg" alt="Gender" width="20" height="20">
-                </button>
-                <button class="filter-btn" id="ageFilter" onclick="showFilterModal('age')">
-                    <img src="age.svg" alt="Age" width="20" height="20">
-                </button>
-                <button class="filter-btn" id="dateFilter" onclick="showFilterModal('date')">
-                    <img src="date.svg" alt="Date" width="20" height="20">
-                </button>
-                <button class="filter-btn" id="sortFilter" onclick="showFilterModal('sort')">
-                    <img src="sort.svg" alt="Sort" width="20" height="20">
-                </button>
-                <button class="filter-btn" id="notificationsFilter" onclick="showNotificationsModal()">
-                    <img src="notification.svg" alt="Notifications" width="20" height="20">
-                </button>
+                <div class="filters-left">
+                    <button class="filter-btn" id="cityFilter" onclick="showFilterModal('city')">
+                        <img src="city.svg" alt="City" width="20" height="20">
+                    </button>
+                    <button class="filter-btn" id="genderFilter" onclick="showFilterModal('gender')">
+                        <img src="gender.svg" alt="Gender" width="20" height="20">
+                    </button>
+                    <button class="filter-btn" id="ageFilter" onclick="showFilterModal('age')">
+                        <img src="age.svg" alt="Age" width="20" height="20">
+                    </button>
+                    <button class="filter-btn" id="dateFilter" onclick="showFilterModal('date')">
+                        <img src="date.svg" alt="Date" width="20" height="20">
+                    </button>
+                </div>
+                <div class="filters-right">
+                    <button class="filter-btn" id="sortFilter" onclick="showFilterModal('sort')">
+                        <img src="sort.svg" alt="Sort" width="20" height="20">
+                    </button>
+                    <button class="filter-btn" id="notificationsFilter" onclick="showNotificationsModal()">
+                        <img src="notification.svg" alt="Notifications" width="20" height="20">
+                    </button>
+                </div>
             </div>
         </div>
         <div class="feed" id="feed"></div>
@@ -893,7 +988,7 @@
             <button onclick="showCreatePostModal()" id="createButton">Создать</button>
         </div>
     </div>
-    <div class="modal" id="postMenu"></div>
+    <div class="modal modal-auto-height" id="postMenu"></div>
     <div class="modal modal-fullscreen" id="filterModal">
         <div class="modal-header">
             <h3 id="filterTitle">Фильтр</h3>
@@ -901,15 +996,63 @@
         </div>
         <div class="modal-content" id="filterOptions"></div>
     </div>
-    <div class="modal" id="notificationsModal">
+    <div class="modal modal-auto-height" id="notificationsModal">
         <div class="modal-header">
-            <h3>Notifications</h3>
+            <h3>Уведомления</h3>
             <button onclick="hideModal('notificationsModal')">✕</button>
         </div>
-        <div class="modal-content" id="notificationOptions">
-            <label><input type="checkbox" checked onchange="toggleNotification('likes')"> Likes</label>
-            <label><input type="checkbox" checked onchange="toggleNotification('system')"> System</label>
-            <label><input type="checkbox" checked onchange="toggleNotification('account')"> Account Status</label>
+        <div class="modal-content">
+            <div class="notification-settings">
+                <div class="notification-group">
+                    <h4>Основные уведомления</h4>
+                    <div class="notification-option">
+                        <input type="checkbox" id="likesNotif" checked onchange="toggleNotification('likes')">
+                        <label for="likesNotif">Лайки на мои объявления</label>
+                    </div>
+                    <div class="notification-option">
+                        <input type="checkbox" id="systemNotif" checked onchange="toggleNotification('system')">
+                        <label for="systemNotif">Системные уведомления</label>
+                    </div>
+                    <div class="notification-option">
+                        <input type="checkbox" id="accountNotif" checked onchange="toggleNotification('account')">
+                        <label for="accountNotif">Изменения аккаунта</label>
+                    </div>
+                </div>
+                
+                <div class="notification-group">
+                    <h4>Новые объявления</h4>
+                    <div class="notification-option">
+                        <input type="checkbox" id="newPostsNotif" onchange="toggleNewPostsNotifications()">
+                        <label for="newPostsNotif">Уведомления о новых объявлениях</label>
+                    </div>
+                    
+                    <div class="notification-filters" id="newPostsFilters" style="display: none;">
+                        <div class="notification-filter-section">
+                            <h5>Категории:</h5>
+                            <div class="notification-filter-tags" id="notificationCategories"></div>
+                        </div>
+                        
+                        <div class="notification-filter-section">
+                            <h5>Теги:</h5>
+                            <div class="tag-groups">
+                                <button class="tag-group-btn" onclick="showNotificationTagModal('city')">
+                                    <img src="city.svg" alt="City" width="20" height="20">
+                                </button>
+                                <button class="tag-group-btn" onclick="showNotificationTagModal('gender')">
+                                    <img src="gender.svg" alt="Gender" width="20" height="20">
+                                </button>
+                                <button class="tag-group-btn" onclick="showNotificationTagModal('age')">
+                                    <img src="age.svg" alt="Age" width="20" height="20">
+                                </button>
+                                <button class="tag-group-btn" onclick="showNotificationTagModal('date')">
+                                    <img src="date.svg" alt="Date" width="20" height="20">
+                                </button>
+                            </div>
+                            <div class="notification-filter-tags" id="notificationTags"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
     <div class="create-post-modal" id="createPostModal">
@@ -958,6 +1101,13 @@
             <button onclick="hideModal('tagModal')">✕</button>
         </div>
         <div class="modal-content" id="tagOptions"></div>
+    </div>
+    <div class="modal modal-auto-height" id="notificationTagModal">
+        <div class="modal-header">
+            <h3 id="notificationTagTitle">Теги для уведомлений</h3>
+            <button onclick="hideModal('notificationTagModal')">✕</button>
+        </div>
+        <div class="modal-content" id="notificationTagOptions"></div>
     </div>
     <script>
         // Translations
@@ -1022,8 +1172,8 @@
                     limitExceeded: 'Достигнут лимит объявлений',
                     banned: 'Ваш аккаунт заблокирован',
                     actionBanned: 'Это действие недоступно для заблокированных пользователей',
-                    postCreated: 'Объявление отправлено на модерацию',
-                    editCreated: 'Изменения отправлены на модерацию',
+                    postCreated: 'Объявление опубликовано',
+                    editCreated: 'Изменения сохранены',
                     alreadyReported: 'Вы уже отправляли жалобу на это объявление',
                     reportSent: 'Жалоба отправлена модераторам',
                     addedToFavorites: 'Добавлено в избранные',
@@ -1099,8 +1249,8 @@
                     limitExceeded: 'Ad limit reached',
                     banned: 'Your account is blocked',
                     actionBanned: 'This action is not available for blocked users',
-                    postCreated: 'Ad sent for moderation',
-                    editCreated: 'Changes sent for moderation',
+                    postCreated: 'Ad published',
+                    editCreated: 'Changes saved',
                     alreadyReported: 'You already reported this ad',
                     reportSent: 'Report sent to moderators',
                     addedToFavorites: 'Added to favorites',
@@ -1138,7 +1288,16 @@
         let editingPostId = null;
         let cities = { ru: [], en: [] };
         let categories = [];
-        let notificationSettings = { likes: true, system: true, account: true };
+        let notificationSettings = { 
+            likes: true, 
+            system: true, 
+            account: true, 
+            new_posts: false,
+            new_posts_categories: [],
+            new_posts_tags: []
+        };
+        let notificationTagSelections = { city: [], gender: [], age: [], date: [] };
+        
         // Utilities
         function t(key) {
             const keys = key.split('.');
@@ -1181,10 +1340,14 @@
                     language: lang
                 }));
             }
-            loadCategories();
-            hideLoadingScreen();
-            currentPage = 1;
-            loadPosts();
+            loadCategories().then(() => {
+                // Устанавливаем категорию "Все" по умолчанию и загружаем посты
+                if (categories && categories.length > 0) {
+                    currentCategory = categories[0][currentLanguage];
+                    selectCategory(currentCategory);
+                }
+                hideLoadingScreen();
+            });
         }
         function updateInterface() {
             document.getElementById('loadingText').textContent = t('loading');
@@ -1300,7 +1463,10 @@
                         favorites: data.favorites || [],
                         hidden: data.hidden || [],
                         liked: data.liked || [],
-                        notification_settings: data.notification_settings || { likes: true, system: true, account: true }
+                        notification_settings: data.notification_settings || { 
+                            likes: true, system: true, account: true, 
+                            new_posts: false, new_posts_categories: [], new_posts_tags: []
+                        }
                     };
                     notificationSettings = userData.notification_settings;
                     const telegramUser = Telegram.WebApp.initDataUnsafe.user;
@@ -1310,18 +1476,20 @@
                         userData.username = telegramUser.username || '';
                         userData.photo_url = telegramUser.photo_url || '';
                     }
-                    currentLanguage = data.language || 'ru'; // Устанавливаем язык
+                    currentLanguage = data.language || 'ru';
                     updateInterface();
                     updateUserInterface();
+                    updateNotificationSettings();
+                    
                     if (data.language && data.language !== 'ru') {
-                        // Если язык уже установлен, загружаем категории и посты
                         loadCategories().then(() => {
-                            currentPage = 1;
-                            loadPosts();
+                            if (categories && categories.length > 0) {
+                                currentCategory = categories[0][currentLanguage];
+                                selectCategory(currentCategory);
+                            }
                             hideLoadingScreen();
                         });
                     } else {
-                        // Если язык не установлен, показываем выбор языка
                         updateUserInterface();
                         showLanguageSelection();
                     }
@@ -1409,6 +1577,8 @@
                 } else if (data.type === 'report_sent') {
                     Telegram.WebApp.showAlert(t('messages.reportSent'));
                     hideModal('postMenu');
+                } else if (data.type === 'notification_settings_updated') {
+                    Telegram.WebApp.showAlert('Настройки уведомлений обновлены');
                 } else if (data.type === 'error') {
                     if (data.message === 'Вы уже отправляли жалобу на это объявление') {
                         Telegram.WebApp.showAlert(t('messages.alreadyReported'));
@@ -1432,300 +1602,330 @@
             <div class="category ${index === 0 ? 'active' : ''}" onclick="selectCategory('${cat[currentLanguage]}')">${cat[currentLanguage]}</div>
         `).join('');
                 currentCategory = categories[0][currentLanguage];
+                
+                // Загружаем категории для уведомлений
+                loadNotificationCategories();
+                
             } catch (error) {
                 console.error('Ошибка загрузки категорий:', error);
                 Telegram.WebApp.showAlert(t('messages.noConnection'));
             }
         }
-            function selectCategory(category) {
-                if (currentCategory === category) return;
-                currentCategory = category;
-                document.querySelectorAll('.category').forEach(el => {
-                    el.classList.toggle('active', el.textContent === category);
-                    if (el.textContent === category) {
-                        el.scrollIntoView({ behavior: 'smooth', inline: 'center' });
-                    }
-                });
-                currentPage = 1;
-                loadPosts();
+        
+        function loadNotificationCategories() {
+            const container = document.getElementById('notificationCategories');
+            if (!container || !categories) return;
+            
+            container.innerHTML = categories.slice(1).map(cat => `
+                <div class="tag-item ${notificationSettings.new_posts_categories.includes(cat[currentLanguage]) ? 'active' : ''}" 
+                     onclick="toggleNotificationCategory('${cat[currentLanguage]}')">${cat[currentLanguage]}</div>
+            `).join('');
+        }
+        
+        function toggleNotificationCategory(category) {
+            const index = notificationSettings.new_posts_categories.indexOf(category);
+            if (index > -1) {
+                notificationSettings.new_posts_categories.splice(index, 1);
+            } else {
+                notificationSettings.new_posts_categories.push(category);
             }
-            async function loadCreateCategories() {
-                const response = await fetch('categories.json');
-                const cats = await response.json();
-                const container = document.getElementById('createCategories');
-                container.innerHTML = cats.slice(1).map(cat => `
+            
+            loadNotificationCategories();
+            updateNotificationSettingsOnServer();
+        }
+        
+        function selectCategory(category) {
+            if (currentCategory === category) return;
+            currentCategory = category;
+            document.querySelectorAll('.category').forEach(el => {
+                el.classList.toggle('active', el.textContent === category);
+                if (el.textContent === category) {
+                    el.scrollIntoView({ behavior: 'smooth', inline: 'center' });
+                }
+            });
+            currentPage = 1;
+            loadPosts();
+        }
+        
+        async function loadCreateCategories() {
+            const response = await fetch('categories.json');
+            const cats = await response.json();
+            const container = document.getElementById('createCategories');
+            container.innerHTML = cats.slice(1).map(cat => `
                 <div class="category-item ${cat[currentLanguage] === createPostCategory ? 'active' : ''}" onclick="selectCreateCategory('${cat[currentLanguage]}')">${cat[currentLanguage]}</div>
             `).join('');
-            }
-            function selectCreateCategory(category) {
-                createPostCategory = category;
-                document.querySelectorAll('#createCategories .category-item').forEach(el => {
-                    el.classList.toggle('active', el.textContent === category);
-                    if (el.textContent === category) {
-                        el.scrollIntoView({ behavior: 'smooth', inline: 'center' });
-                    }
-                });
-            }
-            // Filters
-            async function showFilterModal(filterType) {
-                const filterData = {
-                    city: [t('filters.allCities'), ...(await getCities())],
-                    gender: [t('filters.allGenders'), t('filters.male'), t('filters.female')],
-                    age: [t('filters.allAges'), t('filters.age1'), t('filters.age2'), t('filters.age3'), t('filters.age4')],
-                    date: [t('filters.allDates'), t('filters.today'), t('filters.tomorrow'), t('filters.thisWeek'), t('filters.thisMonth')],
-                    sort: [t('filters.sortNew'), t('filters.sortOld'), t('filters.sortRating'), t('filters.sortMy'), t('filters.sortFavorites'), t('filters.sortHidden')]
-                };
-                const title = document.getElementById('filterTitle');
-                const options = document.getElementById('filterOptions');
-                title.textContent = t(`filters.${filterType}Title`);
-                let content = filterType === 'city' ? `
+        }
+        
+        function selectCreateCategory(category) {
+            createPostCategory = category;
+            document.querySelectorAll('#createCategories .category-item').forEach(el => {
+                el.classList.toggle('active', el.textContent === category);
+                if (el.textContent === category) {
+                    el.scrollIntoView({ behavior: 'smooth', inline: 'center' });
+                }
+            });
+        }
+        
+        // Filters
+        async function showFilterModal(filterType) {
+            const filterData = {
+                city: [t('filters.allCities'), ...(await getCities())],
+                gender: [t('filters.allGenders'), t('filters.male'), t('filters.female')],
+                age: [t('filters.allAges'), t('filters.age1'), t('filters.age2'), t('filters.age3'), t('filters.age4')],
+                date: [t('filters.allDates'), t('filters.today'), t('filters.tomorrow'), t('filters.thisWeek'), t('filters.thisMonth')],
+                sort: [t('filters.sortNew'), t('filters.sortOld'), t('filters.sortRating'), t('filters.sortMy'), t('filters.sortFavorites'), t('filters.sortHidden')]
+            };
+            const title = document.getElementById('filterTitle');
+            const options = document.getElementById('filterOptions');
+            title.textContent = t(`filters.${filterType}Title`);
+            let content = filterType === 'city' ? `
                 <div class="city-search">
                     <input type="text" id="citySearchInput" placeholder="${t('messages.citySearchPlaceholder')}" oninput="filterCities()">
                 </div>
             ` : '';
-                content += filterData[filterType].map(option => `
+            content += filterData[filterType].map(option => `
                 <button onclick="selectFilterOption('${filterType}', '${option}', event)"
                         class="${isFilterActive(filterType, option) ? 'active' : ''}"
                         data-filter-city="${option}">
                     ${option}
                 </button>
             `).join('');
-                options.innerHTML = content;
-                showModal('filterModal');
+            options.innerHTML = content;
+            showModal('filterModal');
+        }
+        function isFilterActive(filterType, option) {
+            if (filterType === 'sort') {
+                const sortMap = {};
+                sortMap[t('filters.sortNew')] = 'new';
+                sortMap[t('filters.sortOld')] = 'old';
+                sortMap[t('filters.sortRating')] = 'rating';
+                sortMap[t('filters.sortMy')] = 'my';
+                sortMap[t('filters.sortFavorites')] = 'favorites';
+                sortMap[t('filters.sortHidden')] = 'hidden';
+                return feedFilters.sort === sortMap[option];
             }
-            function isFilterActive(filterType, option) {
-                if (filterType === 'sort') {
-                    const sortMap = {};
-                    sortMap[t('filters.sortNew')] = 'new';
-                    sortMap[t('filters.sortOld')] = 'old';
-                    sortMap[t('filters.sortRating')] = 'rating';
-                    sortMap[t('filters.sortMy')] = 'my';
-                    sortMap[t('filters.sortFavorites')] = 'favorites';
-                    sortMap[t('filters.sortHidden')] = 'hidden';
-                    return feedFilters.sort === sortMap[option];
-                }
-                return feedFilters[filterType].includes(option);
-            }
-            function selectFilterOption(filterType, option, event) {
-                if (filterType === 'sort') {
-                    const sortMap = {};
-                    sortMap[t('filters.sortNew')] = 'new';
-                    sortMap[t('filters.sortOld')] = 'old';
-                    sortMap[t('filters.sortRating')] = 'rating';
-                    sortMap[t('filters.sortMy')] = 'my';
-                    sortMap[t('filters.sortFavorites')] = 'favorites';
-                    sortMap[t('filters.sortHidden')] = 'hidden';
-                    feedFilters.sort = sortMap[option];
-                } else {
-                    if (option.includes(t('filters.allCities')) || option.includes(t('filters.allGenders')) ||
-                        option.includes(t('filters.allAges')) || option.includes(t('filters.allDates'))) {
-                        feedFilters[filterType] = [];
-                        hideModal('filterModal');
-                    } else {
-                        const index = feedFilters[filterType].indexOf(option);
-                        if (index > -1) {
-                            feedFilters[filterType].splice(index, 1);
-                        } else {
-                            feedFilters[filterType].push(option);
-                        }
-                    }
-                }
-                if (event) {
-                    const clickedButton = event.target.closest('button');
-                    if (clickedButton) {
-                        const isActive = isFilterActive(filterType, option);
-                        clickedButton.classList.toggle('active', isActive);
-                    }
-                }
-                updateFilterButtons();
-                if (filterType === 'sort') {
+            return feedFilters[filterType].includes(option);
+        }
+        function selectFilterOption(filterType, option, event) {
+            if (filterType === 'sort') {
+                const sortMap = {};
+                sortMap[t('filters.sortNew')] = 'new';
+                sortMap[t('filters.sortOld')] = 'old';
+                sortMap[t('filters.sortRating')] = 'rating';
+                sortMap[t('filters.sortMy')] = 'my';
+                sortMap[t('filters.sortFavorites')] = 'favorites';
+                sortMap[t('filters.sortHidden')] = 'hidden';
+                feedFilters.sort = sortMap[option];
+            } else {
+                if (option.includes(t('filters.allCities')) || option.includes(t('filters.allGenders')) ||
+                    option.includes(t('filters.allAges')) || option.includes(t('filters.allDates'))) {
+                    feedFilters[filterType] = [];
                     hideModal('filterModal');
-                }
-                currentPage = 1;
-                loadPosts();
-            }
-            function updateFilterButtons() {
-                Object.keys(feedFilters).forEach(filterType => {
-                    const button = document.getElementById(`${filterType}Filter`);
-                    if (button) {
-                        const hasActiveFilters = filterType === 'sort' ?
-                            feedFilters.sort !== 'new' :
-                            feedFilters[filterType].length > 0;
-                        button.classList.toggle('active', hasActiveFilters);
-                    }
-                });
-            }
-            function filterCities() {
-                const searchInput = document.getElementById('citySearchInput');
-                const searchValue = searchInput.value.toLowerCase();
-                const cityButtons = document.querySelectorAll('#filterOptions button[data-filter-city]');
-                cityButtons.forEach(button => {
-                    const cityName = button.getAttribute('data-filter-city').toLowerCase();
-                    if (cityName.includes(searchValue) || cityName === t('filters.allCities').toLowerCase()) {
-                        button.style.display = 'block';
+                } else {
+                    const index = feedFilters[filterType].indexOf(option);
+                    if (index > -1) {
+                        feedFilters[filterType].splice(index, 1);
                     } else {
-                        button.style.display = 'none';
+                        feedFilters[filterType].push(option);
                     }
-                });
+                }
             }
-            // Tags
-            async function showTagModal(tagType) {
-                const tagData = {
-                    city: await getCities(),
-                    gender: [t('filters.male'), t('filters.female')],
-                    age: [t('filters.age1'), t('filters.age2'), t('filters.age3'), t('filters.age4')],
-                    date: [t('filters.today'), t('filters.tomorrow'), t('filters.thisWeek'), t('filters.thisMonth')]
-                };
-                const title = document.getElementById('tagTitle');
-                const options = document.getElementById('tagOptions');
-                const modal = document.getElementById('tagModal');
-                title.textContent = t(`filters.${tagType}Title`);
-                let content = tagType === 'city' ? `
+            if (event) {
+                const clickedButton = event.target.closest('button');
+                if (clickedButton) {
+                    const isActive = isFilterActive(filterType, option);
+                    clickedButton.classList.toggle('active', isActive);
+                }
+            }
+            updateFilterButtons();
+            if (filterType === 'sort') {
+                hideModal('filterModal');
+            }
+            currentPage = 1;
+            loadPosts();
+        }
+        function updateFilterButtons() {
+            Object.keys(feedFilters).forEach(filterType => {
+                const button = document.getElementById(`${filterType}Filter`);
+                if (button) {
+                    const hasActiveFilters = filterType === 'sort' ?
+                        feedFilters.sort !== 'new' :
+                        feedFilters[filterType].length > 0;
+                    button.classList.toggle('active', hasActiveFilters);
+                }
+            });
+        }
+        function filterCities() {
+            const searchInput = document.getElementById('citySearchInput');
+            const searchValue = searchInput.value.toLowerCase();
+            const cityButtons = document.querySelectorAll('#filterOptions button[data-filter-city]');
+            cityButtons.forEach(button => {
+                const cityName = button.getAttribute('data-filter-city').toLowerCase();
+                if (cityName.includes(searchValue) || cityName === t('filters.allCities').toLowerCase()) {
+                    button.style.display = 'block';
+                } else {
+                    button.style.display = 'none';
+                }
+            });
+        }
+        // Tags
+        async function showTagModal(tagType) {
+            const tagData = {
+                city: await getCities(),
+                gender: [t('filters.male'), t('filters.female')],
+                age: [t('filters.age1'), t('filters.age2'), t('filters.age3'), t('filters.age4')],
+                date: [t('filters.today'), t('filters.tomorrow'), t('filters.thisWeek'), t('filters.thisMonth')]
+            };
+            const title = document.getElementById('tagTitle');
+            const options = document.getElementById('tagOptions');
+            const modal = document.getElementById('tagModal');
+            title.textContent = t(`filters.${tagType}Title`);
+            let content = tagType === 'city' ? `
                 <div class="city-search">
                     <input type="text" id="tagCitySearchInput" placeholder="${t('messages.citySearchPlaceholder')}" oninput="filterTagCities()">
                 </div>
             ` : '';
-                content += tagData[tagType].map(option => `
+            content += tagData[tagType].map(option => `
                 <button onclick="selectTagOption('${tagType}', '${option}', event)" 
                         class="${tagSelections[tagType].includes(option) ? 'active' : ''}"
                         data-tag-city="${option}">
                     ${option}
                 </button>
             `).join('');
-                options.innerHTML = content;
-                modal.style.zIndex = '1002';
-                showModal('tagModal');
+            options.innerHTML = content;
+            modal.style.zIndex = '1002';
+            showModal('tagModal');
+        }
+        function selectTagOption(tagType, option, event) {
+            const index = tagSelections[tagType].indexOf(option);
+            if (index > -1) {
+                tagSelections[tagType].splice(index, 1);
+            } else {
+                tagSelections[tagType].push(option);
             }
-            function selectTagOption(tagType, option, event) {
-                const index = tagSelections[tagType].indexOf(option);
-                if (index > -1) {
-                    tagSelections[tagType].splice(index, 1);
+            const clickedButton = event.target.closest('button');
+            if (clickedButton) {
+                const isActive = tagSelections[tagType].includes(option);
+                clickedButton.classList.toggle('active', isActive);
+            }
+            postTags = [];
+            Object.entries(tagSelections).forEach(([type, values]) => {
+                values.forEach(value => {
+                    postTags.push(`${type}:${value}`);
+                });
+            });
+            updateSelectedTags();
+            updateTagButtons();
+        }
+        function updateSelectedTags() {
+            const container = document.getElementById('selectedTags');
+            if (postTags.length === 0) {
+                container.innerHTML = `<div style="color: #999; font-style: italic;">${currentLanguage === 'ru' ? 'Теги не выбраны' : 'No tags selected'}</div>`;
+                return;
+            }
+            container.innerHTML = postTags.map(tag => {
+                const [type, value] = tag.split(':');
+                return `<div class="tag">${value}</div>`;
+            }).join('');
+        }
+        function updateTagButtons() {
+            Object.keys(tagSelections).forEach(tagType => {
+                const button = document.querySelector(`[onclick="showTagModal('${tagType}')"]`);
+                if (button) {
+                    const hasActiveTags = tagSelections[tagType].length > 0;
+                    button.classList.toggle('active', hasActiveTags);
+                }
+            });
+        }
+        function filterTagCities() {
+            const searchInput = document.getElementById('tagCitySearchInput');
+            const searchValue = searchInput.value.toLowerCase();
+            const cityButtons = document.querySelectorAll('#tagOptions button[data-tag-city]');
+            cityButtons.forEach(button => {
+                const cityName = button.getAttribute('data-tag-city').toLowerCase();
+                if (cityName.includes(searchValue)) {
+                    button.style.display = 'block';
                 } else {
-                    tagSelections[tagType].push(option);
+                    button.style.display = 'none';
                 }
-                const clickedButton = event.target.closest('button');
-                if (clickedButton) {
-                    const isActive = tagSelections[tagType].includes(option);
-                    clickedButton.classList.toggle('active', isActive);
-                }
-                postTags = [];
-                Object.entries(tagSelections).forEach(([type, values]) => {
-                    values.forEach(value => {
-                        postTags.push(`${type}:${value}`);
-                    });
-                });
-                updateSelectedTags();
-                updateTagButtons();
+            });
+        }
+        // Posts
+        function loadPosts(append = false) {
+            if (!isUserSynced || !telegramId) return;
+            if (!ws || ws.readyState !== WebSocket.OPEN) {
+                setTimeout(() => loadPosts(append), 1000);
+                return;
             }
-            function updateSelectedTags() {
-                const container = document.getElementById('selectedTags');
-                if (postTags.length === 0) {
-                    container.innerHTML = `<div style="color: #999; font-style: italic;">${currentLanguage === 'ru' ? 'Теги не выбраны' : 'No tags selected'}</div>`;
-                    return;
-                }
-                container.innerHTML = postTags.map(tag => {
-                    const [type, value] = tag.split(':');
-                    return `<div class="tag">${value}</div>`;
-                }).join('');
-            }
-            function updateTagButtons() {
-                Object.keys(tagSelections).forEach(tagType => {
-                    const button = document.querySelector(`[onclick="showTagModal('${tagType}')"]`);
-                    if (button) {
-                        const hasActiveTags = tagSelections[tagType].length > 0;
-                        button.classList.toggle('active', hasActiveTags);
-                    }
-                });
-            }
-            function filterTagCities() {
-                const searchInput = document.getElementById('tagCitySearchInput');
-                const searchValue = searchInput.value.toLowerCase();
-                const cityButtons = document.querySelectorAll('#tagOptions button[data-tag-city]');
-                cityButtons.forEach(button => {
-                    const cityName = button.getAttribute('data-tag-city').toLowerCase();
-                    if (cityName.includes(searchValue)) {
-                        button.style.display = 'block';
-                    } else {
-                        button.style.display = 'none';
-                    }
-                });
-            }
-            // Posts
-            function loadPosts(append = false) {
-                if (!isUserSynced || !telegramId) return;
-                if (!ws || ws.readyState !== WebSocket.OPEN) {
-                    setTimeout(() => loadPosts(append), 1000);
-                    return;
-                }
-                if (!currentCategory) return;
-                isLoading = true;
-                const searchValue = document.getElementById('search')?.value || '';
-                const categoryToSend = currentCategory === categories[0][currentLanguage] ? null : currentCategory;
-                try {
-                    ws.send(JSON.stringify({
-                        type: 'get_posts',
-                        category: categoryToSend,
-                        filters: feedFilters,
-                        page: currentPage,
-                        limit: 20,
-                        telegram_id: telegramId,
-                        search: searchValue,
-                        append: append
-                    }));
-                } catch (error) {
-                    console.error('Error sending get_posts message:', error);
-                    isLoading = false;
-                }
-            }
-            function renderPosts(posts, append = false) {
-                const feed = document.getElementById('feed');
-                if (!feed) return;
-                if (!append) feed.innerHTML = '';
-                if (posts.length === 0 && !append) {
-                    feed.innerHTML = `<div class="no-posts">${t('noPosts')}</div>`;
-                    isLoading = false;
-                    return;
-                }
-                const postsHTML = posts.map(post => {
-                    try {
-                        return createPostHTML(post);
-                    } catch (error) {
-                        console.error('Error creating post HTML:', error, post);
-                        return '';
-                    }
-                }).join('');
-                if (append) {
-                    feed.insertAdjacentHTML('beforeend', postsHTML);
-                } else {
-                    feed.innerHTML = postsHTML;
-                }
+            if (!currentCategory) return;
+            isLoading = true;
+            const searchValue = document.getElementById('search')?.value || '';
+            const categoryToSend = currentCategory === categories[0][currentLanguage] ? null : currentCategory;
+            try {
+                ws.send(JSON.stringify({
+                    type: 'get_posts',
+                    category: categoryToSend,
+                    filters: feedFilters,
+                    page: currentPage,
+                    limit: 20,
+                    telegram_id: telegramId,
+                    search: searchValue,
+                    append: append
+                }));
+            } catch (error) {
+                console.error('Error sending get_posts message:', error);
                 isLoading = false;
-                if (posts.length > 0) currentPage++;
             }
-            function createPostHTML(post) {
-                if (!post || !post.id) return '';
-                let creator;
+        }
+        function renderPosts(posts, append = false) {
+            const feed = document.getElementById('feed');
+            if (!feed) return;
+            if (!append) feed.innerHTML = '';
+            if (posts.length === 0 && !append) {
+                feed.innerHTML = `<div class="no-posts">${t('noPosts')}</div>`;
+                isLoading = false;
+                return;
+            }
+            const postsHTML = posts.map(post => {
                 try {
-                    creator = typeof post.creator === 'string' ? JSON.parse(post.creator) : post.creator;
-                } catch (e) {
-                    creator = {
-                        first_name: 'User',
-                        last_name: '',
-                        telegram_id: 0,
-                        photo_url: 'https://via.placeholder.com/32'
-                    };
+                    return createPostHTML(post);
+                } catch (error) {
+                    console.error('Error creating post HTML:', error, post);
+                    return '';
                 }
-                const creatorName = `${creator.first_name || ''} ${creator.last_name || ''}`.trim() || 'User';
-                const creatorPhoto = creator.photo_url || 'https://via.placeholder.com/32';
-                const description = escapeHtml(post.description || '');
-                const likes = post.likes || 0;
-                const creatorId = creator.telegram_id;
-                const userLiked = post.user_liked === true;
-                const likeClass = userLiked ? 'like liked' : 'like';
-                const creatorLink = creator.username
-                    ? `https://t.me/${creator.username}`
-                    : `tg://user?id=${creatorId}`;
-                return `
+            }).join('');
+            if (append) {
+                feed.insertAdjacentHTML('beforeend', postsHTML);
+            } else {
+                feed.innerHTML = postsHTML;
+            }
+            isLoading = false;
+            if (posts.length > 0) currentPage++;
+        }
+        function createPostHTML(post) {
+            if (!post || !post.id) return '';
+            let creator;
+            try {
+                creator = typeof post.creator === 'string' ? JSON.parse(post.creator) : post.creator;
+            } catch (e) {
+                creator = {
+                    first_name: 'User',
+                    last_name: '',
+                    telegram_id: 0,
+                    photo_url: 'https://via.placeholder.com/32'
+                };
+            }
+            const creatorName = `${creator.first_name || ''} ${creator.last_name || ''}`.trim() || 'User';
+            const creatorPhoto = creator.photo_url || 'https://via.placeholder.com/32';
+            const description = escapeHtml(post.description || '');
+            const likes = post.likes || 0;
+            const creatorId = creator.telegram_id;
+            const userLiked = post.user_liked === true;
+            const likeClass = userLiked ? 'like liked' : 'like';
+            const creatorLink = creator.username
+                ? `https://t.me/${creator.username}`
+                : `tg://user?id=${creatorId}`;
+            return `
                 <div class="post" data-id="${post.id}">
                     <div class="post-description">${description}</div>
                     <div class="post-creator">
@@ -1747,41 +1947,41 @@
                                       </div>
                 </div>
             `;
+        }
+        function removePostFromFeed(postId) {
+            const postEl = document.querySelector(`.post[data-id="${postId}"]`);
+            if (postEl) postEl.remove();
+        }
+        function likePost(postId) {
+            if (ws && ws.readyState === WebSocket.OPEN) {
+                ws.send(JSON.stringify({
+                    type: 'like_post',
+                    post_id: postId,
+                    telegram_id: telegramId
+                }));
             }
-            function removePostFromFeed(postId) {
-                const postEl = document.querySelector(`.post[data-id="${postId}"]`);
-                if (postEl) postEl.remove();
+        }
+        function openTelegramProfile(event, link) {
+            event.preventDefault();
+            if (window.Telegram && window.Telegram.WebApp) {
+                window.Telegram.WebApp.openTelegramLink(link);
+            } else {
+                window.open(link, '_blank');
             }
-            function likePost(postId) {
-                if (ws && ws.readyState === WebSocket.OPEN) {
-                    ws.send(JSON.stringify({
-                        type: 'like_post',
-                        post_id: postId,
-                        telegram_id: telegramId
-                    }));
-                }
+        }
+        // Post Menu
+        function showPostMenu(postId, isOwnPost) {
+            currentPostId = postId;
+            const modal = document.getElementById('postMenu');
+            let favoriteText = t('menu.addToFavorites');
+            let hideText = t('menu.hidePost');
+            if (userData && userData.favorites && userData.favorites.includes(postId)) {
+                favoriteText = t('menu.removeFromFavorites');
             }
-            function openTelegramProfile(event, link) {
-                event.preventDefault();
-                if (window.Telegram && window.Telegram.WebApp) {
-                    window.Telegram.WebApp.openTelegramLink(link);
-                } else {
-                    window.open(link, '_blank');
-                }
+            if (userData && userData.hidden && userData.hidden.includes(postId)) {
+                hideText = t('menu.showPost');
             }
-            // Post Menu
-            function showPostMenu(postId, isOwnPost) {
-                currentPostId = postId;
-                const modal = document.getElementById('postMenu');
-                let favoriteText = t('menu.addToFavorites');
-                let hideText = t('menu.hidePost');
-                if (userData && userData.favorites && userData.favorites.includes(postId)) {
-                    favoriteText = t('menu.removeFromFavorites');
-                }
-                if (userData && userData.hidden && userData.hidden.includes(postId)) {
-                    hideText = t('menu.showPost');
-                }
-                modal.innerHTML = isOwnPost ? `
+            modal.innerHTML = isOwnPost ? `
                 <div class="modal-header">
                     <h3>${t('menu.myPost')}</h3>
                     <button onclick="hideModal('postMenu')">✕</button>
@@ -1801,252 +2001,327 @@
                         <button onclick="reportPost(${postId})">${t('menu.report')}</button>
                     </div>
                 `;
-                showModal('postMenu');
-                setTimeout(() => hideModal('postMenu'), 10000);
+            showModal('postMenu');
+            setTimeout(() => hideModal('postMenu'), 10000);
+        }
+        function deletePost(postId) {
+            if (ws && ws.readyState === WebSocket.OPEN) {
+                ws.send(JSON.stringify({
+                    type: 'delete_post',
+                    post_id: postId,
+                    telegram_id: telegramId
+                }));
             }
-            function deletePost(postId) {
-                if (ws && ws.readyState === WebSocket.OPEN) {
-                    ws.send(JSON.stringify({
-                        type: 'delete_post',
-                        post_id: postId,
-                        telegram_id: telegramId
-                    }));
-                }
-                hideModal('postMenu');
-            }
-            function reportPost(postId) {
-                if (ws && ws.readyState === WebSocket.OPEN) {
-                    const telegramUser = Telegram.WebApp.initDataUnsafe.user;
-                    ws.send(JSON.stringify({
-                        type: 'report_post',
-                        post_id: postId,
-                        telegram_id: telegramId,
-                        reason: 'Нарушение правил',
-                        reporter_first_name: telegramUser.first_name || '',
-                        reporter_last_name: telegramUser.last_name || '',
-                        reporter_username: telegramUser.username || ''
-                    }));
-                }
-                hideModal('postMenu');
-            }
-            function editPost(postId) {
-                if (ws && ws.readyState === WebSocket.OPEN) {
-                    ws.send(JSON.stringify({
-                        type: 'get_post_for_edit',
-                        post_id: postId,
-                        telegram_id: telegramId
-                    }));
-                }
-                hideModal('postMenu');
-            }
-            function addToFavorites(postId) {
-                if (ws && ws.readyState === WebSocket.OPEN) {
-                    ws.send(JSON.stringify({
-                        type: 'add_to_favorites',
-                        post_id: postId,
-                        telegram_id: telegramId
-                    }));
-                }
-            }
-            function hidePost(postId) {
-                if (ws && ws.readyState === WebSocket.OPEN) {
-                    ws.send(JSON.stringify({
-                        type: 'hide_post',
-                        post_id: postId,
-                        telegram_id: telegramId
-                    }));
-                }
-            }
-            // Notifications
-            function showNotificationsModal() {
-                showModal('notificationsModal');
-            }
-            function toggleNotification(type) {
-                notificationSettings[type] = !notificationSettings[type];
-                if (ws && ws.readyState === WebSocket.OPEN) {
-                    ws.send(JSON.stringify({
-                        type: 'update_notification_settings',
-                        telegram_id: telegramId,
-                        settings: notificationSettings
-                    }));
-                }
-            }
-            // Create/Edit Posts
-            function showCreatePostModal() {
-                isEditMode = false;
-                editingPostId = null;
-                document.getElementById('createPostModal').style.display = 'block';
-                postTags = [];
-                tagSelections = { city: [], gender: [], age: [], date: [] };
-                createPostCategory = currentCategory === categories[0][currentLanguage] ? categories[1][currentLanguage] : currentCategory;
-                updateSelectedTags();
-                loadCreateCategories();
-                updateTagButtons();
-                document.getElementById('postDescription').value = '';
-                const createButton = document.getElementById('createPostButton');
-                if (createButton) {
-                    createButton.textContent = t('createPostButton');
-                }
-                updatePostLimit();
-                Telegram.WebApp.MainButton.hide();
-                Telegram.WebApp.BackButton.show();
-                Telegram.WebApp.BackButton.onClick(hideCreatePostModal);
-                document.body.style.overflow = 'hidden';
-                updateCharacterCount();
-                const textArea = document.getElementById('postDescription');
-                textArea.addEventListener('input', updateCharacterCount);
-            }
-            function openEditPostModal(post) {
-                isEditMode = true;
-                editingPostId = post.id;
-                document.getElementById('createPostModal').style.display = 'block';
-                document.getElementById('postDescription').value = post.description;
-                createPostCategory = post.category;
-                postTags = JSON.parse(post.tags || '[]');
-                tagSelections = { city: [], gender: [], age: [], date: [] };
-                postTags.forEach(tag => {
-                    const [type, value] = tag.split(':');
-                    if (tagSelections[type]) {
-                        tagSelections[type].push(value);
-                    }
-                });
-                updateSelectedTags();
-                loadCreateCategories();
-                updateTagButtons();
-                const createButton = document.getElementById('createPostButton');
-                if (createButton) {
-                    createButton.textContent = t('editPostButton');
-                }
-                Telegram.WebApp.MainButton.hide();
-                Telegram.WebApp.BackButton.show();
-                Telegram.WebApp.BackButton.onClick(hideCreatePostModal);
-                document.body.style.overflow = 'hidden';
-            }
-            function hideCreatePostModal() {
-                document.getElementById('createPostModal').style.display = 'none';
-                Telegram.WebApp.BackButton.hide();
-                isEditMode = false;
-                editingPostId = null;
-                document.body.style.overflow = 'auto';
-            }
-            function updateCharacterCount() {
-                const textArea = document.getElementById('postDescription');
-                const counter = document.getElementById('characterCount');
-                if (textArea && counter) {
-                    counter.textContent = textArea.value.length;
-                    if (textArea.value.length > 400) {
-                        counter.style.color = '#ff4757';
-                    } else if (textArea.value.length > 350) {
-                        counter.style.color = '#ffa726';
-                    } else {
-                        counter.style.color = '#666';
-                    }
-                }
-            }
-            function createPost() {
-                const description = document.getElementById('postDescription').value.trim();
-                if (!description) {
-                    Telegram.WebApp.showAlert(t('messages.enterText'));
-                    return;
-                }
-                if (description.length < 10) {
-                    Telegram.WebApp.showAlert(t('messages.textTooShort'));
-                    return;
-                }
-                if (description.length > 450) {
-                    Telegram.WebApp.showAlert(t('messages.textTooLong'));
-                    return;
-                }
-                if (!createPostCategory) {
-                    Telegram.WebApp.showAlert(t('messages.selectCategory'));
-                    return;
-                }
-                if (!ws || ws.readyState !== WebSocket.OPEN) {
-                    Telegram.WebApp.showAlert(t('messages.noConnection'));
-                    return;
-                }
+            hideModal('postMenu');
+        }
+        function reportPost(postId) {
+            if (ws && ws.readyState === WebSocket.OPEN) {
                 const telegramUser = Telegram.WebApp.initDataUnsafe.user;
-                if (!telegramUser) return;
-                try {
-                    const message = {
-                        type: 'create_post',
-                        telegram_id: telegramId,
-                        description: description,
-                        category: createPostCategory,
-                        tags: postTags,
-                        creator_data: {
-                            telegram_id: telegramUser.id,
-                            username: telegramUser.username || '',
-                            first_name: telegramUser.first_name || '',
-                            last_name: telegramUser.last_name || '',
-                            photo_url: telegramUser.photo_url || ''
-                        },
-                        is_edit: isEditMode
-                    };
-                    if (isEditMode) {
-                        message.original_post_id = editingPostId;
-                    }
-                    ws.send(JSON.stringify(message));
-                } catch (error) {
-                    console.error('Error creating/updating post:', error);
-                }
+                ws.send(JSON.stringify({
+                    type: 'report_post',
+                    post_id: postId,
+                    telegram_id: telegramId,
+                    reason: 'Нарушение правил',
+                    reporter_first_name: telegramUser.first_name || '',
+                    reporter_last_name: telegramUser.last_name || '',
+                    reporter_username: telegramUser.username || ''
+                }));
             }
-            async function getCities() {
-                const response = await fetch(`cities_${currentLanguage}.json`);
-                return await response.json();
+            hideModal('postMenu');
+        }
+        function editPost(postId) {
+            if (ws && ws.readyState === WebSocket.OPEN) {
+                ws.send(JSON.stringify({
+                    type: 'get_post_for_edit',
+                    post_id: postId,
+                    telegram_id: telegramId
+                }));
             }
-            // Initialization
-            Telegram.WebApp.ready();
-            Telegram.WebApp.expand();
-            window.addEventListener('scroll', () => {
-                if (window.innerHeight + window.scrollY >= document.body.offsetHeight - 300) {
-                    loadPosts(true);
-                }
-            });
-            let searchTimeout;
-            document.addEventListener('DOMContentLoaded', () => {
-                const searchInput = document.getElementById('search');
-                if (searchInput) {
-                    searchInput.addEventListener('input', () => {
-                        clearTimeout(searchTimeout);
-                        searchTimeout = setTimeout(() => {
-                            currentPage = 1;
-                            loadPosts();
-                        }, 500);
-                    });
-                    document.addEventListener('click', (e) => {
-                        if (e.target !== searchInput && !searchInput.contains(e.target)) {
-                            searchInput.blur();
-                        }
-                    });
-                }
-            });
-            document.addEventListener('DOMContentLoaded', () => {
-                connectWebSocket();
-                window.addEventListener('click', (e) => {
-                    const createModal = document.getElementById('createPostModal');
-                    if (e.target === createModal) hideCreatePostModal();
-                    const filterModal = document.getElementById('filterModal');
-                    if (e.target === filterModal) hideModal('filterModal');
-                    const tagModal = document.getElementById('tagModal');
-                    if (e.target === tagModal) hideModal('tagModal');
-                    const postMenu = document.getElementById('postMenu');
-                    if (e.target === postMenu) hideModal('postMenu');
-                    const notificationsModal = document.getElementById('notificationsModal');
-                    if (e.target === notificationsModal) hideModal('notificationsModal');
+            hideModal('postMenu');
+        }
+        function addToFavorites(postId) {
+            if (ws && ws.readyState === WebSocket.OPEN) {
+                ws.send(JSON.stringify({
+                    type: 'add_to_favorites',
+                    post_id: postId,
+                    telegram_id: telegramId
+                }));
+            }
+        }
+        function hidePost(postId) {
+            if (ws && ws.readyState === WebSocket.OPEN) {
+                ws.send(JSON.stringify({
+                    type: 'hide_post',
+                    post_id: postId,
+                    telegram_id: telegramId
+                }));
+            }
+        }
+        // Notifications
+        function showNotificationsModal() {
+            showModal('notificationsModal');
+        }
+        
+        function toggleNotification(type) {
+            notificationSettings[type] = !notificationSettings[type];
+            updateNotificationSettingsOnServer();
+        }
+        
+        function toggleNewPostsNotifications() {
+            notificationSettings.new_posts = !notificationSettings.new_posts;
+            const filtersDiv = document.getElementById('newPostsFilters');
+            filtersDiv.style.display = notificationSettings.new_posts ? 'block' : 'none';
+            updateNotificationSettingsOnServer();
+        }
+        
+        function updateNotificationSettings() {
+            document.getElementById('likesNotif').checked = notificationSettings.likes;
+            document.getElementById('systemNotif').checked = notificationSettings.system;
+            document.getElementById('accountNotif').checked = notificationSettings.account;
+            document.getElementById('newPostsNotif').checked = notificationSettings.new_posts;
+            
+            const filtersDiv = document.getElementById('newPostsFilters');
+            filtersDiv.style.display = notificationSettings.new_posts ? 'block' : 'none';
+            
+            loadNotificationCategories();
+            updateNotificationTags();
+        }
+        
+        function updateNotificationSettingsOnServer() {
+            if (ws && ws.readyState === WebSocket.OPEN) {
+                ws.send(JSON.stringify({
+                    type: 'update_notification_settings',
+                    telegram_id: telegramId,
+                    settings: notificationSettings
+                }));
+            }
+        }
+        
+        async function showNotificationTagModal(tagType) {
+            const tagData = {
+                city: await getCities(),
+                gender: [t('filters.male'), t('filters.female')],
+                age: [t('filters.age1'), t('filters.age2'), t('filters.age3'), t('filters.age4')],
+                date: [t('filters.today'), t('filters.tomorrow'), t('filters.thisWeek'), t('filters.thisMonth')]
+            };
+            
+            const title = document.getElementById('notificationTagTitle');
+            const options = document.getElementById('notificationTagOptions');
+            title.textContent = t(`filters.${tagType}Title`);
+            
+            options.innerHTML = tagData[tagType].map(option => `
+                <button onclick="selectNotificationTagOption('${tagType}', '${option}', event)" 
+                        class="${notificationTagSelections[tagType].includes(option) ? 'active' : ''}"
+                        data-tag-city="${option}">
+                    ${option}
+                </button>
+            `).join('');
+            
+            showModal('notificationTagModal');
+        }
+        
+        function selectNotificationTagOption(tagType, option, event) {
+            const index = notificationTagSelections[tagType].indexOf(option);
+            if (index > -1) {
+                notificationTagSelections[tagType].splice(index, 1);
+            } else {
+                notificationTagSelections[tagType].push(option);
+            }
+            
+            const clickedButton = event.target.closest('button');
+            if (clickedButton) {
+                const isActive = notificationTagSelections[tagType].includes(option);
+                clickedButton.classList.toggle('active', isActive);
+            }
+            
+            // Обновляем настройки уведомлений
+            notificationSettings.new_posts_tags = [];
+            Object.entries(notificationTagSelections).forEach(([type, values]) => {
+                values.forEach(value => {
+                    notificationSettings.new_posts_tags.push(`${type}:${value}`);
                 });
             });
-            window.addEventListener('scroll', () => {
-                const scrollButton = document.getElementById('scrollToTop');
-                if (window.scrollY > 300) {
-                    scrollButton.style.display = 'block';
-                } else {
-                    scrollButton.style.display = 'none';
+            
+            updateNotificationTags();
+            updateNotificationSettingsOnServer();
+        }
+        
+        function updateNotificationTags() {
+            const container = document.getElementById('notificationTags');
+            if (!container) return;
+            
+            if (notificationSettings.new_posts_tags.length === 0) {
+                container.innerHTML = `<div style="color: #999; font-style: italic;">Теги не выбраны</div>`;
+                return;
+            }
+            
+            container.innerHTML = notificationSettings.new_posts_tags.map(tag => {
+                const [type, value] = tag.split(':');
+                return `<div class="tag-item">${value}</div>`;
+            }).join('');
+        }
+        
+        // Create/Edit Posts
+        function showCreatePostModal() {
+            isEditMode = false;
+            editingPostId = null;
+            document.getElementById('createPostModal').style.display = 'block';
+            postTags = [];
+            tagSelections = { city: [], gender: [], age: [], date: [] };
+            createPostCategory = currentCategory === categories[0][currentLanguage] ? categories[1][currentLanguage] : currentCategory;
+            updateSelectedTags();
+            loadCreateCategories();
+            updateTagButtons();
+            document.getElementById('postDescription').value = '';
+            const createButton = document.getElementById('createPostButton');
+            if (createButton) {
+                createButton.textContent = t('createPostButton');
+            }
+            updatePostLimit();
+            Telegram.WebApp.MainButton.hide();
+            Telegram.WebApp.BackButton.show();
+            Telegram.WebApp.BackButton.onClick(hideCreatePostModal);
+            document.body.style.overflow = 'hidden';
+            updateCharacterCount();
+            const textArea = document.getElementById('postDescription');
+            textArea.addEventListener('input', updateCharacterCount);
+        }
+        function openEditPostModal(post) {
+            isEditMode = true;
+            editingPostId = post.id;
+            document.getElementById('createPostModal').style.display = 'block';
+            document.getElementById('postDescription').value = post.description;
+            createPostCategory = post.category;
+            postTags = JSON.parse(post.tags || '[]');
+            tagSelections = { city: [], gender: [], age: [], date: [] };
+            postTags.forEach(tag => {
+                const [type, value] = tag.split(':');
+                if (tagSelections[type]) {
+                    tagSelections[type].push(value);
                 }
             });
-            function scrollToTop() {
-                window.scrollTo({ top: 0, behavior: 'smooth' });
+            updateSelectedTags();
+            loadCreateCategories();
+            updateTagButtons();
+            const createButton = document.getElementById('createPostButton');
+            if (createButton) {
+                createButton.textContent = t('editPostButton');
             }
+            Telegram.WebApp.MainButton.hide();
+            Telegram.WebApp.BackButton.show();
+            Telegram.WebApp.BackButton.onClick(hideCreatePostModal);
+            document.body.style.overflow = 'hidden';
+        }
+        function hideCreatePostModal() {
+            document.getElementById('createPostModal').style.display = 'none';
+            Telegram.WebApp.BackButton.hide();
+            isEditMode = false;
+            editingPostId = null;
+            document.body.style.overflow = 'auto';
+        }
+        function updateCharacterCount() {
+            const textArea = document.getElementById('postDescription');
+            const counter = document.getElementById('characterCount');
+            if (textArea && counter) {
+                counter.textContent = textArea.value.length;
+                if (textArea.value.length > 400) {
+                    counter.style.color = '#ff4757';
+                } else if (textArea.value.length > 350) {
+                    counter.style.color = '#ffa726';
+                } else {
+                    counter.style.color = '#666';
+                }
+            }
+        }
+        function createPost() {
+            const description = document.getElementById('postDescription').value.trim();
+            if (!description) {
+                Telegram.WebApp.showAlert(t('messages.enterText'));
+                return;
+            }
+            if (description.length < 10) {
+                Telegram.WebApp.showAlert(t('messages.textTooShort'));
+                return;
+            }
+            if (description.length > 450) {
+                Telegram.WebApp.showAlert(t('messages.textTooLong'));
+                return;
+            }
+            if (!createPostCategory) {
+                Telegram.WebApp.showAlert(t('messages.selectCategory'));
+                return;
+            }
+            if (!ws || ws.readyState !== WebSocket.OPEN) {
+                Telegram.WebApp.showAlert(t('messages.noConnection'));
+                return;
+            }
+            const telegramUser = Telegram.WebApp.initDataUnsafe.user;
+            if (!telegramUser) return;
+            try {
+                const message = {
+                    type: 'create_post',
+                    telegram_id: telegramId,
+                    description: description,
+                    category: createPostCategory,
+                    tags: postTags,
+                    creator_data: {
+                        telegram_id: telegramUser.id,
+                        username: telegramUser.username || '',
+                        first_name: telegramUser.first_name || '',
+                        last_name: telegramUser.last_name || '',
+                        photo_url: telegramUser.photo_url || ''
+                    },
+                    is_edit: isEditMode
+                };
+                if (isEditMode) {
+                    message.original_post_id = editingPostId;
+                }
+                ws.send(JSON.stringify(message));
+            } catch (error) {
+                console.error('Error creating/updating post:', error);
+            }
+        }
+        async function getCities() {
+            const response = await fetch(`cities_${currentLanguage}.json`);
+            return await response.json();
+        }
+        // Initialization
+        Telegram.WebApp.ready();
+        Telegram.WebApp.expand();
+        window.addEventListener('scroll', () => {
+            if (window.innerHeight + window.scrollY >= document.body.offsetHeight - 300) {
+                loadPosts(true);
+            }
+        });
+        let searchTimeout;
+        document.addEventListener('DOMContentLoaded', () => {
+            connectWebSocket();
+            window.addEventListener('click', (e) => {
+                const createModal = document.getElementById('createPostModal');
+                if (e.target === createModal) hideCreatePostModal();
+                const filterModal = document.getElementById('filterModal');
+                if (e.target === filterModal) hideModal('filterModal');
+                const tagModal = document.getElementById('tagModal');
+                if (e.target === tagModal) hideModal('tagModal');
+                const postMenu = document.getElementById('postMenu');
+                if (e.target === postMenu) hideModal('postMenu');
+                const notificationsModal = document.getElementById('notificationsModal');
+                if (e.target === notificationsModal) hideModal('notificationsModal');
+                const notificationTagModal = document.getElementById('notificationTagModal');
+                if (e.target === notificationTagModal) hideModal('notificationTagModal');
+            });
+        });
+        window.addEventListener('scroll', () => {
+            const scrollButton = document.getElementById('scrollToTop');
+            if (window.scrollY > 300) {
+                scrollButton.style.display = 'block';
+            } else {
+                scrollButton.style.display = 'none';
+            }
+        });
+        function scrollToTop() {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
     </script>
     <button class="scroll-to-top" id="scrollToTop" onclick="scrollToTop()" style="display: none;">
         ▲
