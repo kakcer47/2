@@ -464,6 +464,8 @@
             margin: 0;
             font-size: 18px;
             font-weight: 600;
+            flex-grow: 1;
+            max-width: calc(100% - 40px);
         }
 
         .modal-header button {
@@ -473,10 +475,11 @@
             cursor: pointer;
             color: #666;
             width: 24px;
-            height: 24px;
-            line-height: 24px;
+            height: 30px;
+            line-height: 30px;
             text-align: center;
             padding: 0;
+            flex-shrink: 0;
             border-radius: 4px;
         }
 
@@ -903,9 +906,10 @@
 
     <div class="modal" id="postMenu"></div>
 
-    <div class="modal modal-fullscreen" id="filterModal">
         <div class="modal-header">
-            <h3 id="filterTitle">Фильтр</h3>
+            <div class="modal-header-title">
+                <h3 id="filterTitle">Фильтр</h3>
+            </div>
             <button onclick="hideModal('filterModal')">✕</button>
         </div>
         <div class="modal-content" id="filterOptions"></div>
