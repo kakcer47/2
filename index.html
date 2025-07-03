@@ -917,7 +917,7 @@
             <img id="userAvatar" src="https://via.placeholder.com/40" alt="Avatar">
             <div class="user-info">
                 <span class="name" id="userName"></span>
-                <span class="post-limit" id="postLimit">0/60 - объявлений</span>
+                <span class="post-limit" id="postLimit">0/10 - объявлений</span>
             </div>
         </div>
         <div class="create-post-content">
@@ -1232,7 +1232,7 @@
         }
         // WebSocket
         function connectWebSocket() {
-            const SERVER_URL = 'six-yevf.onrender.com';
+            const SERVER_URL = 'six-063o.onrender.com';
             const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
             const protocol = isLocalhost ? 'ws:' : 'wss:';
             const wsUrl = isLocalhost ? 'ws://localhost:10000/ws' : `${protocol}//${SERVER_URL}/ws`;
