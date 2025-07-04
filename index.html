@@ -5,13 +5,128 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Telegram App</title>
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;500&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;600&display=swap" rel="stylesheet">
     <style>
-        body { font-family: 'Rubik', sans-serif; }
+        body { font-family: 'Rubik', sans-serif; font-size: 16px; }
         * { border-color: #e3e3e3; }
-        .spinner { border: 4px solid #e3e3e3; border-top: 4px solid white; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; }
+        .spinner { 
+            border: 4px solid #e3e3e3; 
+            border-top: 4px solid white; 
+            border-radius: 50%; 
+            width: 40px; 
+            height: 40px; 
+            animation: spin 1s linear infinite; 
+        }
         @keyframes spin { to { transform: rotate(360deg); } }
-        .main-bg { background: #fcfcfc; background-image: radial-gradient(circle, #999999 1px, transparent 1px); background-size: 20px 20px; }
+        .main-bg { 
+            background: #fcfcfc; 
+            background-image: radial-gradient(circle, #999999 1px, transparent 1px); 
+            background-size: 20px 20px; 
+        }
+        .category-line {
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            height: 3px;
+            background: black;
+            border-radius: 2px;
+            transform: translateX(-50%) scaleX(0);
+            transition: transform 0.3s ease-in-out;
+            width: calc(100% - 24px);
+        }
+        .category-active .category-line {
+            transform: translateX(-50%) scaleX(1);
+        }
+        .modal-button {
+            background: #f3f4f6;
+            border-radius: 12px;
+            padding: 12px;
+            margin-bottom: 8px;
+            width: 100%;
+            text-align: left;
+            border: none;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .modal-button:hover {
+            background: #e5e7eb;
+        }
+        .close-btn {
+            width: 32px;
+            height: 32px;
+            background: #f3f4f6;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            font-weight: bold;
+            color: #6b7280;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .close-btn:hover {
+            background: #e5e7eb;
+        }
+        .filter-icon {
+            width: 32px;
+            height: 32px;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: white;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .filter-icon:hover {
+            background: #f9fafb;
+            border-color: #9ca3af;
+        }
+        .search-container {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: white;
+            padding: 16px;
+            border-top: 1px solid #e5e7eb;
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            z-index: 30;
+        }
+        .search-input {
+            flex: 1;
+            padding: 12px 16px;
+            border: 1px solid #d1d5db;
+            border-radius: 24px;
+            font-size: 16px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        .search-input:focus {
+            border-color: #3b82f6;
+        }
+        .create-btn {
+            background: #3b82f6;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 24px;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .create-btn:hover {
+            background: #2563eb;
+        }
+        .main-content {
+            padding-bottom: 80px;
+        }
     </style>
 </head>
 <body class="bg-gray-100">
@@ -22,97 +137,270 @@
 
     <!-- Language Modal -->
     <div id="lang-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-40 hidden">
-        <div class="bg-white p-4 rounded">
-            <p class="mb-4">Choose Language / Выберите язык</p>
-            <button id="lang-en" class="px-4 py-2 bg-gray-200 rounded mr-2">English</button>
-            <button id="lang-ru" class="px-4 py-2 bg-gray-200 rounded">Русский</button>
+        <div class="bg-white p-8 rounded-3xl max-w-sm w-full mx-4">
+            <p class="mb-6 text-center text-lg font-medium">Choose Language / Выберите язык</p>
+            <div class="flex justify-center gap-4">
+                <button id="lang-en" class="px-6 py-3 bg-gray-100 rounded-2xl font-medium text-lg hover:bg-gray-200 transition-colors">English</button>
+                <button id="lang-ru" class="px-6 py-3 bg-gray-100 rounded-2xl font-medium text-lg hover:bg-gray-200 transition-colors">Русский</button>
+            </div>
         </div>
     </div>
 
     <!-- Main Screen -->
     <div id="main" class="main-bg min-h-screen hidden">
-        <div id="categories" class="overflow-x-auto whitespace-nowrap py-2 border-b"></div>
-        <div class="flex justify-between p-2 bg-[#f8f7f6] border-b">
-            <button id="f-city" class="w-6 h-6 border rounded flex items-center justify-center"><img src="city.svg" class="w-4 h-4"></button>
-            <button id="f-gender" class="w-6 h-6 border rounded flex items-center justify-center"><img src="gender.svg" class="w-4 h-4"></button>
-            <button id="f-age" class="w-6 h-6 border rounded flex items-center justify-center"><img src="age.svg" class="w-4 h-4"></button>
-            <button id="f-date" class="w-6 h-6 border rounded flex items-center justify-center"><img src="date.svg" class="w-4 h-4"></button>
-            <button id="f-sort" class="w-6 h-6 border rounded flex items-center justify-center"><img src="sort.svg" class="w-4 h-4"></button>
-            <button id="f-notif" class="w-6 h-6 border rounded flex items-center justify-center"><img src="notification.svg" class="w-4 h-4"></button>
+        <div class="main-content">
+            <div id="categories" class="overflow-x-auto whitespace-nowrap py-4 border-b bg-white"></div>
+            
+            <div class="flex justify-between items-center p-3 bg-[#f8f7f6] border-b">
+                <div class="flex gap-2">
+                    <button id="f-city" class="filter-icon">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+                            <circle cx="12" cy="10" r="3"/>
+                        </svg>
+                    </button>
+                    <button id="f-gender" class="filter-icon">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="10"/>
+                            <path d="M8 14s1.5 2 4 2 4-2 4-2"/>
+                            <line x1="9" y1="9" x2="9.01" y2="9"/>
+                            <line x1="15" y1="9" x2="15.01" y2="9"/>
+                        </svg>
+                    </button>
+                    <button id="f-age" class="filter-icon">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="3"/>
+                            <path d="M12 1v6m0 6v6"/>
+                            <path d="m21 12-6-6-6 6"/>
+                        </svg>
+                    </button>
+                    <button id="f-date" class="filter-icon">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                            <line x1="16" y1="2" x2="16" y2="6"/>
+                            <line x1="8" y1="2" x2="8" y2="6"/>
+                            <line x1="3" y1="10" x2="21" y2="10"/>
+                        </svg>
+                    </button>
+                </div>
+                
+                <div class="flex gap-2">
+                    <button id="f-sort" class="filter-icon">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M3 6h18"/>
+                            <path d="M7 12h10"/>
+                            <path d="M10 18h4"/>
+                        </svg>
+                    </button>
+                    <button id="f-notif" class="filter-icon">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+                            <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+            
+            <div id="feed" class="p-4 space-y-4"></div>
         </div>
-        <div id="feed" class="p-2 space-y-2"></div>
+
+        <!-- Search Container -->
+        <div class="search-container">
+            <input type="text" class="search-input" placeholder="Поиск объявлений...">
+            <button class="create-btn">Создать</button>
+        </div>
     </div>
 
     <!-- Filter Modals -->
-    <div id="m-city" class="fixed bottom-0 left-0 right-0 bg-white rounded-t-xl p-4 hidden z-50">
-        <div class="flex justify-between mb-2"><span>Город</span><button class="close text-gray-500">&times;</button></div>
-        <input id="city-search" class="w-full p-2 border rounded mb-2" placeholder="Поиск">
-        <div id="city-options" class="space-y-1"></div>
+    <div id="m-city" class="fixed bottom-0 left-0 right-0 bg-white rounded-t-3xl p-6 hidden z-50">
+        <div class="flex justify-between items-center mb-4">
+            <span class="text-xl font-semibold">Город</span>
+            <div class="close-btn">&times;</div>
+        </div>
+        <hr class="mb-4 border-gray-200">
+        <input id="city-search" class="w-full p-3 border border-gray-300 rounded-2xl mb-4 text-lg" placeholder="Поиск">
+        <div id="city-options" class="space-y-1 max-h-60 overflow-y-auto"></div>
     </div>
-    <div id="m-gender" class="fixed bottom-0 left-0 right-0 bg-white rounded-t-xl p-4 hidden z-50">
-        <div class="flex justify-between mb-2"><span>Пол</span><button class="close text-gray-500">&times;</button></div>
-        <div class="space-y-1"><button>Все</button><button>Мужской</button><button>Женский</button></div>
+
+    <div id="m-gender" class="fixed bottom-0 left-0 right-0 bg-white rounded-t-3xl p-6 hidden z-50">
+        <div class="flex justify-between items-center mb-4">
+            <span class="text-xl font-semibold">Пол</span>
+            <div class="close-btn">&times;</div>
+        </div>
+        <hr class="mb-4 border-gray-200">
+        <div class="space-y-1">
+            <button class="modal-button">Все</button>
+            <button class="modal-button">Мужской</button>
+            <button class="modal-button">Женский</button>
+        </div>
     </div>
-    <div id="m-age" class="fixed bottom-0 left-0 right-0 bg-white rounded-t-xl p-4 hidden z-50">
-        <div class="flex justify-between mb-2"><span>Возраст</span><button class="close text-gray-500">&times;</button></div>
-        <div class="space-y-1"><button>Все</button><button>16-25</button><button>25-35</button><button>35-45</button><button>45+</button></div>
+
+    <div id="m-age" class="fixed bottom-0 left-0 right-0 bg-white rounded-t-3xl p-6 hidden z-50">
+        <div class="flex justify-between items-center mb-4">
+            <span class="text-xl font-semibold">Возраст</span>
+            <div class="close-btn">&times;</div>
+        </div>
+        <hr class="mb-4 border-gray-200">
+        <div class="space-y-1">
+            <button class="modal-button">Все</button>
+            <button class="modal-button">16-25</button>
+            <button class="modal-button">25-35</button>
+            <button class="modal-button">35-45</button>
+            <button class="modal-button">45+</button>
+        </div>
     </div>
-    <div id="m-date" class="fixed bottom-0 left-0 right-0 bg-white rounded-t-xl p-4 hidden z-50">
-        <div class="flex justify-between mb-2"><span>Дата</span><button class="close text-gray-500">&times;</button></div>
-        <div class="space-y-1"><button>Все</button><button>Сегодня</button><button>Завтра</button><button>На неделе</button><button>В этом месяце</button></div>
+
+    <div id="m-date" class="fixed bottom-0 left-0 right-0 bg-white rounded-t-3xl p-6 hidden z-50">
+        <div class="flex justify-between items-center mb-4">
+            <span class="text-xl font-semibold">Дата</span>
+            <div class="close-btn">&times;</div>
+        </div>
+        <hr class="mb-4 border-gray-200">
+        <div class="space-y-1">
+            <button class="modal-button">Все</button>
+            <button class="modal-button">Сегодня</button>
+            <button class="modal-button">Завтра</button>
+            <button class="modal-button">На неделе</button>
+            <button class="modal-button">В этом месяце</button>
+        </div>
     </div>
-    <div id="m-sort" class="fixed bottom-0 left-0 right-0 bg-white rounded-t-xl p-4 hidden z-50">
-        <div class="flex justify-between mb-2"><span>Сортировка</span><button class="close text-gray-500">&times;</button></div>
-        <div class="space-y-1"><button>Мои</button><button>Избранные</button><button>Скрытые</button><hr><button>Новые</button><button>Старые</button><button>По рейтингу</button></div>
+
+    <div id="m-sort" class="fixed bottom-0 left-0 right-0 bg-white rounded-t-3xl p-6 hidden z-50">
+        <div class="flex justify-between items-center mb-4">
+            <span class="text-xl font-semibold">Сортировка</span>
+            <div class="close-btn">&times;</div>
+        </div>
+        <hr class="mb-4 border-gray-200">
+        <div class="space-y-1">
+            <button class="modal-button">Мои</button>
+            <button class="modal-button">Избранные</button>
+            <button class="modal-button">Скрытые</button>
+            <hr class="my-3 border-gray-200">
+            <button class="modal-button">Новые</button>
+            <button class="modal-button">Старые</button>
+            <button class="modal-button">По рейтингу</button>
+        </div>
     </div>
-    <div id="m-notif" class="fixed bottom-0 left-0 right-0 bg-white rounded-t-xl p-4 hidden z-50">
-        <div class="flex justify-between mb-2"><span>Уведомления</span><button class="close text-gray-500">&times;</button></div>
-        <div class="space-y-1"><label><input type="checkbox" id="n-likes"> Лайки</label><label><input type="checkbox" id="n-sys"> Системные</label><label><input type="checkbox" id="n-acc"> Аккаунт</label><button id="n-save" class="w-full py-1 bg-gray-200 rounded mt-2">Сохранить</button></div>
+
+    <div id="m-notif" class="fixed bottom-0 left-0 right-0 bg-white rounded-t-3xl p-6 hidden z-50">
+        <div class="flex justify-between items-center mb-4">
+            <span class="text-xl font-semibold">Уведомления</span>
+            <div class="close-btn">&times;</div>
+        </div>
+        <hr class="mb-4 border-gray-200">
+        <div class="space-y-3">
+            <label class="flex items-center p-3 bg-gray-50 rounded-2xl cursor-pointer">
+                <input type="checkbox" id="n-likes" class="mr-3 w-5 h-5">
+                <span class="text-lg">Лайки</span>
+            </label>
+            <label class="flex items-center p-3 bg-gray-50 rounded-2xl cursor-pointer">
+                <input type="checkbox" id="n-sys" class="mr-3 w-5 h-5">
+                <span class="text-lg">Системные</span>
+            </label>
+            <label class="flex items-center p-3 bg-gray-50 rounded-2xl cursor-pointer">
+                <input type="checkbox" id="n-acc" class="mr-3 w-5 h-5">
+                <span class="text-lg">Аккаунт</span>
+            </label>
+            <button id="n-save" class="w-full py-3 bg-blue-500 text-white rounded-2xl mt-4 text-lg font-medium hover:bg-blue-600 transition-colors">Сохранить</button>
+        </div>
     </div>
-    <div id="m-post" class="fixed bottom-0 left-0 right-0 bg-white rounded-t-xl p-4 hidden z-50">
+
+    <div id="m-post" class="fixed bottom-0 left-0 right-0 bg-white rounded-t-3xl p-6 hidden z-50">
         <div id="post-options" class="space-y-1"></div>
     </div>
 
     <script>
         const user = { id: 1, name: 'Я', username: 'me', logo: 'me.jpg' };
-        let lang = 'ru', filters = { category: 'Все', city: 'Все', gender: 'Все', age: 'Все', date: 'Все', sort: 'Новые' };
-        const favorites = new Set(), hidden = new Set(), liked = new Set();
+        let lang = 'ru';
+        let filters = { category: 'Все', city: 'Все', gender: 'Все', age: 'Все', date: 'Все', sort: 'Новые' };
+        const favorites = new Set();
+        const hidden = new Set();
+        const liked = new Set();
+        let categories = [];
+        let cities = [];
 
-        const categories = [{"ru": "Все", "en": "All"},{"ru": "Дружба", "en": "Friendship"},{"ru": "Прогулки", "en": "Walks"},{"ru": "События", "en": "Events"}];
-        const cities = { ru: ["Москва", "Санкт-Петербург", "Новосибирск"], en: ["Moscow", "Saint Petersburg", "Novosibirsk"] };
         const posts = [
-            { id: 1, creator: user, desc: "Ищу друга", cat: "Дружба", city: "Москва", gender: "Мужской", age: "25-35", date: "Сегодня", likes: 3, ts: 1 },
-            { id: 2, creator: { id: 2, name: "Аня", username: "anya", logo: "anya.jpg" }, desc: "Гуляем?", cat: "Прогулки", city: "Санкт-Петербург", gender: "Женский", age: "16-25", date: "Завтра", likes: 5, ts: 2 },
-            { id: 3, creator: { id: 3, name: "Иван", username: "ivan", logo: "ivan.jpg" }, desc: "Вечеринка", cat: "События", city: "Новосибирск", gender: "Мужской", age: "35-45", date: "На неделе", likes: 2, ts: 3 }
+            { id: 1, creator: user, desc: "Ищу друга для прогулок по городу", cat: "Дружба", city: "Москва", gender: "Мужской", age: "25-35", date: "Сегодня", likes: 3, ts: 1 },
+            { id: 2, creator: { id: 2, name: "Аня", username: "anya", logo: "anya.jpg" }, desc: "Давайте гуляем вместе!", cat: "Прогулки", city: "Санкт-Петербург", gender: "Женский", age: "16-25", date: "Завтра", likes: 5, ts: 2 },
+            { id: 3, creator: { id: 3, name: "Иван", username: "ivan", logo: "ivan.jpg" }, desc: "Организую вечеринку", cat: "События", city: "Новосибирск", gender: "Мужской", age: "35-45", date: "На неделе", likes: 2, ts: 3 }
         ];
 
-        setTimeout(() => { document.getElementById('loading').classList.add('hidden'); document.getElementById('lang-modal').classList.remove('hidden'); }, 1000);
+        async function loadCategories() {
+            try {
+                const response = await fetch('./categories.json');
+                categories = await response.json();
+            } catch {
+                categories = [
+                    {"ru": "Все", "en": "All"},
+                    {"ru": "Дружба", "en": "Friendship"},
+                    {"ru": "Прогулки", "en": "Walks"},
+                    {"ru": "События", "en": "Events"}
+                ];
+            }
+        }
+
+        async function loadCities() {
+            try {
+                const response = await fetch(`./cities_${lang}.json`);
+                cities = await response.json();
+            } catch {
+                cities = lang === 'ru' 
+                    ? ["Москва", "Санкт-Петербург", "Новосибирск"]
+                    : ["Moscow", "Saint Petersburg", "Novosibirsk"];
+            }
+        }
+
+        setTimeout(() => {
+            document.getElementById('loading').classList.add('hidden');
+            document.getElementById('lang-modal').classList.remove('hidden');
+        }, 1000);
+
         document.getElementById('lang-en').onclick = () => setLang('en');
         document.getElementById('lang-ru').onclick = () => setLang('ru');
 
-        function setLang(l) {
+        async function setLang(l) {
             lang = l;
             document.getElementById('lang-modal').classList.add('hidden');
             document.getElementById('main').classList.remove('hidden');
+            
+            await loadCategories();
+            await loadCities();
+            
             renderCategories();
+            renderCities();
             renderPosts();
         }
 
         function renderCategories() {
-            const c = document.getElementById('categories');
-            c.innerHTML = '';
+            const container = document.getElementById('categories');
+            container.innerHTML = '';
+            
             categories.forEach((cat, i) => {
+                const wrapper = document.createElement('div');
+                wrapper.className = 'relative inline-block mx-1';
+                
                 const btn = document.createElement('button');
                 btn.textContent = cat[lang];
-                btn.className = `px-3 py-1 ${i === 0 ? 'border-b-2 border-black rounded-b' : 'text-gray-500'}`;
+                btn.className = `px-4 py-2 text-lg font-semibold transition-colors ${i === 0 ? 'category-active text-black' : 'text-gray-500 hover:text-gray-700'}`;
+                
+                const line = document.createElement('div');
+                line.className = 'category-line';
+                
                 btn.onclick = () => {
-                    c.querySelectorAll('button').forEach(b => { b.className = 'px-3 py-1 text-gray-500'; });
-                    btn.className = 'px-3 py-1 border-b-2 border-black rounded-b';
+                    container.querySelectorAll('button').forEach(b => {
+                        b.className = 'px-4 py-2 text-lg font-semibold text-gray-500 hover:text-gray-700 transition-colors';
+                        b.parentElement.classList.remove('category-active');
+                    });
+                    btn.className = 'px-4 py-2 text-lg font-semibold text-black transition-colors';
+                    wrapper.classList.add('category-active');
                     filters.category = cat[lang];
                     renderPosts();
                     btn.scrollIntoView({ behavior: 'smooth', inline: 'center' });
                 };
-                c.appendChild(btn);
+                
+                wrapper.appendChild(btn);
+                wrapper.appendChild(line);
+                container.appendChild(wrapper);
             });
         }
 
@@ -128,86 +416,147 @@
                  (filters.sort === 'Избранные' && favorites.has(p.id)) ||
                  (filters.sort === 'Скрытые' && hidden.has(p.id)))
             ));
+
             if (filters.sort === 'Новые') filtered.sort((a, b) => b.ts - a.ts);
             if (filters.sort === 'Старые') filtered.sort((a, b) => a.ts - b.ts);
             if (filters.sort === 'По рейтингу') filtered.sort((a, b) => b.likes - a.likes);
 
             const feed = document.getElementById('feed');
             feed.innerHTML = '';
+            
             filtered.forEach(p => {
                 const div = document.createElement('div');
-                div.className = 'bg-white p-3 rounded';
+                div.className = 'bg-white p-4 rounded-2xl shadow-sm border border-gray-100';
                 div.innerHTML = `
-                    <p>${p.desc}</p><hr class="my-1">
-                    <div class="flex justify-between">
+                    <p class="text-lg mb-3">${p.desc}</p>
+                    <hr class="my-3 border-gray-200">
+                    <div class="flex justify-between items-center">
                         <div class="flex items-center">
-                            <img src="${p.creator.logo}" class="w-6 h-6 rounded-full mr-2">
-                            <a href="https://t.me/${p.creator.username}" target="_blank">${p.creator.name}</a>
+                            <img src="${p.creator.logo}" class="w-8 h-8 rounded-full mr-3 bg-gray-200">
+                            <a href="https://t.me/${p.creator.username}" target="_blank" class="text-lg font-medium text-blue-600 hover:text-blue-800">${p.creator.name}</a>
                         </div>
-                        <div class="flex items-center space-x-2">
-                            <button class="like flex items-center" data-id="${p.id}">
-                                <img src="lightning.svg" class="w-4 h-4 ${liked.has(p.id) ? 'text-[#c19433]' : ''}">
-                                <span class="ml-1">${p.likes}</span>
+                        <div class="flex items-center space-x-3">
+                            <button class="like flex items-center p-2 rounded-lg hover:bg-gray-50 transition-colors" data-id="${p.id}">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="${liked.has(p.id) ? '#c19433' : 'none'}" stroke="${liked.has(p.id) ? '#c19433' : 'currentColor'}" stroke-width="2">
+                                    <polygon points="13,2 3,14 12,14 11,22 21,10 12,10"/>
+                                </svg>
+                                <span class="ml-2 text-lg">${p.likes}</span>
                             </button>
-                            <button class="menu" data-id="${p.id}"><img src="menu.svg" class="w-4 h-4"></button>
+                            <button class="menu p-2 rounded-lg hover:bg-gray-50 transition-colors" data-id="${p.id}">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <circle cx="12" cy="12" r="1"/>
+                                    <circle cx="12" cy="5" r="1"/>
+                                    <circle cx="12" cy="19" r="1"/>
+                                </svg>
+                            </button>
                         </div>
                     </div>`;
                 feed.appendChild(div);
             });
         }
 
-        ['city', 'gender', 'age', 'date', 'sort', 'notif'].forEach(f => {
-            document.getElementById(`f-${f}`).onclick = () => document.getElementById(`m-${f}`).classList.remove('hidden');
-        });
-
-        document.querySelectorAll('.close').forEach(c => c.onclick = () => c.closest('.fixed').classList.add('hidden'));
-
         function renderCities(search = '') {
             const opts = document.getElementById('city-options');
-            opts.innerHTML = '<button class="w-full p-1">Все</button>';
-            cities[lang].filter(c => c.toLowerCase().includes(search.toLowerCase())).forEach(c => {
-                opts.innerHTML += `<button class="w-full p-1">${c}</button>`;
+            opts.innerHTML = '<button class="modal-button">Все</button>';
+            cities.filter(c => c.toLowerCase().includes(search.toLowerCase())).forEach(c => {
+                const btn = document.createElement('button');
+                btn.className = 'modal-button';
+                btn.textContent = c;
+                opts.appendChild(btn);
             });
         }
-        document.getElementById('city-search').oninput = e => renderCities(e.target.value);
-        document.getElementById('m-city').onclick = e => { if (e.target.tagName === 'BUTTON') { filters.city = e.target.textContent; renderPosts(); e.target.closest('.fixed').classList.add('hidden'); } };
-        ['gender', 'age', 'date', 'sort'].forEach(m => {
-            document.getElementById(`m-${m}`).onclick = e => { if (e.target.tagName === 'BUTTON') { filters[m] = e.target.textContent; renderPosts(); e.target.closest('.fixed').classList.add('hidden'); } };
+
+        ['city', 'gender', 'age', 'date', 'sort', 'notif'].forEach(f => {
+            document.getElementById(`f-${f}`).onclick = () => {
+                document.getElementById(`m-${f}`).classList.remove('hidden');
+            };
         });
+
+        document.querySelectorAll('.close-btn').forEach(c => {
+            c.onclick = () => c.closest('.fixed').classList.add('hidden');
+        });
+
+        document.getElementById('city-search').oninput = e => renderCities(e.target.value);
+
+        document.getElementById('m-city').onclick = e => {
+            if (e.target.classList.contains('modal-button')) {
+                filters.city = e.target.textContent;
+                renderPosts();
+                e.target.closest('.fixed').classList.add('hidden');
+            }
+        };
+
+        ['gender', 'age', 'date', 'sort'].forEach(m => {
+            document.getElementById(`m-${m}`).onclick = e => {
+                if (e.target.classList.contains('modal-button')) {
+                    filters[m] = e.target.textContent;
+                    renderPosts();
+                    e.target.closest('.fixed').classList.add('hidden');
+                }
+            };
+        });
+
         document.getElementById('n-save').onclick = () => {
-            console.log({ likes: document.getElementById('n-likes').checked, sys: document.getElementById('n-sys').checked, acc: document.getElementById('n-acc').checked });
             document.getElementById('m-notif').classList.add('hidden');
         };
 
         document.addEventListener('click', e => {
-            const t = e.target;
-            if (t.closest('.like')) {
-                const id = parseInt(t.closest('.like').dataset.id);
-                const p = posts.find(p => p.id === id);
-                if (liked.has(id)) { liked.delete(id); p.likes--; t.querySelector('img').classList.remove('text-[#c19433]'); } 
-                else { liked.add(id); p.likes++; t.querySelector('img').classList.add('text-[#c19433]'); }
-                t.querySelector('span').textContent = p.likes;
+            const likeBtn = e.target.closest('.like');
+            const menuBtn = e.target.closest('.menu');
+            
+            if (likeBtn) {
+                const id = parseInt(likeBtn.dataset.id);
+                const post = posts.find(p => p.id === id);
+                const svg = likeBtn.querySelector('svg');
+                const span = likeBtn.querySelector('span');
+                
+                if (liked.has(id)) {
+                    liked.delete(id);
+                    post.likes--;
+                    svg.setAttribute('fill', 'none');
+                    svg.setAttribute('stroke', 'currentColor');
+                } else {
+                    liked.add(id);
+                    post.likes++;
+                    svg.setAttribute('fill', '#c19433');
+                    svg.setAttribute('stroke', '#c19433');
+                }
+                span.textContent = post.likes;
             }
-            if (t.closest('.menu')) {
-                const id = parseInt(t.closest('.menu').dataset.id), p = posts.find(p => p.id === id);
+            
+            if (menuBtn) {
+                const id = parseInt(menuBtn.dataset.id);
+                const post = posts.find(p => p.id === id);
                 const opts = document.getElementById('post-options');
-                opts.innerHTML = (p.creator.id === user.id) ? 
-                    '<button class="w-full p-1">Изменить</button><button class="w-full p-1">Поделиться</button><button class="w-full p-1">Удалить</button>' :
-                    '<button class="w-full p-1">В избранное</button><button class="w-full p-1">Скрыть</button><button class="w-full p-1">Поделиться</button><button class="w-full p-1">Пожаловаться</button>';
+                
+                if (post.creator.id === user.id) {
+                    opts.innerHTML = `
+                        <button class="modal-button">Изменить</button>
+                        <button class="modal-button">Поделиться</button>
+                        <button class="modal-button">Удалить</button>
+                    `;
+                } else {
+                    opts.innerHTML = `
+                        <button class="modal-button">В избранное</button>
+                        <button class="modal-button">Скрыть</button>
+                        <button class="modal-button">Поделиться</button>
+                        <button class="modal-button">Пожаловаться</button>
+                    `;
+                }
+                
                 document.getElementById('m-post').classList.remove('hidden');
+                
                 opts.onclick = e => {
-                    if (e.target.tagName === 'BUTTON') {
-                        const act = e.target.textContent;
-                        if (act === 'В избранное') favorites.add(id);
-                        if (act === 'Скрыть') hidden.add(id);
+                    if (e.target.classList.contains('modal-button')) {
+                        const action = e.target.textContent;
+                        if (action === 'В избранное') favorites.add(id);
+                        if (action === 'Скрыть') hidden.add(id);
                         renderPosts();
                         opts.parentElement.classList.add('hidden');
                     }
                 };
             }
         });
-
-        renderCities();
     </script>
 </body>
 </html>
