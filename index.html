@@ -429,22 +429,79 @@
         </div>
         <hr class="mb-4 border-gray-200">
         
-        <!-- Save Filters Button -->
-        <button id="save-filters" class="w-full py-3 bg-gray-100 text-gray-800 rounded-2xl mb-4 text-lg font-medium hover:bg-gray-200 transition-colors">Сохранить выбранные фильтры</button>
-        
-        <div class="space-y-3">
+        <div class="space-y-4">
             <label class="flex items-center p-3 bg-gray-50 rounded-2xl cursor-pointer">
-                <input type="checkbox" id="n-likes" class="mr-3 w-5 h-5">
-                <span class="text-lg">Лайки</span>
-            </label>
-            <label class="flex items-center p-3 bg-gray-50 rounded-2xl cursor-pointer">
-                <input type="checkbox" id="n-sys" class="mr-3 w-5 h-5">
+                <input type="checkbox" id="n-system" class="mr-3 w-5 h-5" checked>
                 <span class="text-lg">Системные</span>
             </label>
             <label class="flex items-center p-3 bg-gray-50 rounded-2xl cursor-pointer">
-                <input type="checkbox" id="n-acc" class="mr-3 w-5 h-5">
-                <span class="text-lg">Аккаунт</span>
+                <input type="checkbox" id="n-likes" class="mr-3 w-5 h-5" checked>
+                <span class="text-lg">Лайки</span>
             </label>
+            
+            <div class="border-t pt-4">
+                <label class="flex items-center p-3 bg-gray-50 rounded-2xl cursor-pointer">
+                    <input type="checkbox" id="n-filters" class="mr-3 w-5 h-5">
+                    <span class="text-lg">Фильтры и теги</span>
+                </label>
+                
+                <div id="filter-selection" class="mt-4 hidden">
+                    <div class="mb-4">
+                        <button id="select-all-filters" class="w-full py-2 bg-blue-500 text-white rounded-xl">Выбрать все фильтры</button>
+                    </div>
+                    
+                    <div class="space-y-3">
+                        <div>
+                            <span class="font-medium">Категория:</span>
+                            <select id="notif-category" class="w-full mt-1 p-2 border rounded-xl">
+                                <option value="Все">Все</option>
+                            </select>
+                        </div>
+                        
+                        <div>
+                            <span class="font-medium">Город:</span>
+                            <select id="notif-city" class="w-full mt-1 p-2 border rounded-xl">
+                                <option value="Все">Все</option>
+                            </select>
+                        </div>
+                        
+                        <div>
+                            <span class="font-medium">Пол:</span>
+                            <select id="notif-gender" class="w-full mt-1 p-2 border rounded-xl">
+                                <option value="Все">Все</option>
+                                <option value="Мужской">Мужской</option>
+                                <option value="Женский">Женский</option>
+                            </select>
+                        </div>
+                        
+                        <div>
+                            <span class="font-medium">Возраст:</span>
+                            <select id="notif-age" class="w-full mt-1 p-2 border rounded-xl">
+                                <option value="Все">Все</option>
+                                <option value="16-25">16-25</option>
+                                <option value="25-35">25-35</option>
+                                <option value="35-45">35-45</option>
+                                <option value="45+">45+</option>
+                            </select>
+                        </div>
+                        
+                        <div>
+                            <span class="font-medium">Дата:</span>
+                            <select id="notif-date" class="w-full mt-1 p-2 border rounded-xl">
+                                <option value="Все">Все</option>
+                                <option value="Сегодня">Сегодня</option>
+                                <option value="Завтра">Завтра</option>
+                                <option value="На неделе">На неделе</option>
+                                <option value="В этом месяце">В этом месяце</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="mt-6">
+            <button id="save-notifications" class="w-full py-3 bg-green-500 text-white rounded-2xl text-lg font-medium">Сохранить настройки</button>
         </div>
     </div>
 
@@ -515,7 +572,7 @@
         // Глобальные переменные
         let ws = null;
         let user = { telegram_id: null, username: null, full_name: null, first_name: null };
-        let userStats = { posts: [], hidden: [], favorites: [], likes: [], reports: [], post_limit: 10, status: 'live' };
+        let userStats = { posts: [], hidden: [], favorites: [], likes: [], reports: [], post_limit: 10, status: 'live', notifications_likes: true, notifications_system: true, notifications_filters: {} };
         let lang = 'ru';
         let filters = { 
             category: 'Все', 
@@ -539,7 +596,7 @@
         let isEditingPost = false;
         let editingPostId = null;
 
-        // WebSocket URL - измените на ваш домен
+        // WebSocket URL
         const WS_URL = 'wss://six-063o.onrender.com/ws';
 
         // Инициализация WebSocket
@@ -576,6 +633,7 @@
                 case 'user_synced':
                     userStats = data.data;
                     updateUserProfile();
+                    updateNotificationSettings();
                     loadInitialData();
                     break;
                     
@@ -603,6 +661,22 @@
                         allPosts[actionIndex] = data.data;
                         renderPosts();
                     }
+                    break;
+                    
+                case 'user_updated':
+                    userStats = data.data;
+                    updateUserProfile();
+                    break;
+                    
+                case 'user_status_updated':
+                    if (data.data.telegram_id === user.telegram_id) {
+                        userStats = data.data.user_info;
+                        updateUserProfile();
+                    }
+                    break;
+                    
+                case 'notifications_updated':
+                    console.log('Настройки уведомлений сохранены');
                     break;
             }
         }
@@ -701,6 +775,7 @@
                 renderCities();
                 renderTagCities();
                 renderPosts();
+                updateNotificationSelectors();
                 
             } catch (error) {
                 console.error('Ошибка загрузки данных:', error);
@@ -726,6 +801,28 @@
             
             if (userStats) {
                 postsCount.textContent = `${userStats.posts.length}/${userStats.post_limit} объявлений`;
+            }
+        }
+
+        // Обновление настроек уведомлений в UI
+        function updateNotificationSettings() {
+            if (userStats) {
+                document.getElementById('n-system').checked = userStats.notifications_system !== false;
+                document.getElementById('n-likes').checked = userStats.notifications_likes !== false;
+                
+                const hasFilters = userStats.notifications_filters && Object.keys(userStats.notifications_filters).length > 0;
+                document.getElementById('n-filters').checked = hasFilters;
+                
+                if (hasFilters) {
+                    document.getElementById('filter-selection').classList.remove('hidden');
+                    // Загружаем сохраненные фильтры
+                    const filters = userStats.notifications_filters;
+                    if (filters.category) document.getElementById('notif-category').value = filters.category;
+                    if (filters.city) document.getElementById('notif-city').value = filters.city;
+                    if (filters.gender) document.getElementById('notif-gender').value = filters.gender;
+                    if (filters.age) document.getElementById('notif-age').value = filters.age;
+                    if (filters.date) document.getElementById('notif-date').value = filters.date;
+                }
             }
         }
 
@@ -804,9 +901,49 @@
             renderCreateTags();
         }
 
-        // Действия пользователя (лайк, избранное, скрыть, жаловаться)
+        function updateTagIcon(tagId) {
+            const icon = document.getElementById(`t-${tagId}`);
+            const hasTag = tags[tagId] !== 'Все';
+            
+            if (hasTag) {
+                icon.classList.add('active');
+            } else {
+                icon.classList.remove('active');
+            }
+            
+            // Обновляем отображение тегов в создании
+            renderCreateTags();
+        }
+
+        function renderCreateTags() {
+            const container = document.getElementById('create-tags-display');
+            const tagContainer = document.getElementById('create-tags-container');
+            tagContainer.innerHTML = '';
+            
+            let hasTags = false;
+            
+            if (tags.category !== 'Все') {
+                tagContainer.innerHTML += `<span class="filter-tag">${tags.category}</span>`;
+                hasTags = true;
+            }
+            
+            ['city', 'gender', 'age', 'date'].forEach(tagType => {
+                if (tags[tagType] !== 'Все') {
+                    tagContainer.innerHTML += `<span class="filter-tag">${tags[tagType]}</span>`;
+                    hasTags = true;
+                }
+            });
+            
+            if (hasTags) {
+                container.classList.remove('hidden');
+            } else {
+                container.classList.add('hidden');
+            }
+        }
+
+        // Действия пользователя (лайк, избранное, скрыть, жаловаться, удалить)
         function handleUserAction(postId, action) {
-            if (userStats.status === 'banned' && (action === 'like' || action === 'report')) {
+            if (userStats.status === 'banned' && (action === 'like' || action === 'report' || action === 'delete')) {
                 alert('Ваш аккаунт заблокирован');
                 return;
             }
@@ -853,7 +990,39 @@
             });
         }
 
-        // Рендеринг категорий для создания - функция уже определена выше
+        // Рендеринг категорий для создания
+        function renderCreateCategories() {
+            const container = document.getElementById('create-categories');
+            container.innerHTML = '';
+            
+            categories.forEach((cat, i) => {
+                const wrapper = document.createElement('div');
+                wrapper.className = 'relative inline-block mx-1';
+                
+                const btn = document.createElement('button');
+                btn.textContent = cat[lang];
+                btn.className = `px-4 py-2 text-lg font-semibold transition-colors ${tags.category === cat[lang] ? 'category-active text-black' : 'text-gray-500 hover:text-gray-700'}`;
+                
+                const line = document.createElement('div');
+                line.className = 'category-line';
+                
+                btn.onclick = () => {
+                    container.querySelectorAll('button').forEach(b => {
+                        b.className = 'px-4 py-2 text-lg font-semibold text-gray-500 hover:text-gray-700 transition-colors';
+                        b.parentElement.classList.remove('category-active');
+                    });
+                    btn.className = 'px-4 py-2 text-lg font-semibold text-black transition-colors';
+                    wrapper.classList.add('category-active');
+                    tags.category = cat[lang];
+                    renderCreateTags(); // Обновляем отображение тегов
+                    btn.scrollIntoView({ behavior: 'smooth', inline: 'center' });
+                };
+                
+                wrapper.appendChild(btn);
+                wrapper.appendChild(line);
+                container.appendChild(wrapper);
+            });
+        }
 
         // Рендеринг постов
         function renderPosts() {
@@ -946,6 +1115,28 @@
             });
         }
 
+        function updateNotificationSelectors() {
+            // Обновляем селекторы категорий
+            const categorySelect = document.getElementById('notif-category');
+            categorySelect.innerHTML = '<option value="Все">Все</option>';
+            categories.forEach(cat => {
+                const option = document.createElement('option');
+                option.value = cat[lang];
+                option.textContent = cat[lang];
+                categorySelect.appendChild(option);
+            });
+
+            // Обновляем селекторы городов
+            const citySelect = document.getElementById('notif-city');
+            citySelect.innerHTML = '<option value="Все">Все</option>';
+            cities.forEach(city => {
+                const option = document.createElement('option');
+                option.value = city;
+                option.textContent = city;
+                citySelect.appendChild(option);
+            });
+        }
+
         function closeAllModals() {
             document.querySelectorAll('.fixed').forEach(modal => {
                 if (modal.id.startsWith('m-') || modal.id.startsWith('tm-')) {
@@ -964,46 +1155,6 @@
                 icon.classList.add('active');
             } else {
                 icon.classList.remove('active');
-            }
-        }
-
-        function updateTagIcon(tagId) {
-            const icon = document.getElementById(`t-${tagId}`);
-            const hasTag = tags[tagId] !== 'Все';
-            
-            if (hasTag) {
-                icon.classList.add('active');
-            } else {
-                icon.classList.remove('active');
-            }
-            
-            // Обновляем отображение тегов в создании
-            renderCreateTags();
-        }
-
-        function renderCreateTags() {
-            const container = document.getElementById('create-tags-display');
-            const tagContainer = document.getElementById('create-tags-container');
-            tagContainer.innerHTML = '';
-            
-            let hasTags = false;
-            
-            if (tags.category !== 'Все') {
-                tagContainer.innerHTML += `<span class="filter-tag">${tags.category}</span>`;
-                hasTags = true;
-            }
-            
-            ['city', 'gender', 'age', 'date'].forEach(tagType => {
-                if (tags[tagType] !== 'Все') {
-                    tagContainer.innerHTML += `<span class="filter-tag">${tags[tagType]}</span>`;
-                    hasTags = true;
-                }
-            });
-            
-            if (hasTags) {
-                container.classList.remove('hidden');
-            } else {
-                container.classList.add('hidden');
             }
         }
 
@@ -1176,39 +1327,49 @@
             };
         });
 
-        // Обновляем теги при изменении категории
-        function renderCreateCategories() {
-            const container = document.getElementById('create-categories');
-            container.innerHTML = '';
-            
-            categories.forEach((cat, i) => {
-                const wrapper = document.createElement('div');
-                wrapper.className = 'relative inline-block mx-1';
-                
-                const btn = document.createElement('button');
-                btn.textContent = cat[lang];
-                btn.className = `px-4 py-2 text-lg font-semibold transition-colors ${tags.category === cat[lang] ? 'category-active text-black' : 'text-gray-500 hover:text-gray-700'}`;
-                
-                const line = document.createElement('div');
-                line.className = 'category-line';
-                
-                btn.onclick = () => {
-                    container.querySelectorAll('button').forEach(b => {
-                        b.className = 'px-4 py-2 text-lg font-semibold text-gray-500 hover:text-gray-700 transition-colors';
-                        b.parentElement.classList.remove('category-active');
-                    });
-                    btn.className = 'px-4 py-2 text-lg font-semibold text-black transition-colors';
-                    wrapper.classList.add('category-active');
-                    tags.category = cat[lang];
-                    renderCreateTags(); // Обновляем отображение тегов
-                    btn.scrollIntoView({ behavior: 'smooth', inline: 'center' });
-                };
-                
-                wrapper.appendChild(btn);
-                wrapper.appendChild(line);
-                container.appendChild(wrapper);
-            });
-        }
+        // Уведомления
+        document.getElementById('n-filters').onchange = e => {
+            if (e.target.checked) {
+                document.getElementById('filter-selection').classList.remove('hidden');
+            } else {
+                document.getElementById('filter-selection').classList.add('hidden');
+            }
+        };
+
+        document.getElementById('select-all-filters').onclick = () => {
+            const currentFilters = { ...filters };
+            document.getElementById('notif-category').value = currentFilters.category;
+            if (currentFilters.city.length > 0) {
+                document.getElementById('notif-city').value = currentFilters.city[0];
+            }
+            if (currentFilters.gender.length > 0) {
+                document.getElementById('notif-gender').value = currentFilters.gender[0];
+            }
+            if (currentFilters.age.length > 0) {
+                document.getElementById('notif-age').value = currentFilters.age[0];
+            }
+            if (currentFilters.date.length > 0) {
+                document.getElementById('notif-date').value = currentFilters.date[0];
+            }
+        };
+
+        document.getElementById('save-notifications').onclick = () => {
+            const notifications = {
+                telegram_id: user.telegram_id,
+                likes: document.getElementById('n-likes').checked,
+                system: document.getElementById('n-system').checked,
+                filters: document.getElementById('n-filters').checked ? {
+                    category: document.getElementById('notif-category').value,
+                    city: document.getElementById('notif-city').value,
+                    gender: document.getElementById('notif-gender').value,
+                    age: document.getElementById('notif-age').value,
+                    date: document.getElementById('notif-date').value
+                } : {}
+            };
+
+            sendAction('update_notifications', notifications);
+            document.getElementById('m-notif').classList.add('hidden');
+        };
 
         // Создание поста
         document.getElementById('create-btn').onclick = () => {
@@ -1267,8 +1428,8 @@
                 if (post.telegram_id === user.telegram_id) {
                     opts.innerHTML = `
                         <button class="modal-button" data-action="edit" data-id="${id}">Изменить</button>
-                        <button class="modal-button" data-action="share" data-id="${id}">Поделиться</button>
                         <button class="modal-button" data-action="delete" data-id="${id}">Удалить</button>
+                        <button class="modal-button" data-action="share" data-id="${id}">Поделиться</button>
                     `;
                 } else {
                     const isFavorite = userStats.favorites.includes(id);
@@ -1335,13 +1496,6 @@
                 
                 document.getElementById('m-post').classList.add('hidden');
             }
-        };
-
-        // Сохранение фильтров для уведомлений
-        document.getElementById('save-filters').onclick = () => {
-            // Здесь можно добавить логику сохранения подписок
-            alert('Фильтры сохранены для уведомлений');
-            document.getElementById('m-notif').classList.add('hidden');
         };
     </script>
 </body>
