@@ -152,7 +152,7 @@
             display: flex;
             gap: 12px;
             align-items: center;
-            z-index: 30;
+            z-index: 20;
             box-shadow: 0 -4px 6px -1px rgba(0, 0, 0, 0.1);
         }
 
@@ -569,7 +569,7 @@
         </div>
     </div>
 
-    <div id="m-post" class="fixed bottom-0 left-0 right-0 modal-overlay hidden z-50">
+    <div id="m-post" class="fixed bottom-0 left-0 right-0 modal-overlay hidden z-[60]">
         <div class="bg-white rounded-t-3xl p-6 modal-slide modal-content">
             <div class="flex justify-between items-center mb-4">
                 <span class="text-lg font-semibold">Меню</span>
@@ -1157,7 +1157,7 @@
                         </div>
                         <div class="flex items-center space-x-3">
                             <button class="like flex items-center p-2 rounded-lg hover:bg-gray-50 transition-colors" data-id="${p.id}">
-                                <img src="./lightning.svg" width="22" height="22" alt="Like" style="filter: ${userStats.likes.includes(p.id) ? 'invert(25%) sepia(50%) saturate(1500%) hue-rotate(35deg) brightness(100%) contrast(90%)' : 'none'}">
+                                <img src="./lightning.svg" width="22" height="22" alt="Like" style="filter: ${userStats.likes.includes(p.id) ? 'invert(77%) sepia(59%) saturate(348%) hue-rotate(5deg) brightness(92%) contrast(85%)' : 'none'}">
                                 <span class="ml-1 text-base">${p.likes_count || 0}</span>
                             </button>
                             <button class="menu p-2 rounded-lg hover:bg-gray-50 transition-colors" data-id="${p.id}">
@@ -1222,7 +1222,7 @@
                         setTimeout(() => {
                             modal.classList.add('hidden');
                         }, 300);
-                    } else {
+                    } else if (!modal.classList.contains('hidden')) {
                         modal.classList.add('hidden');
                     }
                 }
@@ -1308,6 +1308,16 @@
                 closeAllModals();
                 const modal = document.getElementById(`m-${f}`);
                 const content = modal.querySelector('.modal-slide');
+
+                // Для сортировки - показываем активную кнопку
+                if (f === 'sort') {
+                    document.querySelectorAll('#m-sort .modal-button').forEach(btn => {
+                        btn.classList.remove('selected');
+                        if (btn.textContent === filters.sort) {
+                            btn.classList.add('selected');
+                        }
+                    });
+                }
 
                 modal.classList.remove('hidden');
 
@@ -1416,11 +1426,32 @@
         // Сортировка
         document.getElementById('m-sort').onclick = e => {
             if (e.target.classList.contains('modal-button')) {
+                // Убираем выделение со всех кнопок
+                document.querySelectorAll('#m-sort .modal-button').forEach(btn => {
+                    btn.classList.remove('selected');
+                });
+                
+                // Выделяем выбранную кнопку
+                e.target.classList.add('selected');
+                
                 filters.sort = e.target.textContent;
                 updateFilterIcon('sort');
                 renderPosts();
                 renderFilterTags();
-                e.target.closest('.modal-overlay').classList.add('hidden');
+                
+                // Закрываем модалку с анимацией
+                const modal = e.target.closest('.modal-overlay');
+                const content = modal.querySelector('.modal-slide');
+                
+                if (content) {
+                    content.classList.remove('show');
+                    modal.classList.remove('show');
+                    setTimeout(() => {
+                        modal.classList.add('hidden');
+                    }, 300);
+                } else {
+                    modal.classList.add('hidden');
+                }
             }
         };
 
