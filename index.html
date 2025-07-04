@@ -2,10 +2,11 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0, minimum-scale=1.0">
     <title>Telegram App</title>
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;600&display=swap" rel="stylesheet">
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         body { font-family: 'Rubik', sans-serif; font-size: 16px; }
         * { border-color: #e3e3e3; }
@@ -52,6 +53,10 @@
         .modal-button:hover {
             background: #e5e7eb;
         }
+        .modal-button.selected {
+            background: #1f2937;
+            color: white;
+        }
         .close-btn {
             width: 32px;
             height: 32px;
@@ -84,6 +89,11 @@
         .filter-icon:hover {
             background: #f9fafb;
             border-color: #9ca3af;
+        }
+        .filter-icon.active {
+            background: #1f2937;
+            border-color: #1f2937;
+            color: white;
         }
         .search-container {
             position: fixed;
@@ -127,12 +137,34 @@
         .main-content {
             padding-bottom: 80px;
         }
+        .filter-tag {
+            background: #e5e7eb;
+            color: #374151;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 14px;
+            margin: 2px;
+            display: inline-block;
+        }
+        .char-counter {
+            color: #6b7280;
+            font-size: 14px;
+        }
+        .char-counter.error {
+            color: #ef4444;
+        }
+        .sync-text {
+            color: white;
+            margin-top: 16px;
+            font-size: 14px;
+        }
     </style>
 </head>
 <body class="bg-gray-100">
     <!-- Loading Screen -->
-    <div id="loading" class="fixed inset-0 bg-[#1d1c1b] flex items-center justify-center z-50">
+    <div id="loading" class="fixed inset-0 bg-[#1d1c1b] flex flex-col items-center justify-center z-50">
         <div class="spinner"></div>
+        <div class="sync-text">Синхронизация с Telegram...</div>
     </div>
 
     <!-- Language Modal -->
@@ -201,13 +233,100 @@
                 </div>
             </div>
             
+            <div id="filter-tags" class="px-4 py-2 bg-white border-b hidden">
+                <div class="flex flex-wrap"></div>
+            </div>
+            
             <div id="feed" class="p-4 space-y-4"></div>
         </div>
 
         <!-- Search Container -->
         <div class="search-container">
             <input type="text" class="search-input" placeholder="Поиск объявлений...">
-            <button class="create-btn">Создать</button>
+            <button id="create-btn" class="create-btn">Создать</button>
+        </div>
+    </div>
+
+    <!-- Create Post Screen -->
+    <div id="create-screen" class="fixed inset-0 bg-white z-50 hidden">
+        <div class="flex flex-col h-full">
+            <!-- Header -->
+            <div class="flex items-center p-4 border-b bg-white">
+                <button id="back-btn" class="mr-3">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M19 12H5"/>
+                        <path d="M12 19l-7-7 7-7"/>
+                    </svg>
+                </button>
+                <img id="user-avatar" src="" class="w-10 h-10 rounded-full mr-3 bg-gray-200">
+                <div class="flex-1">
+                    <div id="user-name" class="font-semibold text-lg"></div>
+                    <div class="text-sm text-gray-500">0/10 объявлений</div>
+                </div>
+                <button class="px-4 py-2 bg-gray-100 rounded-lg text-sm">Общий чат</button>
+            </div>
+
+            <!-- Content -->
+            <div class="flex-1 overflow-y-auto p-4">
+                <hr class="mb-4 border-gray-200">
+                
+                <!-- Text Input -->
+                <div class="mb-6">
+                    <textarea id="post-text" placeholder="Введите текст объявления..." class="w-full p-4 border border-gray-300 rounded-2xl resize-none text-lg" rows="4"></textarea>
+                    <div class="flex justify-end mt-2">
+                        <span id="text-counter" class="char-counter">0/450</span>
+                    </div>
+                </div>
+
+                <!-- Categories -->
+                <div class="mb-6">
+                    <h3 class="text-lg font-semibold mb-3">Категории</h3>
+                    <div id="create-categories" class="overflow-x-auto whitespace-nowrap py-2"></div>
+                </div>
+
+                <!-- Tags -->
+                <div class="mb-6">
+                    <h3 class="text-lg font-semibold mb-3">Теги</h3>
+                    <div class="flex justify-between items-center p-3 bg-[#f8f7f6] border-b rounded-xl">
+                        <div class="flex gap-2">
+                            <button id="t-city" class="filter-icon">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+                                    <circle cx="12" cy="10" r="3"/>
+                                </svg>
+                            </button>
+                            <button id="t-gender" class="filter-icon">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <circle cx="12" cy="12" r="10"/>
+                                    <path d="M8 14s1.5 2 4 2 4-2 4-2"/>
+                                    <line x1="9" y1="9" x2="9.01" y2="9"/>
+                                    <line x1="15" y1="9" x2="15.01" y2="9"/>
+                                </svg>
+                            </button>
+                            <button id="t-age" class="filter-icon">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <circle cx="12" cy="12" r="3"/>
+                                    <path d="M12 1v6m0 6v6"/>
+                                    <path d="m21 12-6-6-6 6"/>
+                                </svg>
+                            </button>
+                            <button id="t-date" class="filter-icon">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                                    <line x1="16" y1="2" x2="16" y2="6"/>
+                                    <line x1="8" y1="2" x2="8" y2="6"/>
+                                    <line x1="3" y1="10" x2="21" y2="10"/>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Create Button -->
+            <div class="p-4 border-t bg-white">
+                <button id="submit-post" class="w-full py-3 bg-blue-500 text-white rounded-2xl text-lg font-medium disabled:bg-gray-300 disabled:cursor-not-allowed" disabled>Создать объявление</button>
+            </div>
         </div>
     </div>
 
@@ -288,6 +407,10 @@
             <div class="close-btn">&times;</div>
         </div>
         <hr class="mb-4 border-gray-200">
+        
+        <!-- Save Filters Button -->
+        <button id="save-filters" class="w-full py-3 bg-gray-100 text-gray-800 rounded-2xl mb-4 text-lg font-medium hover:bg-gray-200 transition-colors">Сохранить выбранные фильтры</button>
+        
         <div class="space-y-3">
             <label class="flex items-center p-3 bg-gray-50 rounded-2xl cursor-pointer">
                 <input type="checkbox" id="n-likes" class="mr-3 w-5 h-5">
@@ -301,29 +424,141 @@
                 <input type="checkbox" id="n-acc" class="mr-3 w-5 h-5">
                 <span class="text-lg">Аккаунт</span>
             </label>
-            <button id="n-save" class="w-full py-3 bg-blue-500 text-white rounded-2xl mt-4 text-lg font-medium hover:bg-blue-600 transition-colors">Сохранить</button>
         </div>
     </div>
 
     <div id="m-post" class="fixed bottom-0 left-0 right-0 bg-white rounded-t-3xl p-6 hidden z-50">
+        <div class="flex justify-between items-center mb-4">
+            <span class="text-xl font-semibold">Меню</span>
+            <div class="close-btn">&times;</div>
+        </div>
+        <hr class="mb-4 border-gray-200">
         <div id="post-options" class="space-y-1"></div>
     </div>
 
+    <!-- Tag Modal for Create Screen -->
+    <div id="tm-city" class="fixed bottom-0 left-0 right-0 bg-white rounded-t-3xl p-6 hidden z-50">
+        <div class="flex justify-between items-center mb-4">
+            <span class="text-xl font-semibold">Город</span>
+            <div class="close-btn">&times;</div>
+        </div>
+        <hr class="mb-4 border-gray-200">
+        <input id="tag-city-search" class="w-full p-3 border border-gray-300 rounded-2xl mb-4 text-lg" placeholder="Поиск">
+        <div id="tag-city-options" class="space-y-1 max-h-60 overflow-y-auto"></div>
+    </div>
+
+    <div id="tm-gender" class="fixed bottom-0 left-0 right-0 bg-white rounded-t-3xl p-6 hidden z-50">
+        <div class="flex justify-between items-center mb-4">
+            <span class="text-xl font-semibold">Пол</span>
+            <div class="close-btn">&times;</div>
+        </div>
+        <hr class="mb-4 border-gray-200">
+        <div class="space-y-1">
+            <button class="modal-button">Все</button>
+            <button class="modal-button">Мужской</button>
+            <button class="modal-button">Женский</button>
+        </div>
+    </div>
+
+    <div id="tm-age" class="fixed bottom-0 left-0 right-0 bg-white rounded-t-3xl p-6 hidden z-50">
+        <div class="flex justify-between items-center mb-4">
+            <span class="text-xl font-semibold">Возраст</span>
+            <div class="close-btn">&times;</div>
+        </div>
+        <hr class="mb-4 border-gray-200">
+        <div class="space-y-1">
+            <button class="modal-button">Все</button>
+            <button class="modal-button">16-25</button>
+            <button class="modal-button">25-35</button>
+            <button class="modal-button">35-45</button>
+            <button class="modal-button">45+</button>
+        </div>
+    </div>
+
+    <div id="tm-date" class="fixed bottom-0 left-0 right-0 bg-white rounded-t-3xl p-6 hidden z-50">
+        <div class="flex justify-between items-center mb-4">
+            <span class="text-xl font-semibold">Дата</span>
+            <div class="close-btn">&times;</div>
+        </div>
+        <hr class="mb-4 border-gray-200">
+        <div class="space-y-1">
+            <button class="modal-button">Все</button>
+            <button class="modal-button">Сегодня</button>
+            <button class="modal-button">Завтра</button>
+            <button class="modal-button">На неделе</button>
+            <button class="modal-button">В этом месяце</button>
+        </div>
+    </div>
+
     <script>
-        const user = { id: 1, name: 'Я', username: 'me', logo: 'me.jpg' };
+        let user = { id: null, name: null, username: null, logo: null, fullName: null };
         let lang = 'ru';
-        let filters = { category: 'Все', city: 'Все', gender: 'Все', age: 'Все', date: 'Все', sort: 'Новые' };
+        let filters = { 
+            category: 'Все', 
+            city: [], 
+            gender: [], 
+            age: [], 
+            date: [], 
+            sort: 'Новые' 
+        };
+        let tags = { 
+            category: 'Все', 
+            city: 'Все', 
+            gender: 'Все', 
+            age: 'Все', 
+            date: 'Все' 
+        };
         const favorites = new Set();
         const hidden = new Set();
         const liked = new Set();
         let categories = [];
         let cities = [];
+        let isSynced = false;
 
         const posts = [
             { id: 1, creator: user, desc: "Ищу друга для прогулок по городу", cat: "Дружба", city: "Москва", gender: "Мужской", age: "25-35", date: "Сегодня", likes: 3, ts: 1 },
-            { id: 2, creator: { id: 2, name: "Аня", username: "anya", logo: "anya.jpg" }, desc: "Давайте гуляем вместе!", cat: "Прогулки", city: "Санкт-Петербург", gender: "Женский", age: "16-25", date: "Завтра", likes: 5, ts: 2 },
-            { id: 3, creator: { id: 3, name: "Иван", username: "ivan", logo: "ivan.jpg" }, desc: "Организую вечеринку", cat: "События", city: "Новосибирск", gender: "Мужской", age: "35-45", date: "На неделе", likes: 2, ts: 3 }
+            { id: 2, creator: { id: 2, name: "Аня", username: "anya", logo: "anya.jpg", fullName: "Анна Петрова" }, desc: "Давайте гуляем вместе!", cat: "Прогулки", city: "Санкт-Петербург", gender: "Женский", age: "16-25", date: "Завтра", likes: 5, ts: 2 },
+            { id: 3, creator: { id: 3, name: "Иван", username: "ivan", logo: "ivan.jpg", fullName: "Иван Сидоров" }, desc: "Организую вечеринку", cat: "События", city: "Новосибирск", gender: "Мужской", age: "35-45", date: "На неделе", likes: 2, ts: 3 }
         ];
+
+        // Telegram Sync Function
+        async function syncWithTelegram() {
+            try {
+                // Проверяем доступность Telegram WebApp API
+                if (window.Telegram && window.Telegram.WebApp) {
+                    const tg = window.Telegram.WebApp;
+                    tg.ready();
+                    
+                    if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
+                        const tgUser = tg.initDataUnsafe.user;
+                        user = {
+                            id: tgUser.id,
+                            name: tgUser.first_name,
+                            username: tgUser.username || `user${tgUser.id}`,
+                            logo: tgUser.photo_url || `https://api.telegram.org/file/bot/photos/user_${tgUser.id}.jpg`,
+                            fullName: `${tgUser.first_name} ${tgUser.last_name || ''}`.trim()
+                        };
+                        isSynced = true;
+                        return true;
+                    }
+                }
+                
+                // Fallback: имитация данных для демонстрации
+                await new Promise(resolve => setTimeout(resolve, 2000));
+                user = {
+                    id: 12345678,
+                    name: 'Я',
+                    username: 'myusername',
+                    logo: 'https://api.telegram.org/file/bot/photos/user_12345678.jpg',
+                    fullName: 'Моё Полное Имя'
+                };
+                isSynced = true;
+                return true;
+                
+            } catch (error) {
+                return false;
+            }
+        }
 
         async function loadCategories() {
             try {
@@ -350,10 +585,92 @@
             }
         }
 
-        setTimeout(() => {
-            document.getElementById('loading').classList.add('hidden');
-            document.getElementById('lang-modal').classList.remove('hidden');
-        }, 1000);
+        function closeAllModals() {
+            document.querySelectorAll('.fixed').forEach(modal => {
+                if (modal.id.startsWith('m-') || modal.id.startsWith('tm-')) {
+                    modal.classList.add('hidden');
+                }
+            });
+        }
+
+        function updateFilterIcon(filterId) {
+            const icon = document.getElementById(`f-${filterId}`);
+            const hasActiveFilters = filterId === 'sort' 
+                ? filters[filterId] !== 'Новые'
+                : filters[filterId].length > 0;
+            
+            if (hasActiveFilters) {
+                icon.classList.add('active');
+            } else {
+                icon.classList.remove('active');
+            }
+        }
+
+        function updateTagIcon(tagId) {
+            const icon = document.getElementById(`t-${tagId}`);
+            const hasTag = tags[tagId] !== 'Все';
+            
+            if (hasTag) {
+                icon.classList.add('active');
+            } else {
+                icon.classList.remove('active');
+            }
+        }
+
+        function renderFilterTags() {
+            const container = document.getElementById('filter-tags');
+            const tagContainer = container.querySelector('.flex');
+            tagContainer.innerHTML = '';
+            
+            let hasTags = false;
+            
+            if (filters.category !== 'Все') {
+                tagContainer.innerHTML += `<span class="filter-tag">${filters.category}</span>`;
+                hasTags = true;
+            }
+            
+            ['city', 'gender', 'age', 'date'].forEach(filter => {
+                if (filters[filter].length > 0) {
+                    filters[filter].forEach(value => {
+                        tagContainer.innerHTML += `<span class="filter-tag">${value}</span>`;
+                        hasTags = true;
+                    });
+                }
+            });
+            
+            if (filters.sort !== 'Новые') {
+                tagContainer.innerHTML += `<span class="filter-tag">Сортировка: ${filters.sort}</span>`;
+                hasTags = true;
+            }
+            
+            if (hasTags) {
+                container.classList.remove('hidden');
+            } else {
+                container.classList.add('hidden');
+            }
+        }
+
+        function updateUserProfile() {
+            if (user.logo) {
+                document.getElementById('user-avatar').src = user.logo;
+            }
+            if (user.fullName) {
+                document.getElementById('user-name').textContent = user.fullName;
+            }
+        }
+
+        // Initialize app
+        window.addEventListener('load', async () => {
+            const syncSuccess = await syncWithTelegram();
+            
+            if (syncSuccess) {
+                setTimeout(() => {
+                    document.getElementById('loading').classList.add('hidden');
+                    document.getElementById('lang-modal').classList.remove('hidden');
+                }, 500);
+            }
+            // Если синхронизация не удалась, спиннер будет крутиться бесконечно
+        });
 
         document.getElementById('lang-en').onclick = () => setLang('en');
         document.getElementById('lang-ru').onclick = () => setLang('ru');
@@ -367,8 +684,11 @@
             await loadCities();
             
             renderCategories();
+            renderCreateCategories();
             renderCities();
+            renderTagCities();
             renderPosts();
+            updateUserProfile();
         }
 
         function renderCategories() {
@@ -395,6 +715,39 @@
                     wrapper.classList.add('category-active');
                     filters.category = cat[lang];
                     renderPosts();
+                    renderFilterTags();
+                    btn.scrollIntoView({ behavior: 'smooth', inline: 'center' });
+                };
+                
+                wrapper.appendChild(btn);
+                wrapper.appendChild(line);
+                container.appendChild(wrapper);
+            });
+        }
+
+        function renderCreateCategories() {
+            const container = document.getElementById('create-categories');
+            container.innerHTML = '';
+            
+            categories.forEach((cat, i) => {
+                const wrapper = document.createElement('div');
+                wrapper.className = 'relative inline-block mx-1';
+                
+                const btn = document.createElement('button');
+                btn.textContent = cat[lang];
+                btn.className = `px-4 py-2 text-lg font-semibold transition-colors ${i === 0 ? 'category-active text-black' : 'text-gray-500 hover:text-gray-700'}`;
+                
+                const line = document.createElement('div');
+                line.className = 'category-line';
+                
+                btn.onclick = () => {
+                    container.querySelectorAll('button').forEach(b => {
+                        b.className = 'px-4 py-2 text-lg font-semibold text-gray-500 hover:text-gray-700 transition-colors';
+                        b.parentElement.classList.remove('category-active');
+                    });
+                    btn.className = 'px-4 py-2 text-lg font-semibold text-black transition-colors';
+                    wrapper.classList.add('category-active');
+                    tags.category = cat[lang];
                     btn.scrollIntoView({ behavior: 'smooth', inline: 'center' });
                 };
                 
@@ -405,17 +758,20 @@
         }
 
         function renderPosts() {
-            let filtered = posts.filter(p => (
-                (filters.category === 'Все' || p.cat === filters.category) &&
-                (filters.city === 'Все' || p.city === filters.city) &&
-                (filters.gender === 'Все' || p.gender === filters.gender) &&
-                (filters.age === 'Все' || p.age === filters.age) &&
-                (filters.date === 'Все' || p.date === filters.date) &&
-                (filters.sort === 'Новые' || filters.sort === 'Старые' || filters.sort === 'По рейтингу' || 
-                 (filters.sort === 'Мои' && p.creator.id === user.id) ||
-                 (filters.sort === 'Избранные' && favorites.has(p.id)) ||
-                 (filters.sort === 'Скрытые' && hidden.has(p.id)))
-            ));
+            let filtered = posts.filter(p => {
+                const categoryMatch = filters.category === 'Все' || p.cat === filters.category;
+                const cityMatch = filters.city.length === 0 || filters.city.includes(p.city);
+                const genderMatch = filters.gender.length === 0 || filters.gender.includes(p.gender);
+                const ageMatch = filters.age.length === 0 || filters.age.includes(p.age);
+                const dateMatch = filters.date.length === 0 || filters.date.includes(p.date);
+                
+                let sortMatch = true;
+                if (filters.sort === 'Мои') sortMatch = p.creator.id === user.id;
+                else if (filters.sort === 'Избранные') sortMatch = favorites.has(p.id);
+                else if (filters.sort === 'Скрытые') sortMatch = hidden.has(p.id);
+                
+                return categoryMatch && cityMatch && genderMatch && ageMatch && dateMatch && sortMatch;
+            });
 
             if (filters.sort === 'Новые') filtered.sort((a, b) => b.ts - a.ts);
             if (filters.sort === 'Старые') filtered.sort((a, b) => a.ts - b.ts);
@@ -432,8 +788,8 @@
                     <hr class="my-3 border-gray-200">
                     <div class="flex justify-between items-center">
                         <div class="flex items-center">
-                            <img src="${p.creator.logo}" class="w-8 h-8 rounded-full mr-3 bg-gray-200">
-                            <a href="https://t.me/${p.creator.username}" target="_blank" class="text-lg font-medium text-blue-600 hover:text-blue-800">${p.creator.name}</a>
+                            <img src="${p.creator.logo || 'default-avatar.jpg'}" class="w-8 h-8 rounded-full mr-3 bg-gray-200">
+                            <a href="https://t.me/${p.creator.username}" target="_blank" class="text-lg font-medium text-blue-600 hover:text-blue-800">${p.creator.fullName || p.creator.name}</a>
                         </div>
                         <div class="flex items-center space-x-3">
                             <button class="like flex items-center p-2 rounded-lg hover:bg-gray-50 transition-colors" data-id="${p.id}">
@@ -460,46 +816,162 @@
             opts.innerHTML = '<button class="modal-button">Все</button>';
             cities.filter(c => c.toLowerCase().includes(search.toLowerCase())).forEach(c => {
                 const btn = document.createElement('button');
+                btn.className = filters.city.includes(c) ? 'modal-button selected' : 'modal-button';
+                btn.textContent = c;
+                opts.appendChild(btn);
+            });
+        }
+
+        function renderTagCities(search = '') {
+            const opts = document.getElementById('tag-city-options');
+            opts.innerHTML = '<button class="modal-button">Все</button>';
+            cities.filter(c => c.toLowerCase().includes(search.toLowerCase())).forEach(c => {
+                const btn = document.createElement('button');
                 btn.className = 'modal-button';
                 btn.textContent = c;
                 opts.appendChild(btn);
             });
         }
 
+        // Filter buttons
         ['city', 'gender', 'age', 'date', 'sort', 'notif'].forEach(f => {
             document.getElementById(`f-${f}`).onclick = () => {
+                closeAllModals();
                 document.getElementById(`m-${f}`).classList.remove('hidden');
             };
         });
 
+        // Tag buttons for create screen
+        ['city', 'gender', 'age', 'date'].forEach(f => {
+            document.getElementById(`t-${f}`).onclick = () => {
+                closeAllModals();
+                document.getElementById(`tm-${f}`).classList.remove('hidden');
+            };
+        });
+
+        // Close buttons
         document.querySelectorAll('.close-btn').forEach(c => {
             c.onclick = () => c.closest('.fixed').classList.add('hidden');
         });
 
+        // City search
         document.getElementById('city-search').oninput = e => renderCities(e.target.value);
+        document.getElementById('tag-city-search').oninput = e => renderTagCities(e.target.value);
 
+        // Filter modals logic
         document.getElementById('m-city').onclick = e => {
             if (e.target.classList.contains('modal-button')) {
-                filters.city = e.target.textContent;
+                const value = e.target.textContent;
+                if (value === 'Все') {
+                    filters.city = [];
+                    renderCities();
+                } else {
+                    if (filters.city.includes(value)) {
+                        filters.city = filters.city.filter(v => v !== value);
+                        e.target.classList.remove('selected');
+                    } else {
+                        filters.city.push(value);
+                        e.target.classList.add('selected');
+                    }
+                }
+                updateFilterIcon('city');
                 renderPosts();
+                renderFilterTags();
+            }
+        };
+
+        ['gender', 'age', 'date'].forEach(filterType => {
+            document.getElementById(`m-${filterType}`).onclick = e => {
+                if (e.target.classList.contains('modal-button')) {
+                    const value = e.target.textContent;
+                    if (value === 'Все') {
+                        filters[filterType] = [];
+                        document.querySelectorAll(`#m-${filterType} .modal-button`).forEach(btn => {
+                            btn.classList.remove('selected');
+                        });
+                    } else {
+                        if (filters[filterType].includes(value)) {
+                            filters[filterType] = filters[filterType].filter(v => v !== value);
+                            e.target.classList.remove('selected');
+                        } else {
+                            filters[filterType].push(value);
+                            e.target.classList.add('selected');
+                        }
+                    }
+                    updateFilterIcon(filterType);
+                    renderPosts();
+                    renderFilterTags();
+                }
+            };
+        });
+
+        // Sort modal (only one selection)
+        document.getElementById('m-sort').onclick = e => {
+            if (e.target.classList.contains('modal-button')) {
+                filters.sort = e.target.textContent;
+                updateFilterIcon('sort');
+                renderPosts();
+                renderFilterTags();
                 e.target.closest('.fixed').classList.add('hidden');
             }
         };
 
-        ['gender', 'age', 'date', 'sort'].forEach(m => {
-            document.getElementById(`m-${m}`).onclick = e => {
+        // Tag modals for create screen
+        document.getElementById('tm-city').onclick = e => {
+            if (e.target.classList.contains('modal-button')) {
+                tags.city = e.target.textContent;
+                updateTagIcon('city');
+                e.target.closest('.fixed').classList.add('hidden');
+            }
+        };
+
+        ['gender', 'age', 'date'].forEach(tagType => {
+            document.getElementById(`tm-${tagType}`).onclick = e => {
                 if (e.target.classList.contains('modal-button')) {
-                    filters[m] = e.target.textContent;
-                    renderPosts();
+                    tags[tagType] = e.target.textContent;
+                    updateTagIcon(tagType);
                     e.target.closest('.fixed').classList.add('hidden');
                 }
             };
         });
 
-        document.getElementById('n-save').onclick = () => {
+        // Save filters functionality
+        document.getElementById('save-filters').onclick = () => {
+            renderFilterTags();
             document.getElementById('m-notif').classList.add('hidden');
         };
 
+        // Create post functionality
+        document.getElementById('create-btn').onclick = () => {
+            document.getElementById('create-screen').classList.remove('hidden');
+            updateUserProfile();
+        };
+
+        document.getElementById('back-btn').onclick = () => {
+            document.getElementById('create-screen').classList.add('hidden');
+        };
+
+        // Text counter
+        document.getElementById('post-text').oninput = e => {
+            const text = e.target.value;
+            const counter = document.getElementById('text-counter');
+            const submitBtn = document.getElementById('submit-post');
+            
+            counter.textContent = `${text.length}/450`;
+            
+            if (text.length > 450) {
+                counter.classList.add('error');
+                submitBtn.disabled = true;
+            } else if (text.length < 10) {
+                counter.classList.remove('error');
+                submitBtn.disabled = true;
+            } else {
+                counter.classList.remove('error');
+                submitBtn.disabled = false;
+            }
+        };
+
+        // Post interactions
         document.addEventListener('click', e => {
             const likeBtn = e.target.closest('.like');
             const menuBtn = e.target.closest('.menu');
@@ -525,6 +997,7 @@
             }
             
             if (menuBtn) {
+                closeAllModals();
                 const id = parseInt(menuBtn.dataset.id);
                 const post = posts.find(p => p.id === id);
                 const opts = document.getElementById('post-options');
