@@ -158,9 +158,25 @@
             margin-top: 16px;
             font-size: 14px;
         }
+        .connection-status {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #ef4444;
+            z-index: 1000;
+        }
+        .connection-status.connected {
+            background: #10b981;
+        }
     </style>
 </head>
 <body class="bg-gray-100">
+    <!-- Connection Status -->
+    <div id="connection-status" class="connection-status"></div>
+
     <!-- Loading Screen -->
     <div id="loading" class="fixed inset-0 bg-[#1d1c1b] flex flex-col items-center justify-center z-50">
         <div class="spinner"></div>
@@ -242,7 +258,7 @@
 
         <!-- Search Container -->
         <div class="search-container">
-            <input type="text" class="search-input" placeholder="Поиск объявлений...">
+            <input type="text" id="search-input" class="search-input" placeholder="Поиск объявлений...">
             <button id="create-btn" class="create-btn">Создать</button>
         </div>
     </div>
@@ -261,7 +277,7 @@
                 <img id="user-avatar" src="" class="w-10 h-10 rounded-full mr-3 bg-gray-200">
                 <div class="flex-1">
                     <div id="user-name" class="font-semibold text-lg"></div>
-                    <div class="text-sm text-gray-500">0/10 объявлений</div>
+                    <div id="user-posts-count" class="text-sm text-gray-500">0/10 объявлений</div>
                 </div>
                 <button class="px-4 py-2 bg-gray-100 rounded-lg text-sm">Общий чат</button>
             </div>
@@ -491,7 +507,10 @@
     </div>
 
     <script>
-        let user = { id: null, name: null, username: null, logo: null, fullName: null };
+        // Глобальные переменные
+        let ws = null;
+        let user = { telegram_id: null, username: null, full_name: null, first_name: null };
+        let userStats = { posts: [], hidden: [], favorites: [], likes: [], reports: [], post_limit: 10, status: 'live' };
         let lang = 'ru';
         let filters = { 
             category: 'Все', 
@@ -508,23 +527,99 @@
             age: 'Все', 
             date: 'Все' 
         };
-        const favorites = new Set();
-        const hidden = new Set();
-        const liked = new Set();
+        let allPosts = [];
         let categories = [];
         let cities = [];
-        let isSynced = false;
+        let searchQuery = '';
+        let isEditingPost = false;
+        let editingPostId = null;
 
-        const posts = [
-            { id: 1, creator: user, desc: "Ищу друга для прогулок по городу", cat: "Дружба", city: "Москва", gender: "Мужской", age: "25-35", date: "Сегодня", likes: 3, ts: 1 },
-            { id: 2, creator: { id: 2, name: "Аня", username: "anya", logo: "anya.jpg", fullName: "Анна Петрова" }, desc: "Давайте гуляем вместе!", cat: "Прогулки", city: "Санкт-Петербург", gender: "Женский", age: "16-25", date: "Завтра", likes: 5, ts: 2 },
-            { id: 3, creator: { id: 3, name: "Иван", username: "ivan", logo: "ivan.jpg", fullName: "Иван Сидоров" }, desc: "Организую вечеринку", cat: "События", city: "Новосибирск", gender: "Мужской", age: "35-45", date: "На неделе", likes: 2, ts: 3 }
-        ];
+        // WebSocket URL - измените на ваш домен
+        const WS_URL = 'ws://six-063o.onrender.com/ws';
 
-        // Telegram Sync Function
-        async function syncWithTelegram() {
+        // Инициализация WebSocket
+        function initWebSocket() {
+            ws = new WebSocket(WS_URL);
+            
+            ws.onopen = () => {
+                console.log('WebSocket подключен');
+                document.getElementById('connection-status').classList.add('connected');
+                syncWithServer();
+            };
+            
+            ws.onclose = () => {
+                console.log('WebSocket отключен');
+                document.getElementById('connection-status').classList.remove('connected');
+                // Переподключение через 3 секунды
+                setTimeout(initWebSocket, 3000);
+            };
+            
+            ws.onerror = (error) => {
+                console.error('WebSocket ошибка:', error);
+                document.getElementById('connection-status').classList.remove('connected');
+            };
+            
+            ws.onmessage = (event) => {
+                const data = JSON.parse(event.data);
+                handleServerMessage(data);
+            };
+        }
+
+        // Обработка сообщений от сервера
+        function handleServerMessage(data) {
+            switch (data.type) {
+                case 'user_synced':
+                    userStats = data.data;
+                    updateUserProfile();
+                    loadInitialData();
+                    break;
+                    
+                case 'new_post':
+                    allPosts.unshift(data.data);
+                    renderPosts();
+                    break;
+                    
+                case 'post_updated':
+                    const updatedIndex = allPosts.findIndex(p => p.id === data.data.id);
+                    if (updatedIndex !== -1) {
+                        allPosts[updatedIndex] = data.data;
+                        renderPosts();
+                    }
+                    break;
+                    
+                case 'post_deleted':
+                    allPosts = allPosts.filter(p => p.id !== data.data.post_id);
+                    renderPosts();
+                    break;
+                    
+                case 'post_action':
+                    const actionIndex = allPosts.findIndex(p => p.id === data.data.id);
+                    if (actionIndex !== -1) {
+                        allPosts[actionIndex] = data.data;
+                        renderPosts();
+                    }
+                    break;
+            }
+        }
+
+        // Синхронизация с сервером
+        function syncWithServer() {
+            if (ws && ws.readyState === WebSocket.OPEN) {
+                ws.send(JSON.stringify({
+                    type: 'sync',
+                    data: {
+                        telegram_id: user.telegram_id,
+                        username: user.username,
+                        full_name: user.full_name,
+                        first_name: user.first_name
+                    }
+                }));
+            }
+        }
+
+        // Получение данных пользователя из Telegram
+        async function getTelegramUser() {
             try {
-                // Проверяем доступность Telegram WebApp API
                 if (window.Telegram && window.Telegram.WebApp) {
                     const tg = window.Telegram.WebApp;
                     tg.ready();
@@ -532,57 +627,338 @@
                     if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
                         const tgUser = tg.initDataUnsafe.user;
                         user = {
-                            id: tgUser.id,
-                            name: tgUser.first_name,
+                            telegram_id: tgUser.id,
                             username: tgUser.username || `user${tgUser.id}`,
-                            logo: tgUser.photo_url || `https://api.telegram.org/file/bot/photos/user_${tgUser.id}.jpg`,
-                            fullName: `${tgUser.first_name} ${tgUser.last_name || ''}`.trim()
+                            full_name: `${tgUser.first_name} ${tgUser.last_name || ''}`.trim(),
+                            first_name: tgUser.first_name
                         };
-                        isSynced = true;
                         return true;
                     }
                 }
                 
-                // Fallback: имитация данных для демонстрации
+                // Fallback для тестирования
                 await new Promise(resolve => setTimeout(resolve, 2000));
                 user = {
-                    id: 12345678,
-                    name: 'Я',
-                    username: 'myusername',
-                    logo: 'https://api.telegram.org/file/bot/photos/user_12345678.jpg',
-                    fullName: 'Моё Полное Имя'
+                    telegram_id: 12345678,
+                    username: 'testuser',
+                    full_name: 'Тестовый Пользователь',
+                    first_name: 'Тестовый'
                 };
-                isSynced = true;
                 return true;
                 
             } catch (error) {
+                console.error('Ошибка получения данных Telegram:', error);
                 return false;
             }
         }
 
-        async function loadCategories() {
+        // Загрузка начальных данных
+        async function loadInitialData() {
             try {
-                const response = await fetch('./categories.json');
-                categories = await response.json();
-            } catch {
-                categories = [
-                    {"ru": "Все", "en": "All"},
-                    {"ru": "Дружба", "en": "Friendship"},
-                    {"ru": "Прогулки", "en": "Walks"},
-                    {"ru": "События", "en": "Events"}
-                ];
+                // Загружаем категории
+                try {
+                    const response = await fetch('./categories.json');
+                    categories = await response.json();
+                } catch {
+                    categories = [
+                        {"ru": "Все", "en": "All"},
+                        {"ru": "Дружба", "en": "Friendship"},
+                        {"ru": "Прогулки", "en": "Walks"},
+                        {"ru": "События", "en": "Events"}
+                    ];
+                }
+
+                // Загружаем города
+                try {
+                    const response = await fetch(`./cities_${lang}.json`);
+                    cities = await response.json();
+                } catch {
+                    cities = lang === 'ru' 
+                        ? ["Москва", "Санкт-Петербург", "Новосибирск", "Екатеринбург", "Казань", "Нижний Новгород"]
+                        : ["Moscow", "Saint Petersburg", "Novosibirsk", "Yekaterinburg", "Kazan", "Nizhny Novgorod"];
+                }
+
+                // Загружаем посты
+                try {
+                    const response = await fetch('/api/posts');
+                    allPosts = await response.json();
+                } catch (error) {
+                    console.error('Ошибка загрузки постов:', error);
+                    allPosts = [];
+                }
+
+                renderCategories();
+                renderCreateCategories();
+                renderCities();
+                renderTagCities();
+                renderPosts();
+                
+            } catch (error) {
+                console.error('Ошибка загрузки данных:', error);
             }
         }
 
-        async function loadCities() {
-            try {
-                const response = await fetch(`./cities_${lang}.json`);
-                cities = await response.json();
-            } catch {
-                cities = lang === 'ru' 
-                    ? ["Москва", "Санкт-Петербург", "Новосибирск"]
-                    : ["Moscow", "Saint Petersburg", "Novosibirsk"];
+        // Обновление профиля пользователя
+        function updateUserProfile() {
+            const avatar = document.getElementById('user-avatar');
+            const name = document.getElementById('user-name');
+            const postsCount = document.getElementById('user-posts-count');
+            
+            if (user.telegram_id) {
+                avatar.src = `https://api.telegram.org/file/bot/photos/user_${user.telegram_id}.jpg`;
             }
+            
+            if (user.full_name) {
+                name.textContent = user.full_name;
+            }
+            
+            if (userStats) {
+                postsCount.textContent = `${userStats.posts.length}/${userStats.post_limit} объявлений`;
+            }
+        }
+
+        // Отправка действия на сервер
+        function sendAction(type, data) {
+            if (ws && ws.readyState === WebSocket.OPEN) {
+                ws.send(JSON.stringify({ type, data }));
+            }
+        }
+
+        // Создание/обновление поста
+        function submitPost() {
+            const text = document.getElementById('post-text').value.trim();
+            
+            if (text.length < 10 || text.length > 450) {
+                alert('Текст должен быть от 10 до 450 символов');
+                return;
+            }
+
+            if (userStats.status === 'banned') {
+                alert('Ваш аккаунт заблокирован');
+                return;
+            }
+
+            if (!isEditingPost && userStats.posts.length >= userStats.post_limit) {
+                alert('Достигнут лимит объявлений');
+                return;
+            }
+
+            const postData = {
+                telegram_id: user.telegram_id,
+                description: text,
+                category: tags.category,
+                city: tags.city,
+                gender: tags.gender,
+                age: tags.age,
+                date: tags.date
+            };
+
+            if (isEditingPost) {
+                postData.post_id = editingPostId;
+                sendAction('update_post', postData);
+            } else {
+                sendAction('create_post', postData);
+            }
+
+            // Закрываем экран создания
+            document.getElementById('create-screen').classList.add('hidden');
+            resetCreateForm();
+        }
+
+        // Сброс формы создания
+        function resetCreateForm() {
+            document.getElementById('post-text').value = '';
+            document.getElementById('text-counter').textContent = '0/450';
+            document.getElementById('submit-post').disabled = true;
+            
+            tags = { category: 'Все', city: 'Все', gender: 'Все', age: 'Все', date: 'Все' };
+            updateAllTagIcons();
+            
+            isEditingPost = false;
+            editingPostId = null;
+            
+            // Сбрасываем категории
+            renderCreateCategories();
+        }
+
+        // Обновление иконок тегов
+        function updateAllTagIcons() {
+            ['city', 'gender', 'age', 'date'].forEach(tagType => {
+                updateTagIcon(tagType);
+            });
+        }
+
+        // Действия пользователя (лайк, избранное, скрыть, жаловаться)
+        function handleUserAction(postId, action) {
+            if (userStats.status === 'banned' && (action === 'like' || action === 'report')) {
+                alert('Ваш аккаунт заблокирован');
+                return;
+            }
+
+            sendAction('user_action', {
+                telegram_id: user.telegram_id,
+                post_id: postId,
+                action: action
+            });
+        }
+
+        // Рендеринг категорий
+        function renderCategories() {
+            const container = document.getElementById('categories');
+            container.innerHTML = '';
+            
+            categories.forEach((cat, i) => {
+                const wrapper = document.createElement('div');
+                wrapper.className = 'relative inline-block mx-1';
+                
+                const btn = document.createElement('button');
+                btn.textContent = cat[lang];
+                btn.className = `px-4 py-2 text-lg font-semibold transition-colors ${i === 0 ? 'category-active text-black' : 'text-gray-500 hover:text-gray-700'}`;
+                
+                const line = document.createElement('div');
+                line.className = 'category-line';
+                
+                btn.onclick = () => {
+                    container.querySelectorAll('button').forEach(b => {
+                        b.className = 'px-4 py-2 text-lg font-semibold text-gray-500 hover:text-gray-700 transition-colors';
+                        b.parentElement.classList.remove('category-active');
+                    });
+                    btn.className = 'px-4 py-2 text-lg font-semibold text-black transition-colors';
+                    wrapper.classList.add('category-active');
+                    filters.category = cat[lang];
+                    renderPosts();
+                    renderFilterTags();
+                    btn.scrollIntoView({ behavior: 'smooth', inline: 'center' });
+                };
+                
+                wrapper.appendChild(btn);
+                wrapper.appendChild(line);
+                container.appendChild(wrapper);
+            });
+        }
+
+        // Рендеринг категорий для создания
+        function renderCreateCategories() {
+            const container = document.getElementById('create-categories');
+            container.innerHTML = '';
+            
+            categories.forEach((cat, i) => {
+                const wrapper = document.createElement('div');
+                wrapper.className = 'relative inline-block mx-1';
+                
+                const btn = document.createElement('button');
+                btn.textContent = cat[lang];
+                btn.className = `px-4 py-2 text-lg font-semibold transition-colors ${tags.category === cat[lang] ? 'category-active text-black' : 'text-gray-500 hover:text-gray-700'}`;
+                
+                const line = document.createElement('div');
+                line.className = 'category-line';
+                
+                btn.onclick = () => {
+                    container.querySelectorAll('button').forEach(b => {
+                        b.className = 'px-4 py-2 text-lg font-semibold text-gray-500 hover:text-gray-700 transition-colors';
+                        b.parentElement.classList.remove('category-active');
+                    });
+                    btn.className = 'px-4 py-2 text-lg font-semibold text-black transition-colors';
+                    wrapper.classList.add('category-active');
+                    tags.category = cat[lang];
+                    btn.scrollIntoView({ behavior: 'smooth', inline: 'center' });
+                };
+                
+                wrapper.appendChild(btn);
+                wrapper.appendChild(line);
+                container.appendChild(wrapper);
+            });
+        }
+
+        // Рендеринг постов
+        function renderPosts() {
+            let filtered = allPosts.filter(p => {
+                // Базовые фильтры
+                const categoryMatch = filters.category === 'Все' || p.category === filters.category;
+                const cityMatch = filters.city.length === 0 || filters.city.includes(p.city);
+                const genderMatch = filters.gender.length === 0 || filters.gender.includes(p.gender);
+                const ageMatch = filters.age.length === 0 || filters.age.includes(p.age);
+                const dateMatch = filters.date.length === 0 || filters.date.includes(p.date_tag);
+                
+                // Поиск
+                const searchMatch = !searchQuery || 
+                    p.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                    p.full_name.toLowerCase().includes(searchQuery.toLowerCase());
+                
+                // Сортировка специальная
+                let sortMatch = true;
+                if (filters.sort === 'Мои') sortMatch = p.telegram_id === user.telegram_id;
+                else if (filters.sort === 'Избранные') sortMatch = userStats.favorites.includes(p.id);
+                else if (filters.sort === 'Скрытые') sortMatch = userStats.hidden.includes(p.id);
+                
+                return categoryMatch && cityMatch && genderMatch && ageMatch && dateMatch && sortMatch && searchMatch;
+            });
+
+            // Сортировка
+            if (filters.sort === 'Новые') filtered.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+            if (filters.sort === 'Старые') filtered.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+            if (filters.sort === 'По рейтингу') filtered.sort((a, b) => b.likes_count - a.likes_count);
+
+            const feed = document.getElementById('feed');
+            feed.innerHTML = '';
+            
+            if (filtered.length === 0) {
+                feed.innerHTML = '<div class="text-center text-gray-500 py-8">Нет объявлений</div>';
+                return;
+            }
+            
+            filtered.forEach(p => {
+                const div = document.createElement('div');
+                div.className = 'bg-white p-4 rounded-2xl shadow-sm border border-gray-100';
+                div.innerHTML = `
+                    <p class="text-lg mb-3">${p.description}</p>
+                    <hr class="my-3 border-gray-200">
+                    <div class="flex justify-between items-center">
+                        <div class="flex items-center">
+                            <img src="${p.avatar_url || `https://api.telegram.org/file/bot/photos/user_${p.telegram_id}.jpg`}" class="w-8 h-8 rounded-full mr-3 bg-gray-200" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzIiIGhlaWdodD0iMzIiIHZpZXdCb3g9IjAgMCAzMiAzMiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMTYiIGN5PSIxNiIgcj0iMTYiIGZpbGw9IiNGM0Y0RjYiLz4KPGNpcmNsZSBjeD0iMTYiIGN5PSIxMiIgcj0iNCIgZmlsbD0iIzlDQTNBRiIvPgo8cGF0aCBkPSJNMjQgMjZDMjQgMjIuNjg2MyAyMC40MTgzIDE5IDEyIDE5QzcuNTgxNyAxOSA0IDIyLjY4NjMgNCAyNiIgZmlsbD0iIzlDQTNBRiIvPgo8L3N2Zz4K'">
+                            <a href="https://t.me/${p.username}" target="_blank" class="text-lg font-medium text-blue-600 hover:text-blue-800">${p.full_name}</a>
+                        </div>
+                        <div class="flex items-center space-x-3">
+                            <button class="like flex items-center p-2 rounded-lg hover:bg-gray-50 transition-colors" data-id="${p.id}">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="${userStats.likes.includes(p.id) ? '#c19433' : 'none'}" stroke="${userStats.likes.includes(p.id) ? '#c19433' : 'currentColor'}" stroke-width="2">
+                                    <polygon points="13,2 3,14 12,14 11,22 21,10 12,10"/>
+                                </svg>
+                                <span class="ml-2 text-lg">${p.likes_count || 0}</span>
+                            </button>
+                            <button class="menu p-2 rounded-lg hover:bg-gray-50 transition-colors" data-id="${p.id}">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <circle cx="12" cy="12" r="1"/>
+                                    <circle cx="12" cy="5" r="1"/>
+                                    <circle cx="12" cy="19" r="1"/>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>`;
+                feed.appendChild(div);
+            });
+        }
+
+        // Остальные функции рендеринга (города, фильтры и т.д.)
+        function renderCities(search = '') {
+            const opts = document.getElementById('city-options');
+            opts.innerHTML = '<button class="modal-button">Все</button>';
+            cities.filter(c => c.toLowerCase().includes(search.toLowerCase())).forEach(c => {
+                const btn = document.createElement('button');
+                btn.className = filters.city.includes(c) ? 'modal-button selected' : 'modal-button';
+                btn.textContent = c;
+                opts.appendChild(btn);
+            });
+        }
+
+        function renderTagCities(search = '') {
+            const opts = document.getElementById('tag-city-options');
+            opts.innerHTML = '<button class="modal-button">Все</button>';
+            cities.filter(c => c.toLowerCase().includes(search.toLowerCase())).forEach(c => {
+                const btn = document.createElement('button');
+                btn.className = 'modal-button';
+                btn.textContent = c;
+                opts.appendChild(btn);
+            });
         }
 
         function closeAllModals() {
@@ -650,28 +1026,23 @@
             }
         }
 
-        function updateUserProfile() {
-            if (user.logo) {
-                document.getElementById('user-avatar').src = user.logo;
-            }
-            if (user.fullName) {
-                document.getElementById('user-name').textContent = user.fullName;
-            }
-        }
-
-        // Initialize app
+        // Инициализация приложения
         window.addEventListener('load', async () => {
-            const syncSuccess = await syncWithTelegram();
+            const telegramSuccess = await getTelegramUser();
             
-            if (syncSuccess) {
+            if (telegramSuccess) {
+                initWebSocket();
                 setTimeout(() => {
                     document.getElementById('loading').classList.add('hidden');
                     document.getElementById('lang-modal').classList.remove('hidden');
-                }, 500);
+                }, 1000);
+            } else {
+                // Если не удалось получить данные Telegram, спиннер крутится бесконечно
+                console.error('Не удалось получить данные пользователя Telegram');
             }
-            // Если синхронизация не удалась, спиннер будет крутиться бесконечно
         });
 
+        // Выбор языка
         document.getElementById('lang-en').onclick = () => setLang('en');
         document.getElementById('lang-ru').onclick = () => setLang('ru');
 
@@ -679,161 +1050,11 @@
             lang = l;
             document.getElementById('lang-modal').classList.add('hidden');
             document.getElementById('main').classList.remove('hidden');
-            
-            await loadCategories();
-            await loadCities();
-            
-            renderCategories();
-            renderCreateCategories();
-            renderCities();
-            renderTagCities();
-            renderPosts();
-            updateUserProfile();
         }
 
-        function renderCategories() {
-            const container = document.getElementById('categories');
-            container.innerHTML = '';
-            
-            categories.forEach((cat, i) => {
-                const wrapper = document.createElement('div');
-                wrapper.className = 'relative inline-block mx-1';
-                
-                const btn = document.createElement('button');
-                btn.textContent = cat[lang];
-                btn.className = `px-4 py-2 text-lg font-semibold transition-colors ${i === 0 ? 'category-active text-black' : 'text-gray-500 hover:text-gray-700'}`;
-                
-                const line = document.createElement('div');
-                line.className = 'category-line';
-                
-                btn.onclick = () => {
-                    container.querySelectorAll('button').forEach(b => {
-                        b.className = 'px-4 py-2 text-lg font-semibold text-gray-500 hover:text-gray-700 transition-colors';
-                        b.parentElement.classList.remove('category-active');
-                    });
-                    btn.className = 'px-4 py-2 text-lg font-semibold text-black transition-colors';
-                    wrapper.classList.add('category-active');
-                    filters.category = cat[lang];
-                    renderPosts();
-                    renderFilterTags();
-                    btn.scrollIntoView({ behavior: 'smooth', inline: 'center' });
-                };
-                
-                wrapper.appendChild(btn);
-                wrapper.appendChild(line);
-                container.appendChild(wrapper);
-            });
-        }
+        // Обработчики событий
 
-        function renderCreateCategories() {
-            const container = document.getElementById('create-categories');
-            container.innerHTML = '';
-            
-            categories.forEach((cat, i) => {
-                const wrapper = document.createElement('div');
-                wrapper.className = 'relative inline-block mx-1';
-                
-                const btn = document.createElement('button');
-                btn.textContent = cat[lang];
-                btn.className = `px-4 py-2 text-lg font-semibold transition-colors ${i === 0 ? 'category-active text-black' : 'text-gray-500 hover:text-gray-700'}`;
-                
-                const line = document.createElement('div');
-                line.className = 'category-line';
-                
-                btn.onclick = () => {
-                    container.querySelectorAll('button').forEach(b => {
-                        b.className = 'px-4 py-2 text-lg font-semibold text-gray-500 hover:text-gray-700 transition-colors';
-                        b.parentElement.classList.remove('category-active');
-                    });
-                    btn.className = 'px-4 py-2 text-lg font-semibold text-black transition-colors';
-                    wrapper.classList.add('category-active');
-                    tags.category = cat[lang];
-                    btn.scrollIntoView({ behavior: 'smooth', inline: 'center' });
-                };
-                
-                wrapper.appendChild(btn);
-                wrapper.appendChild(line);
-                container.appendChild(wrapper);
-            });
-        }
-
-        function renderPosts() {
-            let filtered = posts.filter(p => {
-                const categoryMatch = filters.category === 'Все' || p.cat === filters.category;
-                const cityMatch = filters.city.length === 0 || filters.city.includes(p.city);
-                const genderMatch = filters.gender.length === 0 || filters.gender.includes(p.gender);
-                const ageMatch = filters.age.length === 0 || filters.age.includes(p.age);
-                const dateMatch = filters.date.length === 0 || filters.date.includes(p.date);
-                
-                let sortMatch = true;
-                if (filters.sort === 'Мои') sortMatch = p.creator.id === user.id;
-                else if (filters.sort === 'Избранные') sortMatch = favorites.has(p.id);
-                else if (filters.sort === 'Скрытые') sortMatch = hidden.has(p.id);
-                
-                return categoryMatch && cityMatch && genderMatch && ageMatch && dateMatch && sortMatch;
-            });
-
-            if (filters.sort === 'Новые') filtered.sort((a, b) => b.ts - a.ts);
-            if (filters.sort === 'Старые') filtered.sort((a, b) => a.ts - b.ts);
-            if (filters.sort === 'По рейтингу') filtered.sort((a, b) => b.likes - a.likes);
-
-            const feed = document.getElementById('feed');
-            feed.innerHTML = '';
-            
-            filtered.forEach(p => {
-                const div = document.createElement('div');
-                div.className = 'bg-white p-4 rounded-2xl shadow-sm border border-gray-100';
-                div.innerHTML = `
-                    <p class="text-lg mb-3">${p.desc}</p>
-                    <hr class="my-3 border-gray-200">
-                    <div class="flex justify-between items-center">
-                        <div class="flex items-center">
-                            <img src="${p.creator.logo || 'default-avatar.jpg'}" class="w-8 h-8 rounded-full mr-3 bg-gray-200">
-                            <a href="https://t.me/${p.creator.username}" target="_blank" class="text-lg font-medium text-blue-600 hover:text-blue-800">${p.creator.fullName || p.creator.name}</a>
-                        </div>
-                        <div class="flex items-center space-x-3">
-                            <button class="like flex items-center p-2 rounded-lg hover:bg-gray-50 transition-colors" data-id="${p.id}">
-                                <svg width="20" height="20" viewBox="0 0 24 24" fill="${liked.has(p.id) ? '#c19433' : 'none'}" stroke="${liked.has(p.id) ? '#c19433' : 'currentColor'}" stroke-width="2">
-                                    <polygon points="13,2 3,14 12,14 11,22 21,10 12,10"/>
-                                </svg>
-                                <span class="ml-2 text-lg">${p.likes}</span>
-                            </button>
-                            <button class="menu p-2 rounded-lg hover:bg-gray-50 transition-colors" data-id="${p.id}">
-                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <circle cx="12" cy="12" r="1"/>
-                                    <circle cx="12" cy="5" r="1"/>
-                                    <circle cx="12" cy="19" r="1"/>
-                                </svg>
-                            </button>
-                        </div>
-                    </div>`;
-                feed.appendChild(div);
-            });
-        }
-
-        function renderCities(search = '') {
-            const opts = document.getElementById('city-options');
-            opts.innerHTML = '<button class="modal-button">Все</button>';
-            cities.filter(c => c.toLowerCase().includes(search.toLowerCase())).forEach(c => {
-                const btn = document.createElement('button');
-                btn.className = filters.city.includes(c) ? 'modal-button selected' : 'modal-button';
-                btn.textContent = c;
-                opts.appendChild(btn);
-            });
-        }
-
-        function renderTagCities(search = '') {
-            const opts = document.getElementById('tag-city-options');
-            opts.innerHTML = '<button class="modal-button">Все</button>';
-            cities.filter(c => c.toLowerCase().includes(search.toLowerCase())).forEach(c => {
-                const btn = document.createElement('button');
-                btn.className = 'modal-button';
-                btn.textContent = c;
-                opts.appendChild(btn);
-            });
-        }
-
-        // Filter buttons
+        // Фильтры
         ['city', 'gender', 'age', 'date', 'sort', 'notif'].forEach(f => {
             document.getElementById(`f-${f}`).onclick = () => {
                 closeAllModals();
@@ -841,7 +1062,7 @@
             };
         });
 
-        // Tag buttons for create screen
+        // Теги для создания
         ['city', 'gender', 'age', 'date'].forEach(f => {
             document.getElementById(`t-${f}`).onclick = () => {
                 closeAllModals();
@@ -849,16 +1070,22 @@
             };
         });
 
-        // Close buttons
+        // Закрытие модалок
         document.querySelectorAll('.close-btn').forEach(c => {
             c.onclick = () => c.closest('.fixed').classList.add('hidden');
         });
 
-        // City search
+        // Поиск городов
         document.getElementById('city-search').oninput = e => renderCities(e.target.value);
         document.getElementById('tag-city-search').oninput = e => renderTagCities(e.target.value);
 
-        // Filter modals logic
+        // Поиск
+        document.getElementById('search-input').oninput = e => {
+            searchQuery = e.target.value;
+            renderPosts();
+        };
+
+        // Модалки фильтров
         document.getElementById('m-city').onclick = e => {
             if (e.target.classList.contains('modal-button')) {
                 const value = e.target.textContent;
@@ -905,7 +1132,7 @@
             };
         });
 
-        // Sort modal (only one selection)
+        // Сортировка
         document.getElementById('m-sort').onclick = e => {
             if (e.target.classList.contains('modal-button')) {
                 filters.sort = e.target.textContent;
@@ -916,7 +1143,7 @@
             }
         };
 
-        // Tag modals for create screen
+        // Теги для создания
         document.getElementById('tm-city').onclick = e => {
             if (e.target.classList.contains('modal-button')) {
                 tags.city = e.target.textContent;
@@ -935,23 +1162,22 @@
             };
         });
 
-        // Save filters functionality
-        document.getElementById('save-filters').onclick = () => {
-            renderFilterTags();
-            document.getElementById('m-notif').classList.add('hidden');
-        };
-
-        // Create post functionality
+        // Создание поста
         document.getElementById('create-btn').onclick = () => {
+            if (userStats.status === 'banned') {
+                alert('Ваш аккаунт заблокирован');
+                return;
+            }
             document.getElementById('create-screen').classList.remove('hidden');
             updateUserProfile();
         };
 
         document.getElementById('back-btn').onclick = () => {
             document.getElementById('create-screen').classList.add('hidden');
+            resetCreateForm();
         };
 
-        // Text counter
+        // Счетчик символов
         document.getElementById('post-text').oninput = e => {
             const text = e.target.value;
             const counter = document.getElementById('text-counter');
@@ -971,65 +1197,104 @@
             }
         };
 
-        // Post interactions
+        // Отправка поста
+        document.getElementById('submit-post').onclick = submitPost;
+
+        // Действия с постами
         document.addEventListener('click', e => {
             const likeBtn = e.target.closest('.like');
             const menuBtn = e.target.closest('.menu');
             
             if (likeBtn) {
                 const id = parseInt(likeBtn.dataset.id);
-                const post = posts.find(p => p.id === id);
-                const svg = likeBtn.querySelector('svg');
-                const span = likeBtn.querySelector('span');
-                
-                if (liked.has(id)) {
-                    liked.delete(id);
-                    post.likes--;
-                    svg.setAttribute('fill', 'none');
-                    svg.setAttribute('stroke', 'currentColor');
-                } else {
-                    liked.add(id);
-                    post.likes++;
-                    svg.setAttribute('fill', '#c19433');
-                    svg.setAttribute('stroke', '#c19433');
-                }
-                span.textContent = post.likes;
+                handleUserAction(id, 'like');
             }
             
             if (menuBtn) {
                 closeAllModals();
                 const id = parseInt(menuBtn.dataset.id);
-                const post = posts.find(p => p.id === id);
+                const post = allPosts.find(p => p.id === id);
                 const opts = document.getElementById('post-options');
                 
-                if (post.creator.id === user.id) {
+                if (post.telegram_id === user.telegram_id) {
                     opts.innerHTML = `
-                        <button class="modal-button">Изменить</button>
-                        <button class="modal-button">Поделиться</button>
-                        <button class="modal-button">Удалить</button>
+                        <button class="modal-button" data-action="edit" data-id="${id}">Изменить</button>
+                        <button class="modal-button" data-action="share" data-id="${id}">Поделиться</button>
+                        <button class="modal-button" data-action="delete" data-id="${id}">Удалить</button>
                     `;
                 } else {
+                    const isFavorite = userStats.favorites.includes(id);
+                    const isHidden = userStats.hidden.includes(id);
+                    const hasReported = userStats.reports.includes(id);
+                    
                     opts.innerHTML = `
-                        <button class="modal-button">В избранное</button>
-                        <button class="modal-button">Скрыть</button>
-                        <button class="modal-button">Поделиться</button>
-                        <button class="modal-button">Пожаловаться</button>
+                        <button class="modal-button" data-action="favorite" data-id="${id}">${isFavorite ? 'Убрать из избранного' : 'В избранное'}</button>
+                        <button class="modal-button" data-action="hide" data-id="${id}">${isHidden ? 'Показать' : 'Скрыть'}</button>
+                        <button class="modal-button" data-action="share" data-id="${id}">Поделиться</button>
+                        ${!hasReported ? `<button class="modal-button" data-action="report" data-id="${id}">Пожаловаться</button>` : ''}
                     `;
                 }
                 
                 document.getElementById('m-post').classList.remove('hidden');
-                
-                opts.onclick = e => {
-                    if (e.target.classList.contains('modal-button')) {
-                        const action = e.target.textContent;
-                        if (action === 'В избранное') favorites.add(id);
-                        if (action === 'Скрыть') hidden.add(id);
-                        renderPosts();
-                        opts.parentElement.classList.add('hidden');
-                    }
-                };
             }
         });
+
+        // Обработка действий из меню поста
+        document.getElementById('post-options').onclick = e => {
+            if (e.target.classList.contains('modal-button')) {
+                const action = e.target.dataset.action;
+                const id = parseInt(e.target.dataset.id);
+                
+                if (action === 'edit') {
+                    const post = allPosts.find(p => p.id === id);
+                    if (post) {
+                        // Заполняем форму данными поста
+                        document.getElementById('post-text').value = post.description;
+                        document.getElementById('text-counter').textContent = `${post.description.length}/450`;
+                        document.getElementById('submit-post').disabled = false;
+                        
+                        tags = {
+                            category: post.category,
+                            city: post.city,
+                            gender: post.gender,
+                            age: post.age,
+                            date: post.date_tag
+                        };
+                        
+                        isEditingPost = true;
+                        editingPostId = id;
+                        
+                        updateAllTagIcons();
+                        renderCreateCategories();
+                        
+                        document.getElementById('create-screen').classList.remove('hidden');
+                    }
+                } else if (action === 'share') {
+                    if (navigator.share) {
+                        navigator.share({
+                            title: 'Объявление',
+                            text: allPosts.find(p => p.id === id)?.description,
+                            url: window.location.href
+                        });
+                    } else {
+                        // Fallback - копирование в буфер обмена
+                        navigator.clipboard.writeText(window.location.href);
+                        alert('Ссылка скопирована в буфер обмена');
+                    }
+                } else {
+                    handleUserAction(id, action);
+                }
+                
+                document.getElementById('m-post').classList.add('hidden');
+            }
+        };
+
+        // Сохранение фильтров для уведомлений
+        document.getElementById('save-filters').onclick = () => {
+            // Здесь можно добавить логику сохранения подписок
+            alert('Фильтры сохранены для уведомлений');
+            document.getElementById('m-notif').classList.add('hidden');
+        };
     </script>
 </body>
 </html>
