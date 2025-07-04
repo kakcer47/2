@@ -1,29 +1,45 @@
 <!DOCTYPE html>
 <html lang="ru">
+
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0, minimum-scale=1.0">
+    <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0, minimum-scale=1.0">
     <title>Telegram App</title>
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;600&display=swap" rel="stylesheet">
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-        body { font-family: 'Rubik', sans-serif; font-size: 16px; }
-        * { border-color: #e3e3e3; }
-        .spinner { 
-            border: 4px solid #e3e3e3; 
-            border-top: 4px solid white; 
-            border-radius: 50%; 
-            width: 40px; 
-            height: 40px; 
-            animation: spin 1s linear infinite; 
+        body {
+            font-family: 'Rubik', sans-serif;
+            font-size: 16px;
         }
-        @keyframes spin { to { transform: rotate(360deg); } }
-        .main-bg { 
-            background: #fcfcfc; 
-            background-image: radial-gradient(circle, #999999 1px, transparent 1px); 
-            background-size: 20px 20px; 
+
+        * {
+            border-color: #e3e3e3;
         }
+
+        .spinner {
+            border: 4px solid #e3e3e3;
+            border-top: 4px solid white;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .main-bg {
+            background: #fcfcfc;
+            background-image: radial-gradient(circle, #999999 1px, transparent 1px);
+            background-size: 20px 20px;
+        }
+
         .category-line {
             position: absolute;
             bottom: 0;
@@ -35,9 +51,11 @@
             transition: transform 0.3s ease-in-out;
             width: calc(100% - 24px);
         }
+
         .category-active .category-line {
             transform: translateX(-50%) scaleX(1);
         }
+
         .modal-button {
             background: #f3f4f6;
             border-radius: 12px;
@@ -50,13 +68,16 @@
             cursor: pointer;
             transition: background 0.2s;
         }
+
         .modal-button:hover {
             background: #e5e7eb;
         }
+
         .modal-button.selected {
             background: #1f2937;
             color: white;
         }
+
         .close-btn {
             width: 32px;
             height: 32px;
@@ -71,9 +92,11 @@
             cursor: pointer;
             transition: background 0.2s;
         }
+
         .close-btn:hover {
             background: #e5e7eb;
         }
+
         .filter-icon {
             width: 32px;
             height: 32px;
@@ -86,15 +109,18 @@
             cursor: pointer;
             transition: all 0.2s;
         }
+
         .filter-icon:hover {
             background: #f9fafb;
             border-color: #9ca3af;
         }
+
         .filter-icon.active {
             background: #1f2937;
             border-color: #1f2937;
             color: white;
         }
+
         .search-container {
             position: fixed;
             bottom: 0;
@@ -108,6 +134,7 @@
             align-items: center;
             z-index: 30;
         }
+
         .search-input {
             flex: 1;
             padding: 12px 16px;
@@ -117,9 +144,11 @@
             outline: none;
             transition: border-color 0.2s;
         }
+
         .search-input:focus {
             border-color: #3b82f6;
         }
+
         .create-btn {
             background: #3b82f6;
             color: white;
@@ -131,12 +160,15 @@
             cursor: pointer;
             transition: background 0.2s;
         }
+
         .create-btn:hover {
             background: #2563eb;
         }
+
         .main-content {
             padding-bottom: 80px;
         }
+
         .filter-tag {
             background: #e5e7eb;
             color: #374151;
@@ -146,18 +178,22 @@
             margin: 2px;
             display: inline-block;
         }
+
         .char-counter {
             color: #6b7280;
             font-size: 14px;
         }
+
         .char-counter.error {
             color: #ef4444;
         }
+
         .sync-text {
             color: white;
             margin-top: 16px;
             font-size: 14px;
         }
+
         .connection-status {
             position: fixed;
             top: 10px;
@@ -168,11 +204,13 @@
             background: #ef4444;
             z-index: 1000;
         }
+
         .connection-status.connected {
             background: #10b981;
         }
     </style>
 </head>
+
 <body class="bg-gray-100">
     <!-- Connection Status -->
     <div id="connection-status" class="connection-status"></div>
@@ -188,8 +226,10 @@
         <div class="bg-white p-8 rounded-3xl max-w-sm w-full mx-4">
             <p class="mb-6 text-center text-lg font-medium">Choose Language / Выберите язык</p>
             <div class="flex justify-center gap-4">
-                <button id="lang-en" class="px-6 py-3 bg-gray-100 rounded-2xl font-medium text-lg hover:bg-gray-200 transition-colors">English</button>
-                <button id="lang-ru" class="px-6 py-3 bg-gray-100 rounded-2xl font-medium text-lg hover:bg-gray-200 transition-colors">Русский</button>
+                <button id="lang-en"
+                    class="px-6 py-3 bg-gray-100 rounded-2xl font-medium text-lg hover:bg-gray-200 transition-colors">English</button>
+                <button id="lang-ru"
+                    class="px-6 py-3 bg-gray-100 rounded-2xl font-medium text-lg hover:bg-gray-200 transition-colors">Русский</button>
             </div>
         </div>
     </div>
@@ -198,61 +238,67 @@
     <div id="main" class="main-bg min-h-screen hidden">
         <div class="main-content">
             <div id="categories" class="overflow-x-auto whitespace-nowrap py-4 border-b bg-white"></div>
-            
+
             <div class="flex justify-between items-center p-3 bg-[#f8f7f6] border-b">
                 <div class="flex gap-2">
                     <button id="f-city" class="filter-icon">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
-                            <circle cx="12" cy="10" r="3"/>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+                            <circle cx="12" cy="10" r="3" />
                         </svg>
                     </button>
                     <button id="f-gender" class="filter-icon">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <circle cx="12" cy="12" r="10"/>
-                            <path d="M8 14s1.5 2 4 2 4-2 4-2"/>
-                            <line x1="9" y1="9" x2="9.01" y2="9"/>
-                            <line x1="15" y1="9" x2="15.01" y2="9"/>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <circle cx="12" cy="12" r="10" />
+                            <path d="M8 14s1.5 2 4 2 4-2 4-2" />
+                            <line x1="9" y1="9" x2="9.01" y2="9" />
+                            <line x1="15" y1="9" x2="15.01" y2="9" />
                         </svg>
                     </button>
                     <button id="f-age" class="filter-icon">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <circle cx="12" cy="12" r="3"/>
-                            <path d="M12 1v6m0 6v6"/>
-                            <path d="m21 12-6-6-6 6"/>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <circle cx="12" cy="12" r="3" />
+                            <path d="M12 1v6m0 6v6" />
+                            <path d="m21 12-6-6-6 6" />
                         </svg>
                     </button>
                     <button id="f-date" class="filter-icon">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
-                            <line x1="16" y1="2" x2="16" y2="6"/>
-                            <line x1="8" y1="2" x2="8" y2="6"/>
-                            <line x1="3" y1="10" x2="21" y2="10"/>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+                            <line x1="16" y1="2" x2="16" y2="6" />
+                            <line x1="8" y1="2" x2="8" y2="6" />
+                            <line x1="3" y1="10" x2="21" y2="10" />
                         </svg>
                     </button>
                 </div>
-                
+
                 <div class="flex gap-2">
                     <button id="f-sort" class="filter-icon">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M3 6h18"/>
-                            <path d="M7 12h10"/>
-                            <path d="M10 18h4"/>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <path d="M3 6h18" />
+                            <path d="M7 12h10" />
+                            <path d="M10 18h4" />
                         </svg>
                     </button>
                     <button id="f-notif" class="filter-icon">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
-                            <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+                            <path d="M13.73 21a2 2 0 0 1-3.46 0" />
                         </svg>
                     </button>
                 </div>
             </div>
-            
+
             <div id="filter-tags" class="px-4 py-2 bg-white border-b hidden">
                 <div class="flex flex-wrap"></div>
             </div>
-            
+
             <div id="feed" class="p-4 space-y-4"></div>
         </div>
 
@@ -270,8 +316,8 @@
             <div class="flex items-center p-4 border-b bg-white">
                 <button id="back-btn" class="mr-3">
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M19 12H5"/>
-                        <path d="M12 19l-7-7 7-7"/>
+                        <path d="M19 12H5" />
+                        <path d="M12 19l-7-7 7-7" />
                     </svg>
                 </button>
                 <img id="user-avatar" src="" class="w-10 h-10 rounded-full mr-3 bg-gray-200">
@@ -285,10 +331,11 @@
             <!-- Content -->
             <div class="flex-1 overflow-y-auto p-4">
                 <hr class="mb-4 border-gray-200">
-                
+
                 <!-- Text Input -->
                 <div class="mb-6">
-                    <textarea id="post-text" placeholder="Введите текст объявления..." class="w-full p-4 border border-gray-300 rounded-2xl resize-none text-lg" rows="4"></textarea>
+                    <textarea id="post-text" placeholder="Введите текст объявления..."
+                        class="w-full p-4 border border-gray-300 rounded-2xl resize-none text-lg" rows="4"></textarea>
                     <div class="flex justify-end mt-2">
                         <span id="text-counter" class="char-counter">0/450</span>
                     </div>
@@ -306,37 +353,41 @@
                     <div class="flex justify-between items-center p-3 bg-[#f8f7f6] border-b rounded-xl">
                         <div class="flex gap-2">
                             <button id="t-city" class="filter-icon">
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
-                                    <circle cx="12" cy="10" r="3"/>
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2">
+                                    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+                                    <circle cx="12" cy="10" r="3" />
                                 </svg>
                             </button>
                             <button id="t-gender" class="filter-icon">
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <circle cx="12" cy="12" r="10"/>
-                                    <path d="M8 14s1.5 2 4 2 4-2 4-2"/>
-                                    <line x1="9" y1="9" x2="9.01" y2="9"/>
-                                    <line x1="15" y1="9" x2="15.01" y2="9"/>
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2">
+                                    <circle cx="12" cy="12" r="10" />
+                                    <path d="M8 14s1.5 2 4 2 4-2 4-2" />
+                                    <line x1="9" y1="9" x2="9.01" y2="9" />
+                                    <line x1="15" y1="9" x2="15.01" y2="9" />
                                 </svg>
                             </button>
                             <button id="t-age" class="filter-icon">
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <circle cx="12" cy="12" r="3"/>
-                                    <path d="M12 1v6m0 6v6"/>
-                                    <path d="m21 12-6-6-6 6"/>
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2">
+                                    <circle cx="12" cy="12" r="3" />
+                                    <path d="M12 1v6m0 6v6" />
+                                    <path d="m21 12-6-6-6 6" />
                                 </svg>
                             </button>
                             <button id="t-date" class="filter-icon">
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
-                                    <line x1="16" y1="2" x2="16" y2="6"/>
-                                    <line x1="8" y1="2" x2="8" y2="6"/>
-                                    <line x1="3" y1="10" x2="21" y2="10"/>
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2">
+                                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+                                    <line x1="16" y1="2" x2="16" y2="6" />
+                                    <line x1="8" y1="2" x2="8" y2="6" />
+                                    <line x1="3" y1="10" x2="21" y2="10" />
                                 </svg>
                             </button>
                         </div>
                     </div>
-                    
+
                     <!-- Selected Tags Display -->
                     <div id="create-tags-display" class="px-4 py-2 bg-white border-b mt-2 hidden">
                         <div class="flex flex-wrap" id="create-tags-container"></div>
@@ -346,7 +397,9 @@
 
             <!-- Create Button -->
             <div class="p-4 border-t bg-white">
-                <button id="submit-post" class="w-full py-3 bg-blue-500 text-white rounded-2xl text-lg font-medium disabled:bg-gray-300 disabled:cursor-not-allowed" disabled>Создать объявление</button>
+                <button id="submit-post"
+                    class="w-full py-3 bg-blue-500 text-white rounded-2xl text-lg font-medium disabled:bg-gray-300 disabled:cursor-not-allowed"
+                    disabled>Создать объявление</button>
             </div>
         </div>
     </div>
@@ -428,7 +481,7 @@
             <div class="close-btn">&times;</div>
         </div>
         <hr class="mb-4 border-gray-200">
-        
+
         <div class="space-y-4">
             <label class="flex items-center p-3 bg-gray-50 rounded-2xl cursor-pointer">
                 <input type="checkbox" id="n-system" class="mr-3 w-5 h-5" checked>
@@ -438,18 +491,19 @@
                 <input type="checkbox" id="n-likes" class="mr-3 w-5 h-5" checked>
                 <span class="text-lg">Лайки</span>
             </label>
-            
+
             <div class="border-t pt-4">
                 <label class="flex items-center p-3 bg-gray-50 rounded-2xl cursor-pointer">
                     <input type="checkbox" id="n-filters" class="mr-3 w-5 h-5">
                     <span class="text-lg">Фильтры и теги</span>
                 </label>
-                
+
                 <div id="filter-selection" class="mt-4 hidden">
                     <div class="mb-4">
-                        <button id="select-all-filters" class="w-full py-2 bg-blue-500 text-white rounded-xl">Выбрать все фильтры</button>
+                        <button id="select-all-filters" class="w-full py-2 bg-blue-500 text-white rounded-xl">Выбрать
+                            все фильтры</button>
                     </div>
-                    
+
                     <div class="space-y-3">
                         <div>
                             <span class="font-medium">Категория:</span>
@@ -457,14 +511,14 @@
                                 <option value="Все">Все</option>
                             </select>
                         </div>
-                        
+
                         <div>
                             <span class="font-medium">Город:</span>
                             <select id="notif-city" class="w-full mt-1 p-2 border rounded-xl">
                                 <option value="Все">Все</option>
                             </select>
                         </div>
-                        
+
                         <div>
                             <span class="font-medium">Пол:</span>
                             <select id="notif-gender" class="w-full mt-1 p-2 border rounded-xl">
@@ -473,7 +527,7 @@
                                 <option value="Женский">Женский</option>
                             </select>
                         </div>
-                        
+
                         <div>
                             <span class="font-medium">Возраст:</span>
                             <select id="notif-age" class="w-full mt-1 p-2 border rounded-xl">
@@ -484,7 +538,7 @@
                                 <option value="45+">45+</option>
                             </select>
                         </div>
-                        
+
                         <div>
                             <span class="font-medium">Дата:</span>
                             <select id="notif-date" class="w-full mt-1 p-2 border rounded-xl">
@@ -499,9 +553,10 @@
                 </div>
             </div>
         </div>
-        
+
         <div class="mt-6">
-            <button id="save-notifications" class="w-full py-3 bg-green-500 text-white rounded-2xl text-lg font-medium">Сохранить настройки</button>
+            <button id="save-notifications"
+                class="w-full py-3 bg-green-500 text-white rounded-2xl text-lg font-medium">Сохранить настройки</button>
         </div>
     </div>
 
@@ -521,7 +576,8 @@
             <div class="close-btn">&times;</div>
         </div>
         <hr class="mb-4 border-gray-200">
-        <input id="tag-city-search" class="w-full p-3 border border-gray-300 rounded-2xl mb-4 text-lg" placeholder="Поиск">
+        <input id="tag-city-search" class="w-full p-3 border border-gray-300 rounded-2xl mb-4 text-lg"
+            placeholder="Поиск">
         <div id="tag-city-options" class="space-y-1 max-h-60 overflow-y-auto"></div>
     </div>
 
@@ -574,20 +630,20 @@
         let user = { telegram_id: null, username: null, full_name: null, first_name: null };
         let userStats = { posts: [], hidden: [], favorites: [], likes: [], reports: [], post_limit: 10, status: 'live', notifications_likes: true, notifications_system: true, notifications_filters: {} };
         let lang = 'ru';
-        let filters = { 
-            category: 'Все', 
-            city: [], 
-            gender: [], 
-            age: [], 
-            date: [], 
-            sort: 'Новые' 
+        let filters = {
+            category: 'Все',
+            city: [],
+            gender: [],
+            age: [],
+            date: [],
+            sort: 'Новые'
         };
-        let tags = { 
-            category: 'Все', 
-            city: 'Все', 
-            gender: 'Все', 
-            age: 'Все', 
-            date: 'Все' 
+        let tags = {
+            category: 'Все',
+            city: 'Все',
+            gender: 'Все',
+            age: 'Все',
+            date: 'Все'
         };
         let allPosts = [];
         let categories = [];
@@ -602,25 +658,25 @@
         // Инициализация WebSocket
         function initWebSocket() {
             ws = new WebSocket(WS_URL);
-            
+
             ws.onopen = () => {
                 console.log('WebSocket подключен');
                 document.getElementById('connection-status').classList.add('connected');
                 syncWithServer();
             };
-            
+
             ws.onclose = () => {
                 console.log('WebSocket отключен');
                 document.getElementById('connection-status').classList.remove('connected');
                 // Переподключение через 3 секунды
                 setTimeout(initWebSocket, 3000);
             };
-            
+
             ws.onerror = (error) => {
                 console.error('WebSocket ошибка:', error);
                 document.getElementById('connection-status').classList.remove('connected');
             };
-            
+
             ws.onmessage = (event) => {
                 const data = JSON.parse(event.data);
                 handleServerMessage(data);
@@ -630,18 +686,23 @@
         // Обработка сообщений от сервера
         function handleServerMessage(data) {
             switch (data.type) {
+                case 'posts_loaded':
+                    allPosts = data.data;
+                    renderPosts();
+                    break;
+
                 case 'user_synced':
                     userStats = data.data;
                     updateUserProfile();
                     updateNotificationSettings();
                     loadInitialData();
                     break;
-                    
+
                 case 'new_post':
                     allPosts.unshift(data.data);
                     renderPosts();
                     break;
-                    
+
                 case 'post_updated':
                     const updatedIndex = allPosts.findIndex(p => p.id === data.data.id);
                     if (updatedIndex !== -1) {
@@ -649,12 +710,12 @@
                         renderPosts();
                     }
                     break;
-                    
+
                 case 'post_deleted':
                     allPosts = allPosts.filter(p => p.id !== data.data.post_id);
                     renderPosts();
                     break;
-                    
+
                 case 'post_action':
                     const actionIndex = allPosts.findIndex(p => p.id === data.data.id);
                     if (actionIndex !== -1) {
@@ -662,19 +723,19 @@
                         renderPosts();
                     }
                     break;
-                    
+
                 case 'user_updated':
                     userStats = data.data;
                     updateUserProfile();
                     break;
-                    
+
                 case 'user_status_updated':
                     if (data.data.telegram_id === user.telegram_id) {
                         userStats = data.data.user_info;
                         updateUserProfile();
                     }
                     break;
-                    
+
                 case 'notifications_updated':
                     console.log('Настройки уведомлений сохранены');
                     break;
@@ -702,7 +763,7 @@
                 if (window.Telegram && window.Telegram.WebApp) {
                     const tg = window.Telegram.WebApp;
                     tg.ready();
-                    
+
                     if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
                         const tgUser = tg.initDataUnsafe.user;
                         user = {
@@ -714,7 +775,7 @@
                         return true;
                     }
                 }
-                
+
                 // Fallback для тестирования
                 await new Promise(resolve => setTimeout(resolve, 2000));
                 user = {
@@ -724,7 +785,7 @@
                     first_name: 'Тестовый'
                 };
                 return true;
-                
+
             } catch (error) {
                 console.error('Ошибка получения данных Telegram:', error);
                 return false;
@@ -740,10 +801,10 @@
                     categories = await response.json();
                 } catch {
                     categories = [
-                        {"ru": "Все", "en": "All"},
-                        {"ru": "Дружба", "en": "Friendship"},
-                        {"ru": "Прогулки", "en": "Walks"},
-                        {"ru": "События", "en": "Events"}
+                        { "ru": "Все", "en": "All" },
+                        { "ru": "Дружба", "en": "Friendship" },
+                        { "ru": "Прогулки", "en": "Walks" },
+                        { "ru": "События", "en": "Events" }
                     ];
                 }
 
@@ -756,18 +817,25 @@
                         throw new Error('Cities file not found');
                     }
                 } catch {
-                    cities = lang === 'ru' 
+                    cities = lang === 'ru'
                         ? ["Москва", "Санкт-Петербург", "Новосибирск", "Екатеринбург", "Казань", "Нижний Новгород"]
                         : ["Moscow", "Saint Petersburg", "Novosibirsk", "Yekaterinburg", "Kazan", "Nizhny Novgorod"];
                 }
 
                 // Загружаем посты
-                try {
-                    const response = await fetch('/api/posts');
-                    allPosts = await response.json();
-                } catch (error) {
-                    console.error('Ошибка загрузки постов:', error);
-                    allPosts = [];
+                if (ws && ws.readyState === WebSocket.OPEN) {
+                    console.log('Posts will be loaded via WebSocket');
+                } else {
+                    // Fallback - загрузка через API
+                    try {
+                        const response = await fetch('/api/posts');
+                        if (response.ok) {
+                            allPosts = await response.json();
+                        }
+                    } catch (error) {
+                        console.error('Ошибка загрузки постов:', error);
+                        allPosts = [];
+                    }
                 }
 
                 renderCategories();
@@ -776,7 +844,7 @@
                 renderTagCities();
                 renderPosts();
                 updateNotificationSelectors();
-                
+
             } catch (error) {
                 console.error('Ошибка загрузки данных:', error);
             }
@@ -787,18 +855,17 @@
             const avatar = document.getElementById('user-avatar');
             const name = document.getElementById('user-name');
             const postsCount = document.getElementById('user-posts-count');
-            
-            if (user.telegram_id) {
-                avatar.src = `https://api.telegram.org/file/bot/photos/user_${user.telegram_id}.jpg`;
-                avatar.onerror = () => {
-                    avatar.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMjAiIGN5PSIyMCIgcj0iMjAiIGZpbGw9IiNGM0Y0RjYiLz4KPGNpcmNsZSBjeD0iMjAiIGN5PSIxNSIgcj0iNSIgZmlsbD0iIzlDQTNBRiIvPgo8cGF0aCBkPSJNMzAgMzJDMzAgMjcuNTgyIDI2LjQxOCAyNCAyMCAyNEMxMy41ODIgMjQgMTAgMjcuNTgyIDEwIDMyIiBmaWxsPSIjOUNBM0FGIi8+Cjwvc3ZnPgo=';
-                };
+
+            if (user.telegram_id && userStats.avatar_url) {
+                avatar.src = userStats.avatar_url;
+            } else if (user.telegram_id) {
+                avatar.src = `https://t.me/i/userpic/160/${user.username}.jpg`;
             }
-            
+
             if (user.full_name) {
                 name.textContent = user.full_name;
             }
-            
+
             if (userStats) {
                 postsCount.textContent = `${userStats.posts.length}/${userStats.post_limit} объявлений`;
             }
@@ -809,10 +876,10 @@
             if (userStats) {
                 document.getElementById('n-system').checked = userStats.notifications_system !== false;
                 document.getElementById('n-likes').checked = userStats.notifications_likes !== false;
-                
+
                 const hasFilters = userStats.notifications_filters && Object.keys(userStats.notifications_filters).length > 0;
                 document.getElementById('n-filters').checked = hasFilters;
-                
+
                 if (hasFilters) {
                     document.getElementById('filter-selection').classList.remove('hidden');
                     // Загружаем сохраненные фильтры
@@ -836,7 +903,7 @@
         // Создание/обновление поста
         function submitPost() {
             const text = document.getElementById('post-text').value.trim();
-            
+
             if (text.length < 10 || text.length > 450) {
                 alert('Текст должен быть от 10 до 450 символов');
                 return;
@@ -879,16 +946,16 @@
             document.getElementById('post-text').value = '';
             document.getElementById('text-counter').textContent = '0/450';
             document.getElementById('submit-post').disabled = true;
-            
+
             tags = { category: 'Все', city: 'Все', gender: 'Все', age: 'Все', date: 'Все' };
             updateAllTagIcons();
-            
+
             isEditingPost = false;
             editingPostId = null;
-            
+
             // Сбрасываем категории
             renderCreateCategories();
-            
+
             // Скрываем область тегов
             document.getElementById('create-tags-display').classList.add('hidden');
         }
@@ -904,13 +971,13 @@
         function updateTagIcon(tagId) {
             const icon = document.getElementById(`t-${tagId}`);
             const hasTag = tags[tagId] !== 'Все';
-            
+
             if (hasTag) {
                 icon.classList.add('active');
             } else {
                 icon.classList.remove('active');
             }
-            
+
             // Обновляем отображение тегов в создании
             renderCreateTags();
         }
@@ -919,21 +986,21 @@
             const container = document.getElementById('create-tags-display');
             const tagContainer = document.getElementById('create-tags-container');
             tagContainer.innerHTML = '';
-            
+
             let hasTags = false;
-            
+
             if (tags.category !== 'Все') {
                 tagContainer.innerHTML += `<span class="filter-tag">${tags.category}</span>`;
                 hasTags = true;
             }
-            
+
             ['city', 'gender', 'age', 'date'].forEach(tagType => {
                 if (tags[tagType] !== 'Все') {
                     tagContainer.innerHTML += `<span class="filter-tag">${tags[tagType]}</span>`;
                     hasTags = true;
                 }
             });
-            
+
             if (hasTags) {
                 container.classList.remove('hidden');
             } else {
@@ -959,18 +1026,18 @@
         function renderCategories() {
             const container = document.getElementById('categories');
             container.innerHTML = '';
-            
+
             categories.forEach((cat, i) => {
                 const wrapper = document.createElement('div');
                 wrapper.className = 'relative inline-block mx-1';
-                
+
                 const btn = document.createElement('button');
                 btn.textContent = cat[lang];
                 btn.className = `px-4 py-2 text-lg font-semibold transition-colors ${i === 0 ? 'category-active text-black' : 'text-gray-500 hover:text-gray-700'}`;
-                
+
                 const line = document.createElement('div');
                 line.className = 'category-line';
-                
+
                 btn.onclick = () => {
                     container.querySelectorAll('button').forEach(b => {
                         b.className = 'px-4 py-2 text-lg font-semibold text-gray-500 hover:text-gray-700 transition-colors';
@@ -983,7 +1050,7 @@
                     renderFilterTags();
                     btn.scrollIntoView({ behavior: 'smooth', inline: 'center' });
                 };
-                
+
                 wrapper.appendChild(btn);
                 wrapper.appendChild(line);
                 container.appendChild(wrapper);
@@ -994,18 +1061,18 @@
         function renderCreateCategories() {
             const container = document.getElementById('create-categories');
             container.innerHTML = '';
-            
+
             categories.forEach((cat, i) => {
                 const wrapper = document.createElement('div');
                 wrapper.className = 'relative inline-block mx-1';
-                
+
                 const btn = document.createElement('button');
                 btn.textContent = cat[lang];
                 btn.className = `px-4 py-2 text-lg font-semibold transition-colors ${tags.category === cat[lang] ? 'category-active text-black' : 'text-gray-500 hover:text-gray-700'}`;
-                
+
                 const line = document.createElement('div');
                 line.className = 'category-line';
-                
+
                 btn.onclick = () => {
                     container.querySelectorAll('button').forEach(b => {
                         b.className = 'px-4 py-2 text-lg font-semibold text-gray-500 hover:text-gray-700 transition-colors';
@@ -1017,7 +1084,7 @@
                     renderCreateTags(); // Обновляем отображение тегов
                     btn.scrollIntoView({ behavior: 'smooth', inline: 'center' });
                 };
-                
+
                 wrapper.appendChild(btn);
                 wrapper.appendChild(line);
                 container.appendChild(wrapper);
@@ -1033,18 +1100,18 @@
                 const genderMatch = filters.gender.length === 0 || filters.gender.includes(p.gender);
                 const ageMatch = filters.age.length === 0 || filters.age.includes(p.age);
                 const dateMatch = filters.date.length === 0 || filters.date.includes(p.date_tag);
-                
+
                 // Поиск
-                const searchMatch = !searchQuery || 
+                const searchMatch = !searchQuery ||
                     p.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
                     p.full_name.toLowerCase().includes(searchQuery.toLowerCase());
-                
+
                 // Сортировка специальная
                 let sortMatch = true;
                 if (filters.sort === 'Мои') sortMatch = p.telegram_id === user.telegram_id;
                 else if (filters.sort === 'Избранные') sortMatch = userStats.favorites.includes(p.id);
                 else if (filters.sort === 'Скрытые') sortMatch = userStats.hidden.includes(p.id);
-                
+
                 return categoryMatch && cityMatch && genderMatch && ageMatch && dateMatch && sortMatch && searchMatch;
             });
 
@@ -1055,12 +1122,12 @@
 
             const feed = document.getElementById('feed');
             feed.innerHTML = '';
-            
+
             if (filtered.length === 0) {
                 feed.innerHTML = '<div class="text-center text-gray-500 py-8">Нет объявлений</div>';
                 return;
             }
-            
+
             filtered.forEach(p => {
                 const div = document.createElement('div');
                 div.className = 'bg-white p-4 rounded-2xl shadow-sm border border-gray-100';
@@ -1147,10 +1214,10 @@
 
         function updateFilterIcon(filterId) {
             const icon = document.getElementById(`f-${filterId}`);
-            const hasActiveFilters = filterId === 'sort' 
+            const hasActiveFilters = filterId === 'sort'
                 ? filters[filterId] !== 'Новые'
                 : filters[filterId].length > 0;
-            
+
             if (hasActiveFilters) {
                 icon.classList.add('active');
             } else {
@@ -1162,14 +1229,14 @@
             const container = document.getElementById('filter-tags');
             const tagContainer = container.querySelector('.flex');
             tagContainer.innerHTML = '';
-            
+
             let hasTags = false;
-            
+
             if (filters.category !== 'Все') {
                 tagContainer.innerHTML += `<span class="filter-tag">${filters.category}</span>`;
                 hasTags = true;
             }
-            
+
             ['city', 'gender', 'age', 'date'].forEach(filter => {
                 if (filters[filter].length > 0) {
                     filters[filter].forEach(value => {
@@ -1178,12 +1245,12 @@
                     });
                 }
             });
-            
+
             if (filters.sort !== 'Новые') {
                 tagContainer.innerHTML += `<span class="filter-tag">Сортировка: ${filters.sort}</span>`;
                 hasTags = true;
             }
-            
+
             if (hasTags) {
                 container.classList.remove('hidden');
             } else {
@@ -1194,7 +1261,7 @@
         // Инициализация приложения
         window.addEventListener('load', async () => {
             const telegramSuccess = await getTelegramUser();
-            
+
             if (telegramSuccess) {
                 initWebSocket();
                 setTimeout(() => {
@@ -1391,9 +1458,9 @@
             const text = e.target.value;
             const counter = document.getElementById('text-counter');
             const submitBtn = document.getElementById('submit-post');
-            
+
             counter.textContent = `${text.length}/450`;
-            
+
             if (text.length > 450) {
                 counter.classList.add('error');
                 submitBtn.disabled = true;
@@ -1413,18 +1480,18 @@
         document.addEventListener('click', e => {
             const likeBtn = e.target.closest('.like');
             const menuBtn = e.target.closest('.menu');
-            
+
             if (likeBtn) {
                 const id = parseInt(likeBtn.dataset.id);
                 handleUserAction(id, 'like');
             }
-            
+
             if (menuBtn) {
                 closeAllModals();
                 const id = parseInt(menuBtn.dataset.id);
                 const post = allPosts.find(p => p.id === id);
                 const opts = document.getElementById('post-options');
-                
+
                 if (post.telegram_id === user.telegram_id) {
                     opts.innerHTML = `
                         <button class="modal-button" data-action="edit" data-id="${id}">Изменить</button>
@@ -1435,7 +1502,7 @@
                     const isFavorite = userStats.favorites.includes(id);
                     const isHidden = userStats.hidden.includes(id);
                     const hasReported = userStats.reports.includes(id);
-                    
+
                     opts.innerHTML = `
                         <button class="modal-button" data-action="favorite" data-id="${id}">${isFavorite ? 'Убрать из избранного' : 'В избранное'}</button>
                         <button class="modal-button" data-action="hide" data-id="${id}">${isHidden ? 'Показать' : 'Скрыть'}</button>
@@ -1443,7 +1510,7 @@
                         ${!hasReported ? `<button class="modal-button" data-action="report" data-id="${id}">Пожаловаться</button>` : ''}
                     `;
                 }
-                
+
                 document.getElementById('m-post').classList.remove('hidden');
             }
         });
@@ -1453,7 +1520,7 @@
             if (e.target.classList.contains('modal-button')) {
                 const action = e.target.dataset.action;
                 const id = parseInt(e.target.dataset.id);
-                
+
                 if (action === 'edit') {
                     const post = allPosts.find(p => p.id === id);
                     if (post) {
@@ -1461,7 +1528,7 @@
                         document.getElementById('post-text').value = post.description;
                         document.getElementById('text-counter').textContent = `${post.description.length}/450`;
                         document.getElementById('submit-post').disabled = false;
-                        
+
                         tags = {
                             category: post.category,
                             city: post.city,
@@ -1469,13 +1536,13 @@
                             age: post.age,
                             date: post.date_tag
                         };
-                        
+
                         isEditingPost = true;
                         editingPostId = id;
-                        
+
                         updateAllTagIcons();
                         renderCreateCategories();
-                        
+
                         document.getElementById('create-screen').classList.remove('hidden');
                     }
                 } else if (action === 'share') {
@@ -1493,10 +1560,11 @@
                 } else {
                     handleUserAction(id, action);
                 }
-                
+
                 document.getElementById('m-post').classList.add('hidden');
             }
         };
     </script>
 </body>
+
 </html>
