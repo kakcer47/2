@@ -171,7 +171,7 @@
         }
 
         .create-btn {
-            background: #6b7280;
+            background: #262624;
             color: white;
             border: none;
             padding: 12px 24px;
@@ -183,7 +183,7 @@
         }
 
         .create-btn:hover {
-            background: #4b5563;
+            background: #1a1918;
         }
 
         .main-content {
@@ -394,7 +394,7 @@
             <!-- Create Button -->
             <div class="p-4 bg-white create-container">
                 <button id="submit-post"
-                    class="w-full py-3 bg-blue-500 text-white rounded-2xl text-lg font-medium disabled:bg-gray-300 disabled:cursor-not-allowed"
+                    class="w-full py-3 bg-[#262624] text-white rounded-2xl text-lg font-medium disabled:bg-gray-300 disabled:cursor-not-allowed hover:bg-[#1a1918] transition-colors"
                     disabled>Создать объявление</button>
             </div>
         </div>
@@ -1157,7 +1157,7 @@
                         </div>
                         <div class="flex items-center space-x-3">
                             <button class="like flex items-center p-2 rounded-lg hover:bg-gray-50 transition-colors" data-id="${p.id}">
-                                <img src="./lightning.svg" width="20" height="20" alt="Like" style="filter: ${userStats.likes.includes(p.id) ? 'invert(48%) sepia(79%) saturate(2476%) hue-rotate(86deg) brightness(118%) contrast(119%)' : 'none'}">
+                                <img src="./lightning.svg" width="22" height="22" alt="Like" style="filter: ${userStats.likes.includes(p.id) ? 'invert(25%) sepia(50%) saturate(1500%) hue-rotate(35deg) brightness(100%) contrast(90%)' : 'none'}">
                                 <span class="ml-1 text-base">${p.likes_count || 0}</span>
                             </button>
                             <button class="menu p-2 rounded-lg hover:bg-gray-50 transition-colors" data-id="${p.id}">
@@ -1615,7 +1615,18 @@
                     handleUserAction(id, action);
                 }
 
-                document.getElementById('m-post').classList.add('hidden');
+                const modal = document.getElementById('m-post');
+                const content = modal.querySelector('.modal-slide');
+
+                if (content) {
+                    content.classList.remove('show');
+                    modal.classList.remove('show');
+                    setTimeout(() => {
+                        modal.classList.add('hidden');
+                    }, 300);
+                } else {
+                    modal.classList.add('hidden');
+                }
             }
         };
     </script>
